@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../ui/PageHero.astro';
+import { socials } from '../../data/socials';
+import { team } from '../../data/team';
+import type { Locale } from '../../types/content';
+interface Props { locale: Locale; }
+const { locale }=Astro.props;
+const activeSocials=socials.filter((s)=>s.isActive).sort((a,b)=>a.order-b.order);
+const activeTeam=team.filter((p)=>p.isActive).sort((a,b)=>a.order-b.order);
+const title=locale==='tr'?'İletişim':'Contact';
+const desc=locale==='tr'?'Etkinlikler, üyelik ve iş birlikleri hakkında SASTEK ile iletişime geçin.':'Contact SASTEK about events, membership and collaborations.';
+---
+<BaseLayout title={title} description={desc} locale={locale}>
+  <PageHero eyebrow="SASTEK / CONTACT" title={title} text={desc} />
+  <section class="section"><div class="container contact-grid"><div class="glass panel"><p class="eyebrow">{locale==='tr'?'Kulüp iletişimi':'Club contact'}</p><h2>{locale==='tr'?'Eskişehir Teknik Üniversitesi':'Eskişehir Technical University'}</h2><p class="muted">{locale==='tr'?'İki Eylül Kampüsü, Eskişehir':'İki Eylül Campus, Eskişehir'}</p><div class="notice">{locale==='tr'?'Genel iletişim e-postası ve güncel yönetim bilgileri kulüp tarafından eklenecektir.':'The general contact email and current board details will be added by the club.'}</div></div><div class="glass panel"><p class="eyebrow">{locale==='tr'?'Yönetim':'Board'}</p>{activeTeam.length?activeTeam.map((person)=><div class="person"><b>{person.name}</b><span>{person.role[locale]}</span>{person.email&&<a href={`mailto:${person.email}`}>{person.email}</a>}</div>):<p class="muted">{locale==='tr'?'Güncel yönetim bilgileri bekleniyor.':'Current board details are pending.'}</p>}</div><div class="glass panel"><p class="eyebrow">{locale==='tr'?'Sosyal medya':'Social media'}</p>{activeSocials.length?<div class="links">{activeSocials.map((social)=><a class="btn btn-secondary" href={social.url} target="_blank" rel="noreferrer">{social.label} ↗</a>)}</div>:<p class="muted">{locale==='tr'?'Doğrulanmış sosyal medya bağlantıları bekleniyor.':'Verified social media links are pending.'}</p>}</div></div></section>
+</BaseLayout>
+<style>.contact-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:1.2rem}.panel{border-radius:1.2rem;padding:clamp(1.4rem,4vw,2.2rem)}.panel:first-child{grid-row:span 2}.panel h2{font-size:1.8rem}.person{display:grid;gap:.15rem;padding:1rem 0;border-bottom:1px solid rgba(84,119,151,.2)}.person span{color:#a9bbce}.person a{color:#ff9a62}.links{display:flex;gap:.7rem;flex-wrap:wrap}@media(max-width:760px){.contact-grid{grid-template-columns:1fr}.panel:first-child{grid-row:auto}}</style>

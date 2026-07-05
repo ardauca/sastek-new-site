@@ -1,0 +1,64 @@
+---
+import { navigation } from '../../data/navigation';
+import { t } from '../../lib/content';
+import type { Locale } from '../../types/content';
+
+interface Props { locale: Locale; currentPath: string; }
+const { locale, currentPath } = Astro.props;
+const detailMatch = locale === 'tr'
+  ? currentPath.match(/^\/etkinlikler\/([^/]+)$/)
+  : currentPath.match(/^\/en\/events\/([^/]+)$/);
+const languageTarget = detailMatch
+  ? (locale === 'tr' ? `/en/events/${detailMatch[1]}` : `/etkinlikler/${detailMatch[1]}`)
+  : locale === 'tr'
+    ? (navigation.find((item) => item.tr === currentPath)?.en ?? '/en')
+    : (navigation.find((item) => item.en === currentPath)?.tr ?? '/');
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href={locale === 'tr' ? '/' : '/en'} aria-label="SASTEK">
+      <img src="/images/logo/sastek-logo.png" alt="" width="132" height="46" />
+      <span>SASTEK</span>
+    </a>
+
+    <nav class="desktop-nav" aria-label={locale === 'tr' ? 'Ana menü' : 'Main menu'}>
+      {navigation.map((item) => {
+        const href = item[locale];
+        const active = currentPath === href || (href !== '/' && href !== '/en' && currentPath.startsWith(`${href}/`));
+        return <a href={href} aria-current={active ? 'page' : undefined}>{t(item.label, locale)}</a>;
+      })}
+    </nav>
+
+    <a class="lang" href={languageTarget} hreflang={locale === 'tr' ? 'en' : 'tr'}>
+      {locale === 'tr' ? 'EN' : 'TR'}
+    </a>
+
+    <details class="mobile-menu">
+      <summary aria-label={locale === 'tr' ? 'Menüyü aç' : 'Open menu'}><span></span><span></span><span></span></summary>
+      <nav aria-label={locale === 'tr' ? 'Mobil menü' : 'Mobile menu'}>
+        {navigation.map((item) => <a href={item[locale]}>{t(item.label, locale)}</a>)}
+        <a href={languageTarget}>{locale === 'tr' ? 'English' : 'Türkçe'}</a>
+      </nav>
+    </details>
+  </div>
+</header>
+
+<style>
+  .site-header { position: sticky; top: 0; z-index: 30; border-bottom: 1px solid rgba(84,119,151,.2); background: rgba(5,11,20,.82); backdrop-filter: blur(18px); }
+  .header-inner { display: flex; min-height: 4.75rem; align-items: center; gap: 1.3rem; }
+  .brand { display: inline-flex; align-items: center; gap: .6rem; font-weight: 900; letter-spacing: .09em; }
+  .brand img { width: 2.7rem; height: 2.7rem; object-fit: contain; }
+  .desktop-nav { display: flex; align-items: center; gap: 1.05rem; margin-left: auto; }
+  .desktop-nav a { position: relative; color: #aebed0; font-size: .8rem; font-weight: 720; white-space: nowrap; }
+  .desktop-nav a:hover, .desktop-nav a[aria-current="page"] { color: #fff; }
+  .desktop-nav a[aria-current="page"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.7rem; height: 2px; background: #ff6b1a; }
+  .lang { border: 1px solid #395674; border-radius: 999px; padding: .35rem .65rem; color: #ff9a62; font-size: .75rem; font-weight: 900; }
+  .mobile-menu { display: none; margin-left: auto; }
+  summary { display: grid; gap: 4px; cursor: pointer; list-style: none; padding: .6rem; }
+  summary::-webkit-details-marker { display: none; }
+  summary span { display: block; width: 23px; height: 2px; background: #fff; }
+  .mobile-menu nav { position: absolute; left: 1rem; right: 1rem; top: 4.25rem; display: grid; padding: 1rem; border: 1px solid #29445e; border-radius: 1rem; background: #081524; box-shadow: 0 25px 80px #000; }
+  .mobile-menu nav a { padding: .75rem; border-bottom: 1px solid rgba(84,119,151,.18); }
+  @media (max-width: 1040px) { .desktop-nav, .header-inner > .lang { display: none; } .mobile-menu { display: block; } }
+</style>

@@ -1,0 +1,18 @@
+---
+import { t } from '../../lib/content';
+import type { Locale, Partner } from '../../types/content';
+interface Props { partner: Partner; locale: Locale; }
+const { partner, locale } = Astro.props;
+---
+<article class="partner glass" data-filter-card data-category={t(partner.category, locale).toLowerCase()} data-search={`${partner.name} ${t(partner.category, locale)}`.toLowerCase()}>
+  <div class="logo"><img src={partner.logo} alt={`${partner.name} logo`} width="240" height="160" loading="lazy" /></div>
+  <div class="body">
+    <span class="chip">{t(partner.category, locale)}</span>
+    <h3>{partner.name}</h3>
+    <p class="offer">{t(partner.discountLabel, locale)}</p>
+    {!partner.isVerified && <p class="verify">● {locale === 'tr' ? 'Doğrulama bekliyor' : 'Awaiting verification'}</p>}
+  </div>
+</article>
+<style>
+  .partner{display:grid;grid-template-columns:110px 1fr;align-items:center;gap:1.1rem;border-radius:1rem;padding:1rem}.logo{display:grid;place-items:center;aspect-ratio:1;border-radius:.75rem;background:#f2f3f4;overflow:hidden}.logo img{width:85%;height:85%;object-fit:contain}.body h3{margin:.55rem 0 .1rem;font-size:1.15rem}.offer{margin:0;color:#d9e6f2;font-size:.88rem}.verify{margin:.55rem 0 0;color:#ff9a62;font-size:.7rem;font-weight:750}@media(max-width:420px){.partner{grid-template-columns:85px 1fr}}
+</style>

@@ -1,0 +1,29 @@
+---
+interface Props { locale: 'tr' | 'en'; categories: string[]; showSearch?: boolean; }
+const { locale, categories, showSearch = true } = Astro.props;
+---
+<div class="filters" data-filter-controls>
+  {showSearch && <label><span class="sr-only">{locale === 'tr' ? 'Ara' : 'Search'}</span><input type="search" placeholder={locale === 'tr' ? 'Ara…' : 'Search…'} data-filter-search /></label>}
+  <label><span class="sr-only">{locale === 'tr' ? 'Kategori' : 'Category'}</span><select data-filter-category><option value="">{locale === 'tr' ? 'Tüm kategoriler' : 'All categories'}</option>{categories.map((category) => <option value={category.toLowerCase()}>{category}</option>)}</select></label>
+</div>
+<script>
+  document.querySelectorAll('[data-filter-root]').forEach((root) => {
+    const search = root.querySelector<HTMLInputElement>('[data-filter-search]');
+    const select = root.querySelector<HTMLSelectElement>('[data-filter-category]');
+    const cards = root.querySelectorAll<HTMLElement>('[data-filter-card]');
+    const apply = () => {
+      const term = search?.value.trim().toLocaleLowerCase('tr') ?? '';
+      const category = select?.value ?? '';
+      cards.forEach((card) => {
+        const matchesTerm = !term || card.dataset.search?.toLocaleLowerCase('tr').includes(term);
+        const matchesCategory = !category || card.dataset.category === category;
+        card.hidden = !(matchesTerm && matchesCategory);
+      });
+    };
+    search?.addEventListener('input', apply);
+    select?.addEventListener('change', apply);
+  });
+</script>
+<style>
+  .filters{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem}.filters input,.filters select{min-height:3rem;border:1px solid #36516c;border-radius:.75rem;background:#081727;color:#fff;padding:.6rem .85rem}.filters input{min-width:min(100%,320px)}.filters select{min-width:190px}
+</style>

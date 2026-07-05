@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../ui/PageHero.astro';
+import EventCard from '../cards/EventCard.astro';
+import FilterControls from '../ui/FilterControls.astro';
+import { events } from '../../data/events';
+import { t } from '../../lib/content';
+import type { Locale } from '../../types/content';
+interface Props { locale: Locale; }
+const { locale } = Astro.props;
+const categories = [...new Set(events.map((item) => t(item.category, locale)))];
+const title=locale==='tr'?'Etkinlikler':'Events';
+const desc=locale==='tr'?'Teknik bilgi, sektör deneyimi ve güçlü bir topluluk için tasarlanan SASTEK etkinlikleri.':'SASTEK events designed for technical knowledge, industry experience and a strong community.';
+---
+<BaseLayout title={title} description={desc} locale={locale}>
+  <PageHero eyebrow="SASTEK / EVENTS" title={title} text={desc} />
+  <section class="section"><div class="container" data-filter-root><FilterControls locale={locale} categories={categories} /><div class="grid-auto">{events.map((event)=><EventCard event={event} locale={locale} />)}</div></div></section>
+</BaseLayout>

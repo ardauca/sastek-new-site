@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../ui/PageHero.astro';
+import { sponsors } from '../../data/sponsors';
+import type { Locale, SponsorTier } from '../../types/content';
+interface Props { locale: Locale; }
+const { locale }=Astro.props;
+const active=sponsors.filter((s)=>s.isActive).sort((a,b)=>a.order-b.order);
+const labels:Record<SponsorTier,Record<Locale,string>>={
+  'ana-sponsor':{tr:'Ana Sponsor',en:'Main Sponsor'},altin:{tr:'Altın Sponsor',en:'Gold Sponsor'},gumus:{tr:'Gümüş Sponsor',en:'Silver Sponsor'},bronz:{tr:'Bronz Sponsor',en:'Bronze Sponsor'},destekci:{tr:'Destekçi',en:'Supporter'},partner:{tr:'Çözüm Ortağı',en:'Partner'},
+};
+const title=locale==='tr'?'Sponsorlarımız':'Our Sponsors';
+const desc=locale==='tr'?'Öğrencilerin teknolojiyle buluşmasına katkı sağlayan destekçilerimiz.':'Our supporters helping students connect with technology.';
+---
+<BaseLayout title={title} description={desc} locale={locale}>
+  <PageHero eyebrow="SASTEK / SPONSORS" title={title} text={desc} />
+  <section class="section"><div class="container"><div class="notice">{locale==='tr'?'Sponsor kayıtları doğrulanmış güncel liste ile değiştirilmek üzere örnek olarak gösterilmektedir.':'Sponsor entries are samples pending replacement with a verified current list.'}</div><div class="sponsors">{active.map((sponsor)=><article class="glass"><span class="tier">{labels[sponsor.tier][locale]}</span><div class="logo"><img src={sponsor.logo} alt={`${sponsor.name} logo`} /></div><h2>{sponsor.name}</h2>{!sponsor.isVerified&&<span class="pending">{locale==='tr'?'Doğrulama bekliyor':'Awaiting verification'}</span>}</article>)}</div></div></section>
+  <section class="section support"><div class="container support-inner"><div><p class="eyebrow">COLLABORATE</p><h2 class="title">{locale==='tr'?'Geleceğin mühendislerine birlikte alan açalım.':'Let’s create opportunities for future engineers.'}</h2></div><a class="btn btn-primary" href={locale==='tr'?'/iletisim':'/en/contact'}>{locale==='tr'?'İletişime geç':'Get in touch'} →</a></div></section>
+</BaseLayout>
+<style>.sponsors{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem;margin-top:2rem}.sponsors article{text-align:center;border-radius:1.2rem;padding:1.5rem}.tier{color:#ff9a62;font-size:.72rem;font-weight:850;letter-spacing:.14em;text-transform:uppercase}.logo{display:grid;place-items:center;height:180px;margin:1rem 0;border-radius:1rem;background:#f5f5f5}.logo img{max-width:80%;max-height:110px;object-fit:contain}.sponsors h2{font-size:1.05rem}.pending{font-size:.7rem;color:#a9bbce}.support{background:rgba(7,21,38,.7)}.support-inner{display:flex;justify-content:space-between;align-items:center;gap:2rem}.support-inner h2{max-width:760px}@media(max-width:700px){.support-inner{align-items:flex-start;flex-direction:column}}</style>

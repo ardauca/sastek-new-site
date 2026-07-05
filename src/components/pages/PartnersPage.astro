@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../ui/PageHero.astro';
+import FilterControls from '../ui/FilterControls.astro';
+import PartnerCard from '../cards/PartnerCard.astro';
+import { partners } from '../../data/partners';
+import { t } from '../../lib/content';
+import type { Locale } from '../../types/content';
+interface Props { locale: Locale; }
+const { locale }=Astro.props;
+const active=partners.filter((p)=>p.isActive).sort((a,b)=>a.order-b.order);
+const categories=[...new Set(active.map((p)=>t(p.category,locale)))];
+const title=locale==='tr'?'Anlaşmalı Noktalar':'Student Partners';
+const desc=locale==='tr'?'SASTEK üyelerine özel avantaj ve kampanyaların modüler vitrini.':'A modular showcase of benefits and offers for SASTEK members.';
+---
+<BaseLayout title={title} description={desc} locale={locale}>
+  <PageHero eyebrow="SASTEK / PARTNERS" title={title} text={desc} />
+  <section class="section"><div class="container" data-filter-root>
+    <div class="notice">{locale==='tr'?'Bu sayfadaki mevcut kayıtlar arşiv görsellerinden hazırlanmıştır. Firma ve kampanya bilgileri yayın öncesinde kulüp tarafından doğrulanmalıdır.':'Current entries were prepared from archive assets. Partner and offer details must be verified by the club before publication.'}</div>
+    <div class="filter-space"><FilterControls locale={locale} categories={categories} /></div>
+    <div class="grid-auto">{active.map((partner)=><PartnerCard partner={partner} locale={locale} />)}</div>
+  </div></section>
+</BaseLayout>
+<style>.filter-space{margin-top:2rem}</style>
