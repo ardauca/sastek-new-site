@@ -4,7 +4,7 @@ Eskişehir Teknik Üniversitesi Savunma Sanayii ve Teknolojileri Kulübü ana ta
 
 ## Yerel kurulum
 
-Node.js LTS ve npm gereklidir.
+Node.js `>=22.12.0` ve npm `>=9.6.5` gereklidir. Proje kökünde yer alan `.nvmrc` dosyası Cloudflare Pages ile aynı Node sürümünü hedefler.
 
 ```sh
 npm install
@@ -31,8 +31,9 @@ Arşivden gelen anlaşmalı nokta ve sponsor kayıtları doğrulanmış kabul ed
 1. GitHub deposunu Cloudflare Pages projesine bağlayın.
 2. Framework preset olarak Astro seçin.
 3. Build komutunu `npm run build`, çıktı dizinini `dist` olarak ayarlayın.
-4. Preview ve production deploy'ları ayrı branch akışlarıyla kullanın.
-5. Üretim doğrulandıktan sonra yalnızca ana domaini Cloudflare Pages'e bağlayın.
+4. Environment variables alanına `NODE_VERSION=22.12.0` ekleyin.
+5. Preview ve production deploy'ları ayrı branch akışlarıyla kullanın.
+6. Üretim doğrulandıktan sonra yalnızca ana domaini Cloudflare Pages'e bağlayın.
 
 `etkinlik.sastek.org`, `yoklama.sastek.org`, `belge.sastek.org`, `qr.sastek.org`, `form.sastek.org`, `mail.sastek.org` ve `kayit.sastek.org` gibi mevcut operasyonel sistemlerin DNS kayıtlarına veya hosting dosyalarına dokunulmamalıdır.
 
