@@ -15,6 +15,7 @@ export interface EventItem {
   image: string;
   status: EventStatus;
   isFeatured: boolean;
+  showDetails?: boolean;
   applicationUrl?: string;
   galleryIds?: string[];
 }

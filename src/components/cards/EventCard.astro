@@ -4,15 +4,16 @@ import type { EventItem, Locale } from '../../types/content';
 interface Props { event: EventItem; locale: Locale; }
 const { event, locale } = Astro.props;
 const href = locale === 'tr' ? `/etkinlikler/${event.slug}` : `/en/events/${event.slug}`;
+const showDetails = event.showDetails !== false;
 const status = { planned: { tr: 'Planlanıyor', en: 'Planned' }, active: { tr: 'Aktif', en: 'Active' }, past: { tr: 'Geçmiş', en: 'Past' } }[event.status][locale];
 ---
 <article class="event-card glass" data-filter-card data-category={t(event.category, locale).toLowerCase()} data-search={`${t(event.title, locale)} ${t(event.summary, locale)}`.toLowerCase()}>
   <a href={href} class="visual" aria-label={t(event.title, locale)}><img src={event.image} alt="" width="600" height="360" loading="lazy" /></a>
   <div class="body">
-    <div class="meta"><span class="chip">{t(event.category, locale)}</span><span>{status}</span></div>
+    <div class="meta"><span class="chip">{t(event.category, locale)}</span>{showDetails && <span>{status}</span>}</div>
     <h3><a href={href}>{t(event.title, locale)}</a></h3>
     <p class="muted">{t(event.summary, locale)}</p>
-    <div class="foot"><span>{formatDate(event.date, locale)}</span><a href={href}>{locale === 'tr' ? 'İncele →' : 'Explore →'}</a></div>
+    <div class="foot">{showDetails && <span>{formatDate(event.date, locale)}</span>}<a href={href}>{locale === 'tr' ? 'İncele →' : 'Explore →'}</a></div>
   </div>
 </article>
 <style>

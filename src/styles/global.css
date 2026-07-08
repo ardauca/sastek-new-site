@@ -30,11 +30,15 @@ body::before {
   inset: 0;
   pointer-events: none;
   opacity: .16;
-  background-image: url('/images/backgrounds/space.jpg');
-  background-size: cover;
-  background-position: center;
+  background-image:
+    linear-gradient(115deg, transparent 0 34%, rgba(176, 224, 255, .95) 45%, rgba(92, 178, 255, .42) 56%, transparent 70%),
+    url('/images/backgrounds/space.jpg');
+  background-size: 180px 2px, cover;
+  background-position: -24vw 24vh, center;
+  background-repeat: no-repeat;
   mix-blend-mode: screen;
   z-index: -1;
+  animation: shooting-star 22s ease-in-out infinite;
 }
 body::after {
   content: "";
@@ -43,25 +47,31 @@ body::after {
   pointer-events: none;
   z-index: 0;
   min-height: 100%;
-  opacity: .68;
+  opacity: .72;
   background-image:
-    radial-gradient(circle at 11% 18%, rgba(230, 247, 255, .9) 0 .8px, transparent 1.35px),
-    radial-gradient(circle at 72% 9%, rgba(109, 190, 255, .72) 0 1.4px, transparent 2px),
-    radial-gradient(circle at 31% 63%, rgba(177, 225, 255, .56) 0 2.2px, transparent 3px),
-    radial-gradient(circle at 84% 74%, rgba(80, 165, 248, .42) 0 3.8px, transparent 5px),
-    radial-gradient(circle at 19% 82%, rgba(238, 250, 255, .76) 0 1px, transparent 1.7px),
-    radial-gradient(circle at 57% 39%, rgba(142, 207, 255, .62) 0 2.8px, transparent 3.8px),
-    radial-gradient(circle at 43% 14%, rgba(90, 177, 255, .34) 0 5.5px, transparent 6.7px),
-    radial-gradient(circle at 91% 42%, rgba(225, 244, 255, .78) 0 1.2px, transparent 1.9px),
-    radial-gradient(circle at 6% 58%, rgba(95, 179, 255, .44) 0 2px, transparent 2.8px),
-    radial-gradient(circle at 68% 88%, rgba(206, 236, 255, .52) 0 3px, transparent 4.1px);
-  background-size: 317px 241px, 389px 281px, 467px 337px, 563px 409px, 283px 461px, 521px 323px, 641px 487px, 367px 557px, 431px 379px, 617px 353px;
-  background-position: 17px 43px, 149px 87px, 61px 238px, 291px 131px, 408px 319px, 117px 502px, 73px 19px, 530px 260px, 240px 610px, 760px 440px;
+    radial-gradient(circle at 7% 23%, rgba(230, 247, 255, .9) 0 .8px, transparent 1.35px),
+    radial-gradient(circle at 81% 11%, rgba(220, 244, 255, .84) 0 1.4px, transparent 2px),
+    radial-gradient(circle at 28% 71%, rgba(238, 250, 255, .72) 0 2.2px, transparent 3px),
+    radial-gradient(circle at 93% 66%, rgba(230, 247, 255, .74) 0 2.6px, transparent 3.4px),
+    radial-gradient(circle at 16% 88%, rgba(238, 250, 255, .76) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 63% 34%, rgba(232, 248, 255, .78) 0 2.6px, transparent 3.4px),
+    radial-gradient(circle at 39% 8%, rgba(205, 238, 255, .68) 0 3px, transparent 3.8px),
+    radial-gradient(circle at 96% 47%, rgba(225, 244, 255, .78) 0 1.2px, transparent 1.9px),
+    radial-gradient(circle at 3% 54%, rgba(210, 240, 255, .68) 0 2px, transparent 2.8px),
+    radial-gradient(circle at 74% 92%, rgba(248, 253, 255, .78) 0 2.8px, transparent 3.7px),
+    radial-gradient(circle at 46% 51%, rgba(232, 248, 255, .74) 0 1.6px, transparent 2.4px),
+    radial-gradient(circle at 22% 37%, rgba(205, 238, 255, .66) 0 3px, transparent 3.9px),
+    radial-gradient(circle at 58% 78%, rgba(235, 249, 255, .68) 0 .7px, transparent 1.2px),
+    radial-gradient(circle at 12% 7%, rgba(216, 243, 255, .72) 0 2.4px, transparent 3.2px),
+    radial-gradient(circle at 88% 24%, rgba(248, 253, 255, .8) 0 3px, transparent 3.9px),
+    radial-gradient(circle at 34% 91%, rgba(205, 238, 255, .68) 0 3px, transparent 3.9px);
+  background-size: 151px 229px, 263px 137px, 337px 419px, 491px 251px, 181px 463px, 367px 199px, 541px 283px, 293px 587px, 223px 317px, 421px 233px, 307px 509px, 599px 353px, 173px 271px, 349px 443px, 487px 331px, 701px 389px;
+  background-position: 23px 71px, 187px 29px, 94px 311px, 337px 149px, 472px 263px, 51px 569px, 119px 37px, 617px 218px, 283px 691px, 811px 397px, 429px 763px, 953px 91px, 548px 123px, 73px 819px, 731px 286px, 1011px 653px;
   background-repeat: repeat;
   filter:
-    drop-shadow(0 0 3px rgba(105, 190, 255, .34))
-    drop-shadow(0 0 9px rgba(73, 164, 255, .16));
-  animation: star-drift 32s linear infinite, star-sparkle 4.2s ease-in-out infinite alternate;
+    drop-shadow(0 0 5px rgba(232, 248, 255, .62))
+    drop-shadow(0 0 18px rgba(143, 211, 255, .42));
+  animation: star-sparkle 4.8s ease-in-out infinite alternate;
 }
 body > * {
   position: relative;
@@ -99,20 +109,35 @@ button, a, input, select, textarea { outline-offset: 4px; }
 
 @keyframes star-drift {
   from {
-    background-position: 17px 43px, 149px 87px, 61px 238px, 291px 131px, 408px 319px, 117px 502px, 73px 19px, 530px 260px, 240px 610px, 760px 440px;
+    background-position: 23px 71px, 187px 29px, 94px 311px, 337px 149px, 472px 263px, 51px 569px, 119px 37px, 617px 218px, 283px 691px, 811px 397px, 429px 763px, 953px 91px, 548px 123px, 73px 819px, 731px 286px, 1011px 653px;
   }
   to {
-    background-position: 92px 118px, 67px 176px, 156px 319px, 204px 241px, 493px 246px, 42px 623px, 151px 92px, 472px 337px, 310px 548px, 685px 518px;
+    background-position: 89px 133px, 104px 91px, 163px 372px, 288px 203px, 426px 347px, 117px 517px, 67px 102px, 548px 331px, 347px 632px, 758px 493px, 518px 699px, 887px 173px, 603px 58px, 141px 756px, 657px 409px, 947px 732px;
   }
 }
 
 @keyframes star-sparkle {
-  0% { opacity: .36; filter: drop-shadow(0 0 2px rgba(105, 190, 255, .22)); }
-  43% { opacity: .78; filter: drop-shadow(0 0 5px rgba(105, 190, 255, .42)); }
-  100% { opacity: .52; filter: drop-shadow(0 0 10px rgba(73, 164, 255, .24)); }
+  0% { opacity: .58; filter: drop-shadow(0 0 5px rgba(232, 248, 255, .48)); }
+  48% { opacity: .92; filter: drop-shadow(0 0 12px rgba(242, 252, 255, .72)); }
+  100% { opacity: .76; filter: drop-shadow(0 0 20px rgba(158, 218, 255, .48)); }
+}
+
+@keyframes shooting-star {
+  0%, 78% {
+    background-position: -24vw 24vh, center;
+  }
+  86% {
+    background-position: 122vw 52vh, center;
+  }
+  100% {
+    background-position: 122vw 52vh, center;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
