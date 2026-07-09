@@ -29,6 +29,11 @@ export interface Partner {
   description?: LocalizedText;
   logo: string;
   location?: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  showOnMap?: boolean;
   mapUrl?: string;
   instagramUrl?: string;
   websiteUrl?: string;

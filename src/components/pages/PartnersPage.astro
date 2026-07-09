@@ -6,19 +6,305 @@ import PartnerCard from '../cards/PartnerCard.astro';
 import { partners } from '../../data/partners';
 import { t } from '../../lib/content';
 import type { Locale } from '../../types/content';
+
 interface Props { locale: Locale; }
+
 const { locale }=Astro.props;
 const active=partners.filter((p)=>p.isActive).sort((a,b)=>a.order-b.order);
+const mapPartners=active
+  .filter((p)=>(p.showOnMap ?? true) && p.coordinates)
+  .map((p)=>({
+    id:p.id,
+    name:p.name,
+    category:t(p.category,locale),
+    discount:t(p.discountLabel,locale),
+    logo:p.logo,
+    location:p.location ?? '',
+    mapUrl:p.mapUrl ?? '',
+    lat:p.coordinates?.lat,
+    lng:p.coordinates?.lng,
+  }));
 const categories=[...new Set(active.map((p)=>t(p.category,locale)))];
 const title=locale==='tr'?'Anlaşmalı Noktalar':'Student Partners';
 const desc=locale==='tr'?'SASTEK üyelerine özel avantaj ve kampanyaların modüler vitrini.':'A modular showcase of benefits and offers for SASTEK members.';
+const mapboxToken=import.meta.env.PUBLIC_MAPBOX_TOKEN ?? '';
+const labels=locale==='tr' ? {
+  grid:'Izgara Görünüm',
+  map:'Harita Görünüm',
+  partners:'Anlaşmalı Noktalar',
+  openMaps:'Haritalarda Aç',
+  tokenMissing:'Harita görünümü için PUBLIC_MAPBOX_TOKEN gerekli.',
+  emptyMap:'Haritada gösterilecek koordinatlı anlaşmalı nokta yok.',
+  mapLoading:'Harita yükleniyor…',
+} : {
+  grid:'Grid View',
+  map:'Map View',
+  partners:'Student Partners',
+  openMaps:'Open in Maps',
+  tokenMissing:'PUBLIC_MAPBOX_TOKEN is required for the map view.',
+  emptyMap:'No partners with coordinates to show on the map.',
+  mapLoading:'Loading map…',
+};
 ---
 <BaseLayout title={title} description={desc} locale={locale}>
   <PageHero eyebrow="SASTEK / PARTNERS" title={title} text={desc} />
-  <section class="section"><div class="container" data-filter-root>
-    <div class="notice">{locale==='tr'?'Bu sayfadaki mevcut kayıtlar arşiv görsellerinden hazırlanmıştır. Firma ve kampanya bilgileri yayın öncesinde kulüp tarafından doğrulanmalıdır.':'Current entries were prepared from archive assets. Partner and offer details must be verified by the club before publication.'}</div>
-    <div class="filter-space"><FilterControls locale={locale} categories={categories} /></div>
-    <div class="grid-auto">{active.map((partner)=><PartnerCard partner={partner} locale={locale} />)}</div>
-  </div></section>
+  <section class="section">
+    <div class="container partners-page" data-filter-root data-partners-view data-map-token={mapboxToken}>
+      <div class="notice">{locale==='tr'?'Bu sayfadaki mevcut kayıtlar arşiv görsellerinden hazırlanmıştır. Firma ve kampanya bilgileri yayın öncesinde kulüp tarafından doğrulanmalıdır.':'Current entries were prepared from archive assets. Partner and offer details must be verified by the club before publication.'}</div>
+
+      <div class="view-toggle" role="group" aria-label={locale==='tr'?'Anlaşmalı noktalar görünümü':'Student partners view'}>
+        <button class="view-button is-active" type="button" data-view-button="grid" aria-pressed="true">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6ZM6 6v2h2V6H6Zm10 0v2h2V6h-2ZM6 16v2h2v-2H6Zm10 0v2h2v-2h-2Z"/></svg>
+          {labels.grid}
+        </button>
+        <button class="view-button" type="button" data-view-button="map" aria-pressed="false">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2.75a7.25 7.25 0 0 0-7.25 7.25c0 5.1 6.45 10.87 6.73 11.11l.52.46.52-.46c.28-.24 6.73-6.01 6.73-11.11A7.25 7.25 0 0 0 12 2.75Zm0 16.67C10.5 17.95 6.25 13.45 6.25 10A5.75 5.75 0 0 1 12 4.25 5.75 5.75 0 0 1 17.75 10c0 3.45-4.25 7.95-5.75 9.42ZM12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0 4.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>
+          {labels.map}
+        </button>
+      </div>
+
+      <div class="view-panel is-active" data-view-panel="grid">
+        <div class="filter-space"><FilterControls locale={locale} categories={categories} /></div>
+        <div class="grid-auto">{active.map((partner)=><PartnerCard partner={partner} locale={locale} />)}</div>
+      </div>
+
+      <div class="view-panel" data-view-panel="map" hidden>
+        <div class="map-shell glass">
+          <div class="map-stage">
+            <div id="partners-map" data-map-empty={labels.emptyMap} data-map-loading={labels.mapLoading}></div>
+            <p class="map-message" data-map-message>{mapboxToken ? labels.mapLoading : labels.tokenMissing}</p>
+          </div>
+          <aside class="map-list" aria-label={labels.partners}>
+            <div class="map-list-head">
+              <strong>{labels.partners}</strong>
+              <span>{mapPartners.length} {locale==='tr'?'konum':'locations'}</span>
+            </div>
+            <div class="map-list-items">
+              {mapPartners.length ? mapPartners.map((partner)=>(
+                <button type="button" class="map-list-item" data-map-partner={partner.id}>
+                  <img src={partner.logo} alt="" width="44" height="44" loading="lazy" />
+                  <span>
+                    <b>{partner.name}</b>
+                    <small>{partner.location || partner.category}</small>
+                  </span>
+                </button>
+              )) : <p class="empty-map">{labels.emptyMap}</p>}
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="partners-cta">
+        <h2>{locale==='tr'?'Sponsor Olmak İster misiniz?':'Would You Like to Become a Sponsor?'}</h2>
+        <p>{locale==='tr'?'SASTEK Kulübü ile iş birliği yaparak topluluğumuza katkıda bulunun.':'Collaborate with SASTEK Club and contribute to our community.'}</p>
+        <a class="btn btn-primary" href={locale==='tr'?'/iletisim/':'/en/contact/'}>{locale==='tr'?'İletişime Geçin':'Contact Us'}</a>
+      </div>
+
+      <script is:inline type="application/json" id="partners-map-data" set:html={JSON.stringify({ partners: mapPartners, labels })} />
+    </div>
+  </section>
 </BaseLayout>
-<style>.filter-space{margin-top:2rem}</style>
+
+<script>
+  const root=document.querySelector<HTMLElement>('[data-partners-view]');
+  const buttons=root?.querySelectorAll<HTMLButtonElement>('[data-view-button]');
+  const panels=root?.querySelectorAll<HTMLElement>('[data-view-panel]');
+  const mapElement=root?.querySelector<HTMLElement>('#partners-map');
+  const mapMessage=root?.querySelector<HTMLElement>('[data-map-message]');
+  const dataElement=root?.querySelector<HTMLScriptElement>('#partners-map-data');
+  const parsed=JSON.parse(dataElement?.textContent || '{"partners":[],"labels":{}}');
+  const mapPartners=parsed.partners || [];
+  const labels=parsed.labels || {};
+  let map:any;
+  let mapStarted=false;
+  const markers=new Map<string, any>();
+
+  function setView(view:string){
+    buttons?.forEach((button)=>{
+      const active=button.dataset.viewButton===view;
+      button.classList.toggle('is-active',active);
+      button.setAttribute('aria-pressed',String(active));
+    });
+    panels?.forEach((panel)=>{
+      const active=panel.dataset.viewPanel===view;
+      panel.classList.toggle('is-active',active);
+      panel.hidden=!active;
+    });
+    if(view==='map') initMap();
+  }
+
+  function loadMapbox(){
+    if((window as any).mapboxgl) return Promise.resolve((window as any).mapboxgl);
+    return new Promise((resolve,reject)=>{
+      if(!document.querySelector('link[data-mapbox-css]')){
+        const link=document.createElement('link');
+        link.rel='stylesheet';
+        link.href='https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.css';
+        link.dataset.mapboxCss='true';
+        document.head.appendChild(link);
+      }
+      const existing=document.querySelector<HTMLScriptElement>('script[data-mapbox-js]');
+      if(existing){
+        existing.addEventListener('load',()=>resolve((window as any).mapboxgl),{once:true});
+        existing.addEventListener('error',reject,{once:true});
+        return;
+      }
+      const script=document.createElement('script');
+      script.src='https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.js';
+      script.async=true;
+      script.dataset.mapboxJs='true';
+      script.onload=()=>resolve((window as any).mapboxgl);
+      script.onerror=reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  function injectMapboxThemeStyles(){
+    if(document.querySelector('style[data-sastek-mapbox-theme]')) return;
+    const style=document.createElement('style');
+    style.dataset.sastekMapboxTheme='true';
+    style.textContent=`
+      .mapboxgl-popup{max-width:min(245px,calc(100vw - 2rem))!important}
+      .mapboxgl-popup-content{overflow:hidden!important;border:1px solid rgba(128,174,213,.24)!important;border-radius:.82rem!important;background:rgba(6,18,32,.96)!important;padding:0!important;box-shadow:0 18px 46px rgba(0,0,0,.44),0 0 0 1px rgba(255,255,255,.025)!important;color:#f5fbff!important}
+      .mapboxgl-popup-tip{border-top-color:rgba(6,18,32,.96)!important;border-bottom-color:rgba(6,18,32,.96)!important}
+      .mapboxgl-popup-close-button{top:.42rem!important;right:.42rem!important;display:grid!important;place-items:center!important;width:1.45rem!important;height:1.45rem!important;border:1px solid rgba(128,174,213,.18)!important;border-radius:999px!important;background:rgba(255,255,255,.04)!important;color:#a9bbce!important;font-size:.95rem!important;line-height:1!important}
+      .mapboxgl-popup-close-button:hover{background:rgba(255,107,26,.18)!important;color:#fff!important}
+      .partner-popup{min-width:210px!important;color:#f5fbff!important}
+      .popup-head{display:grid!important;grid-template-columns:42px 1fr!important;gap:.62rem!important;align-items:center!important;padding:.72rem .72rem .55rem!important}
+      .popup-head img{width:42px!important;height:42px!important;object-fit:contain!important;border:1px solid rgba(128,174,213,.2)!important;border-radius:.62rem!important;background:#fff!important;padding:.18rem!important;box-shadow:none!important}
+      .popup-head strong{display:block!important;padding-right:1.35rem!important;color:#fff!important;font-size:.92rem!important;line-height:1.16!important}
+      .popup-head span{display:inline-block!important;margin-top:.26rem!important;border:1px solid rgba(128,174,213,.18)!important;border-radius:999px!important;background:rgba(128,174,213,.1)!important;color:#9cc8ee!important;padding:.12rem .42rem!important;font-size:.6rem!important;font-weight:850!important}
+      .popup-offer{margin:0 .72rem .58rem!important;border:1px solid rgba(56,221,139,.26)!important;border-radius:.55rem!important;background:rgba(24,168,96,.1)!important;color:#79e8ad!important;padding:.52rem .58rem!important;font-size:.72rem!important;font-weight:850!important;line-height:1.35!important}
+      .popup-location{margin:0 .72rem .62rem!important;color:#9cafc1!important;font-size:.68rem!important;line-height:1.42!important}
+      .popup-map-link{display:block!important;margin:.62rem .72rem .72rem!important;border:1px solid rgba(255,107,26,.32)!important;border-radius:.58rem!important;background:rgba(255,107,26,.14)!important;color:#ffb184!important;padding:.56rem .65rem!important;text-align:center!important;text-decoration:none!important;font-size:.74rem!important;font-weight:900!important;box-shadow:none!important}
+      .popup-map-link:hover{background:rgba(255,107,26,.22)!important;color:#fff!important}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function escapeHtml(value:string){
+    return String(value).replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char] || char));
+  }
+
+  function popupHtml(partner:any){
+    const mapsButton=partner.mapUrl ? `<a class="popup-map-link" href="${escapeHtml(partner.mapUrl)}" target="_blank" rel="noopener">${escapeHtml(labels.openMaps || 'Open in Maps')}</a>` : '';
+    const location=partner.location ? `<p class="popup-location">⌖ ${escapeHtml(partner.location)}</p>` : '';
+    return `<div class="partner-popup">
+      <div class="popup-head"><img src="${escapeHtml(partner.logo)}" alt="" /><div><strong>${escapeHtml(partner.name)}</strong><span>${escapeHtml(partner.category)}</span></div></div>
+      <p class="popup-offer">${escapeHtml(partner.discount)}</p>
+      ${location}
+      ${mapsButton}
+    </div>`;
+  }
+
+  async function initMap(){
+    if(mapStarted || !root || !mapElement || !mapMessage) return;
+    mapStarted=true;
+    const token=root.dataset.mapToken || '';
+    if(!token){
+      mapMessage.textContent=labels.tokenMissing || 'Mapbox token missing.';
+      return;
+    }
+    if(!mapPartners.length){
+      mapMessage.textContent=mapElement.dataset.mapEmpty || '';
+      return;
+    }
+    try{
+      mapMessage.textContent=mapElement.dataset.mapLoading || '';
+      const mapboxgl:any=await loadMapbox();
+      mapboxgl.accessToken=token;
+      injectMapboxThemeStyles();
+      const first=mapPartners[0];
+      map=new mapboxgl.Map({
+        container:mapElement,
+        style:'mapbox://styles/mapbox/dark-v11',
+        center:[first.lng,first.lat],
+        zoom:12.2,
+        scrollZoom:false,
+        attributionControl:true,
+      });
+      map.scrollZoom.disable();
+      map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
+      map.on('load',()=>{
+        mapMessage.hidden=true;
+        const bounds=new mapboxgl.LngLatBounds();
+        mapPartners.forEach((partner:any)=>{
+          const markerNode=document.createElement('button');
+          markerNode.type='button';
+          markerNode.className='map-logo-marker';
+          markerNode.setAttribute('aria-label',partner.name);
+          markerNode.innerHTML=`<img src="${escapeHtml(partner.logo)}" alt="" />`;
+          const popup=new mapboxgl.Popup({offset:28, closeButton:true}).setHTML(popupHtml(partner));
+          const marker=new mapboxgl.Marker({element:markerNode, anchor:'center'}).setLngLat([partner.lng,partner.lat]).setPopup(popup).addTo(map);
+          markers.set(partner.id, marker);
+          bounds.extend([partner.lng,partner.lat]);
+        });
+        if(mapPartners.length>1) map.fitBounds(bounds,{padding:70,maxZoom:14});
+      });
+    }catch(error){
+      mapStarted=false;
+      mapMessage.textContent='Harita yüklenemedi. Lütfen Mapbox token ve bağlantıyı kontrol edin.';
+    }
+  }
+
+  buttons?.forEach((button)=>button.addEventListener('click',()=>setView(button.dataset.viewButton || 'grid')));
+  root?.querySelectorAll<HTMLButtonElement>('[data-map-partner]').forEach((button)=>button.addEventListener('click',()=>{
+    const partner=mapPartners.find((item:any)=>item.id===button.dataset.mapPartner);
+    const marker=markers.get(button.dataset.mapPartner || '');
+    if(!partner || !map) return;
+    map.flyTo({center:[partner.lng,partner.lat],zoom:15,essential:true});
+    marker?.togglePopup();
+  }));
+</script>
+
+<style>
+  .partners-page{position:relative}
+  .filter-space{margin-top:2rem}
+  .view-toggle{display:flex;justify-content:center;gap:.7rem;flex-wrap:wrap;margin:2rem 0 0}
+  .view-button{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:2.75rem;border:1px solid rgba(84,119,151,.18);border-radius:999px;background:rgba(255,255,255,.06);color:#d9e6f2;padding:.65rem 1.15rem;font-weight:850;cursor:pointer;transition:background .2s,border-color .2s,transform .2s,box-shadow .2s}
+  .view-button svg{width:1rem;height:1rem;fill:currentColor;opacity:.95}
+  .view-button:hover{border-color:rgba(128,174,213,.45);transform:translateY(-1px)}
+  .view-button.is-active{background:#071526;border-color:#071526;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.24)}
+  .view-panel{margin-top:2rem}
+  .partners-cta{position:relative;display:grid;justify-items:center;gap:1rem;margin-top:2.2rem;text-align:center;padding:clamp(2rem,5vw,3.2rem) 1rem}
+  .partners-cta::before{content:"";position:absolute;inset:0 50%;width:min(100%,820px);transform:translateX(-50%);border-radius:999px;background:radial-gradient(ellipse at center,rgba(5,11,20,.84),rgba(5,11,20,.52) 52%,transparent 76%);pointer-events:none}
+  .partners-cta > *{position:relative;z-index:1}
+  .partners-cta h2{margin:0;color:#fff;font-size:clamp(1.35rem,3vw,2rem)}
+  .partners-cta p{max-width:720px;margin:0;color:#a9bbce}
+  .partners-cta .btn{white-space:nowrap}
+  .map-shell{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:1rem;border-radius:1.2rem;padding:1rem}
+  .map-stage{position:relative;min-height:520px;overflow:hidden;border:1px solid rgba(84,119,151,.25);border-radius:1rem;background:rgba(3,7,13,.8)}
+  #partners-map{position:absolute;inset:0}
+  .map-message{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:2rem;text-align:center;color:#a9bbce;background:rgba(3,7,13,.75)}
+  .map-list{overflow:hidden;overflow-x:hidden;border:1px solid rgba(84,119,151,.22);border-radius:1rem;background:rgba(3,12,22,.72)}
+  .map-list-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1rem;border-bottom:1px solid rgba(84,119,151,.18)}
+  .map-list-head strong{display:block;color:#fff}
+  .map-list-head span{color:#a9bbce;font-size:.78rem}
+  .map-list-items{display:grid;gap:.5rem;max-height:458px;overflow-x:hidden;overflow-y:auto;padding:.75rem}
+  .map-list-item{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;gap:.7rem;width:100%;min-width:0;border:1px solid transparent;border-radius:.85rem;background:rgba(255,255,255,.04);color:#fff;padding:.55rem;text-align:left;cursor:pointer}
+  .map-list-item:hover,.map-list-item:focus-visible{border-color:rgba(128,174,213,.35);background:rgba(255,255,255,.08);outline:0}
+  .map-list-item img{width:44px;height:44px;object-fit:contain;border-radius:.6rem;background:#fff;padding:.18rem}
+  .map-list-item span{min-width:0}
+  .map-list-item b{display:block;font-size:.9rem}
+  .map-list-item small{display:block;overflow:hidden;color:#a9bbce;font-size:.72rem;line-height:1.35;text-overflow:ellipsis;white-space:normal}
+  .empty-map{margin:0;padding:1rem;color:#a9bbce}
+  :global(.mapboxgl-popup){max-width:min(245px,calc(100vw - 2rem))!important}
+  :global(.mapboxgl-popup-content){overflow:hidden;border:1px solid rgba(128,174,213,.24);border-radius:.82rem;background:rgba(6,18,32,.96);padding:0;box-shadow:0 18px 46px rgba(0,0,0,.44),0 0 0 1px rgba(255,255,255,.025);color:#f5fbff}
+  :global(.mapboxgl-popup-tip){border-top-color:rgba(6,18,32,.96)!important;border-bottom-color:rgba(6,18,32,.96)!important}
+  :global(.mapboxgl-popup-close-button){top:.42rem;right:.42rem;display:grid;place-items:center;width:1.45rem;height:1.45rem;border:1px solid rgba(128,174,213,.18);border-radius:999px;background:rgba(255,255,255,.04);color:#a9bbce;font-size:.95rem;line-height:1;transition:background .2s,color .2s,border-color .2s}
+  :global(.mapboxgl-popup-close-button:hover){background:rgba(255,107,26,.18);border-color:rgba(255,107,26,.28);color:#fff}
+  :global(.partner-popup){min-width:210px;color:#f5fbff}
+  :global(.popup-head){display:grid;grid-template-columns:42px 1fr;gap:.62rem;align-items:center;padding:.72rem .72rem .55rem}
+  :global(.popup-head img){width:42px;height:42px;object-fit:contain;border:1px solid rgba(128,174,213,.2);border-radius:.62rem;background:#fff;padding:.18rem;box-shadow:none}
+  :global(.popup-head strong){display:block;padding-right:1.35rem;color:#fff;font-size:.92rem;line-height:1.16}
+  :global(.popup-head span){display:inline-block;margin-top:.26rem;border:1px solid rgba(128,174,213,.18);border-radius:999px;background:rgba(128,174,213,.1);color:#9cc8ee;padding:.12rem .42rem;font-size:.6rem;font-weight:850}
+  :global(.popup-offer){margin:0 .72rem .58rem;border:1px solid rgba(56,221,139,.26);border-radius:.55rem;background:rgba(24,168,96,.1);color:#79e8ad;padding:.52rem .58rem;font-size:.72rem;font-weight:850;line-height:1.35}
+  :global(.popup-location){margin:0 .72rem .62rem;color:#9cafc1;font-size:.68rem;line-height:1.42}
+  :global(.popup-map-link){display:block;margin:.62rem .72rem .72rem;border:1px solid rgba(255,107,26,.32);border-radius:.58rem;background:rgba(255,107,26,.14);color:#ffb184;padding:.56rem .65rem;text-align:center;text-decoration:none;font-size:.74rem;font-weight:900;box-shadow:none}
+  :global(.popup-map-link:hover){background:rgba(255,107,26,.22);color:#fff}
+  :global(.map-logo-marker){display:grid;place-items:center;width:48px;height:48px;border:2px solid rgba(255,255,255,.92);border-radius:999px;background:#fff;box-shadow:0 10px 28px rgba(0,0,0,.35),0 0 0 5px rgba(128,174,213,.13);cursor:pointer;transition:transform .18s,box-shadow .18s}
+  :global(.map-logo-marker:hover){transform:scale(1.08);box-shadow:0 14px 34px rgba(0,0,0,.42),0 0 0 7px rgba(255,107,26,.16)}
+  :global(.map-logo-marker img){width:38px;height:38px;object-fit:contain;border-radius:999px}
+  @media(max-width:900px){.map-shell{grid-template-columns:1fr}.map-stage{min-height:420px}.map-list-items{max-height:280px}}
+  @media(max-width:560px){.view-button{width:100%;justify-content:center}.map-shell{padding:.75rem}.map-stage{min-height:360px}}
+</style>
