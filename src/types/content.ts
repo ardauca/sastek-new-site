@@ -75,6 +75,8 @@ export interface TeamMember {
   name: string;
   role: LocalizedText;
   email?: string;
+  photo?: string;
+  linkedinUrl?: string;
   isActive: boolean;
   order: number;
 }
