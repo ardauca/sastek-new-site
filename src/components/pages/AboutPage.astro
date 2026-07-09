@@ -3,23 +3,124 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../ui/PageHero.astro';
 import SectionHeading from '../ui/SectionHeading.astro';
 import type { Locale } from '../../types/content';
+
 interface Props { locale: Locale; }
+
 const { locale } = Astro.props;
+
 const c = locale === 'tr' ? {
-  title:'Hakkımızda',desc:'SASTEK’in kuruluşunu, amacını ve birlikte ürettiğimiz kulüp kültürünü keşfedin.',intro:'Teknik merakı gerçek deneyime dönüştüren öğrenci topluluğu.',
-  body:'Savunma Sanayii ve Teknolojileri Kulübü (SASTEK), Eskişehir Teknik Üniversitesi bünyesinde öğrenim gören farklı mühendislik disiplinlerinden öğrenciler tarafından 2019 yılının güz döneminde kuruldu.',
-  mission:'Amacımız',missionText:'Öğrencileri savunma sanayii, havacılık, uzay, mühendislik, teknoloji, Ar-Ge ve kariyer alanlarında bir araya getirmek; öğrenme, paylaşma ve sektörle temas fırsatları oluşturmaktır.',
-  culture:'Kulüp kültürümüz',cultureText:'Merak etmeyi, sorumluluk almayı ve ekip olarak üretmeyi önemsiyoruz. Teknik gelişimin güçlü bir topluluk içinde daha anlamlı olduğuna inanıyoruz.'
+  title: 'Hakkımızda',
+  desc: 'SASTEK’in kuruluşunu, misyonunu, vizyonunu ve öğrenciler için oluşturduğu teknik topluluk kültürünü keşfedin.',
+  intro: 'Savunma sanayii, teknoloji ve mühendislik merakını gerçek deneyime dönüştüren öğrenci topluluğu.',
+  body: 'Savunma Sanayii ve Teknolojileri Kulübü (SASTEK), Eskişehir Teknik Üniversitesi bünyesinde öğrenim gören çeşitli mühendislik öğrencileri tarafından 2019 yılının güz döneminde kurulmuştur. Kulübümüz; mühendislik, havacılık ve uzay bilimleri, mimarlık ve tasarım ile fen alanlarında öğrenim gören öğrencilerin aktif katılımıyla çalışmalarını sürdürmektedir.',
+  founded: 'Eskişehir’de kuruldu',
+  mission: 'Misyonumuz',
+  missionText: 'Etkinlikler, eğitimler ve sektör buluşmaları aracılığıyla savunma sanayiisini tanıtmak; öğrencilerin savunma sanayii ve farklı sektörlerde ne tür kariyer yolları izleyebilecekleri konusunda bilgi edinmelerini sağlamaktır.',
+  vision: 'Vizyonumuz',
+  visionText: 'Öğrencilere kendilerini geliştirme fırsatı sunan, farklı sektörlerle etkileşimi artıran ve üniversite-sanayi iş birliğine katkı sağlayan güçlü bir öğrenci kulübü olmaktır.',
+  activitiesTitle: 'SASTEK’te neler var?',
+  activitiesText: 'Kulübümüz; kariyer sohbetleri, sektör buluşmaları, teknik geziler, sertifikalı eğitimler, zirveler ve sosyal etkinliklerle öğrencilerin hem teknik hem de kişisel gelişimini destekler.',
+  activityItems: [
+    { title: 'Büyük zirveler', text: 'ESAS ve ARTEK gibi etkinliklerle sektör temsilcileri ile öğrencileri aynı paydada buluştururuz.' },
+    { title: 'Kariyer ve sektör buluşmaları', text: 'Mühendisler Nerede?, Coffee Talk, Savunma Günlükleri ve Sektörde SASTEK gibi formatlarla deneyim aktarımı sağlarız.' },
+    { title: 'Eğitim ve teknik deneyim', text: 'Sertifikalı eğitimler, workshoplar ve teknik gezilerle öğrencilerin iş ortamını yakından tanımasını hedefleriz.' },
+  ],
 } : {
-  title:'About',desc:'Discover SASTEK’s foundation, purpose and the club culture we build together.',intro:'A student community turning technical curiosity into real experience.',
-  body:'The Defence Industry and Technologies Club (SASTEK) was founded in autumn 2019 by students from different engineering disciplines at Eskişehir Technical University.',
-  mission:'Our purpose',missionText:'We bring students together across defence, aviation, space, engineering, technology, R&D and careers, creating opportunities to learn, share and engage with industry.',
-  culture:'Our culture',cultureText:'We value curiosity, ownership and creating as a team. We believe technical growth becomes more meaningful within a strong community.'
+  title: 'About',
+  desc: 'Discover SASTEK’s foundation, mission, vision and the technical community culture it creates for students.',
+  intro: 'A student community turning curiosity in defence, technology and engineering into real experience.',
+  body: 'The Defence Industry and Technologies Club (SASTEK) was founded in autumn 2019 by engineering students at Eskişehir Technical University. The club continues its work with active participation from students across engineering, aviation and space sciences, architecture and design, and science disciplines.',
+  founded: 'Founded in Eskişehir',
+  mission: 'Our mission',
+  missionText: 'Through events, trainings and industry meetups, we introduce students to the defence industry and help them understand possible career paths across defence and other technology-driven sectors.',
+  vision: 'Our vision',
+  visionText: 'To be a strong student club that creates opportunities for self-development, strengthens interaction with different sectors and contributes to university-industry collaboration.',
+  activitiesTitle: 'What happens at SASTEK?',
+  activitiesText: 'Our club supports students’ technical and personal growth through career talks, industry meetups, technical visits, certified trainings, summits and social events.',
+  activityItems: [
+    { title: 'Major summits', text: 'We bring students and industry representatives together through events such as ESAS and ARTEK.' },
+    { title: 'Career and industry meetups', text: 'Formats such as Where Are Engineers?, Coffee Talk, Defence Diaries and SASTEK in Industry enable experience sharing.' },
+    { title: 'Training and technical experience', text: 'Certified trainings, workshops and technical visits help students get closer to real working environments.' },
+  ],
 };
 ---
+
 <BaseLayout title={c.title} description={c.desc} locale={locale}>
   <PageHero eyebrow="SASTEK / ABOUT" title={c.title} text={c.desc} />
-  <section class="section"><div class="container split"><div><SectionHeading title={c.intro} text={c.body} /></div><div class="year glass"><strong>2019</strong><span>{locale==='tr'?'Eskişehir’de kuruldu':'Founded in Eskişehir'}</span></div></div></section>
-  <section class="section dark"><div class="container two"><div class="glass card"><span>01</span><h2>{c.mission}</h2><p class="muted">{c.missionText}</p></div><div class="glass card"><span>02</span><h2>{c.culture}</h2><p class="muted">{c.cultureText}</p></div></div></section>
+
+  <section class="section about-intro">
+    <div class="container split">
+      <div>
+        <SectionHeading title={c.intro} text={c.body} />
+      </div>
+      <div class="year glass" aria-label="2019">
+        <strong>2019</strong>
+        <span>{c.founded}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section dark mission-section">
+    <div class="container two">
+      <article class="glass card">
+        <span>01</span>
+        <h2>{c.mission}</h2>
+        <p class="muted">{c.missionText}</p>
+      </article>
+      <article class="glass card">
+        <span>02</span>
+        <h2>{c.vision}</h2>
+        <p class="muted">{c.visionText}</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container activity-block">
+      <div class="activity-head">
+        <p class="eyebrow">SASTEK / EXPERIENCE</p>
+        <h2>{c.activitiesTitle}</h2>
+        <p>{c.activitiesText}</p>
+      </div>
+      <div class="activity-grid">
+        {c.activityItems.map((item, index) => (
+          <article class="activity-card glass">
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <h3>{item.title}</h3>
+            <p>{item.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
 </BaseLayout>
-<style>.split{display:grid;grid-template-columns:1.3fr .7fr;gap:5rem;align-items:center}.year{min-height:270px;border-radius:50%;aspect-ratio:1;display:grid;place-content:center;text-align:center}.year strong{color:#ff6b1a;font-size:4.5rem;line-height:1}.year span{margin-top:.7rem;color:#a9bbce}.dark{background:rgba(5,14,25,.55)}.two{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}.card{border-radius:1.2rem;padding:2rem}.card>span{color:#ff6b1a;font:700 .75rem monospace}.card h2{font-size:1.7rem}@media(max-width:760px){.split,.two{grid-template-columns:1fr}.year{width:min(100%,260px);margin:auto}}</style>
+
+<style>
+  .about-intro{padding-bottom:clamp(3rem,7vw,5rem)}
+  .split{display:grid;grid-template-columns:minmax(0,1.22fr) minmax(240px,.78fr);gap:clamp(2.5rem,6vw,5.5rem);align-items:center}
+  .year{position:relative;min-height:270px;border-radius:50%;aspect-ratio:1;display:grid;place-content:center;text-align:center;background:radial-gradient(circle at 50% 35%,rgba(19,54,88,.92),rgba(7,21,38,.88) 62%);box-shadow:0 24px 80px rgba(0,0,0,.24),inset 0 1px 22px rgba(255,255,255,.06)}
+  .year::before{content:"";position:absolute;inset:-18px;border:1px solid rgba(128,174,213,.18);border-radius:50%;opacity:.75}
+  .year strong{color:#ff7a2f;font-size:clamp(3.5rem,7vw,4.8rem);line-height:1;letter-spacing:-.08em}
+  .year span{margin-top:.7rem;color:#c0cfdd;font-weight:800}
+  .dark{background:linear-gradient(180deg,rgba(5,14,25,.66),rgba(5,14,25,.36));border-block:1px solid rgba(84,119,151,.14)}
+  .mission-section{position:relative;overflow:hidden}
+  .mission-section::before{content:"";position:absolute;inset:10% -20% auto auto;width:520px;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,107,26,.09),transparent 66%);pointer-events:none}
+  .two{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .card{position:relative;overflow:hidden;border-radius:1.25rem;padding:clamp(1.5rem,3vw,2.35rem);min-height:260px}
+  .card::after{content:"";position:absolute;right:-4rem;bottom:-5rem;width:13rem;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(128,174,213,.1),transparent 66%);pointer-events:none}
+  .card>span,.activity-card>span{position:relative;color:#ff7a2f;font:800 .75rem/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em}
+  .card h2{position:relative;margin:2.8rem 0 .8rem;color:#fff;font-size:clamp(1.6rem,3vw,2.25rem);letter-spacing:-.04em}
+  .card p{position:relative;line-height:1.75}
+  .activity-block{display:grid;gap:clamp(1.4rem,3vw,2rem)}
+  .activity-head{max-width:820px}
+  .activity-head h2{margin:.35rem 0;color:#fff;font-size:clamp(2.2rem,5vw,4.3rem);line-height:.95;letter-spacing:-.065em;text-wrap:balance}
+  .activity-head p:not(.eyebrow){margin:0;color:#b8c8d8;font-size:1.05rem;line-height:1.75}
+  .activity-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+  .activity-card{position:relative;overflow:hidden;border-radius:1.15rem;padding:clamp(1.25rem,2vw,1.65rem);min-height:250px;transition:border-color .2s,transform .2s,background .2s}
+  .activity-card::before{content:"";position:absolute;left:1.5rem;right:1.5rem;top:4.25rem;height:1px;background:linear-gradient(90deg,rgba(255,107,26,.42),rgba(128,174,213,.05))}
+  .activity-card::after{content:"";position:absolute;right:-4rem;top:-4rem;width:10rem;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,107,26,.13),transparent 65%);pointer-events:none}
+  .activity-card:hover{border-color:rgba(255,107,26,.32);background:linear-gradient(145deg,rgba(16,43,70,.72),rgba(7,21,38,.78));transform:translateY(-2px)}
+  .activity-card h3{position:relative;margin:3.3rem 0 .75rem;color:#fff;font-size:clamp(1.12rem,2vw,1.32rem);letter-spacing:-.02em}
+  .activity-card p{position:relative;margin:0;color:#a9bbce;line-height:1.68}
+  @media(max-width:900px){.split,.two,.activity-grid{grid-template-columns:1fr}.split{gap:2rem}.year{width:min(100%,260px);margin:auto}.card,.activity-card{min-height:auto}}
+</style>
