@@ -18,7 +18,7 @@ const featuredSponsors = sponsors.filter((item) => item.isActive && item.isFeatu
 const featuredGallery = gallery.filter((item) => item.isFeatured).sort((a,b) => a.order-b.order).slice(0, 3);
 const path = (tr: string, en: string) => locale === 'tr' ? tr : `/en${en}`;
 const copy = locale === 'tr' ? {
-  badge: 'Eskişehir Teknik Üniversitesi · 2019’dan beri', titleA: 'Geleceğin', titleB: 'teknolojisini', titleC: 'birlikte keşfet.',
+  badge: 'Eskişehir Teknik Üniversitesi · 2019’dan beri', titleA: 'Kampüsten', titleB: 'Savunma', titleC: 'Sanayiine.',
   hero: site.description.tr, events: 'Etkinlikleri Gör', contact: 'Bize Ulaş',
   aboutEyebrow: 'Biz kimiz?', aboutTitle: 'Merakı, mühendisliği ve sektörü aynı yörüngede buluşturuyoruz.',
   aboutText: '2019 yılında farklı mühendislik disiplinlerinden öğrenciler tarafından kurulan SASTEK; savunma sanayii, havacılık, uzay, Ar-Ge ve kariyer alanlarında öğrenciler için güçlü bir öğrenme ve paylaşım ağı oluşturur.',
@@ -28,7 +28,7 @@ const copy = locale === 'tr' ? {
   galleryTitle: 'SASTEK’ten kareler', galleryText: 'Teknik merakın, ekip ruhunun ve yeni bağlantıların bir araya geldiği anlar.',
   cta: 'Aynı geleceğe bakıyorsak tanışalım.', ctaText: 'SASTEK’in etkinlikleri, projeleri ve iş birlikleri hakkında bizimle iletişime geçin.', all: 'Tümünü gör',
 } : {
-  badge: 'Eskişehir Technical University · Since 2019', titleA: 'Explore', titleB: 'tomorrow’s technology', titleC: 'together.',
+  badge: 'Eskişehir Technical University · Since 2019', titleA: 'From Campus to', titleB: 'Defence', titleC: 'Industry.',
   hero: site.description.en, events: 'Explore Events', contact: 'Contact Us',
   aboutEyebrow: 'Who we are', aboutTitle: 'Bringing curiosity, engineering and industry into the same orbit.',
   aboutText: 'Founded in 2019 by students from different engineering disciplines, SASTEK builds a strong learning and sharing network across defence, aviation, space, R&D and careers.',

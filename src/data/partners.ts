@@ -16,8 +16,8 @@ export const partners: Partner[] = [
     location: 'İstiklal, Porsuk Bulvari Su Sk No:43/B, 26010 Odunpazarı/Eskişehir',
     coordinates: { lat: 39.77758361376617, lng: 30.5139965830759 }, 
     mapUrl: 'https://maps.app.goo.gl/AAxUxLVudZxujrnF6',
-    showOnMap: true,
-    isActive: true, isFeatured: true, isVerified: true, order: 1 },
+
+    showOnMap: true, isActive: true, isFeatured: true, isVerified: true, order: 1 },
   
     { id: 'jardin', name: 'Jardin', category: { tr: 'Kafe', en: 'Café' }, discountLabel: pending, description, logo: '/images/partners/jardin.png', isActive: true, isFeatured: true, isVerified: false, order: 2 },
   

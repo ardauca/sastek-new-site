@@ -24,7 +24,7 @@ const languageTarget = detailMatch
 
     <nav class="desktop-nav" aria-label={locale === 'tr' ? 'Ana menü' : 'Main menu'}>
       {navigation.map((item) => {
-        const href = item[locale];
+        const href = item[locale] as string;
         const active = currentPath === href || (href !== '/' && href !== '/en' && currentPath.startsWith(`${href}/`));
         return <a href={href} aria-current={active ? 'page' : undefined}>{t(item.label, locale)}</a>;
       })}
