@@ -3,7 +3,7 @@ import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  site: 'https://sastek.pages.dev',
+  site: 'https://sastek.org',
   output: 'static',
   integrations: [sitemap()],
   vite: { plugins: [tailwindcss()] },
