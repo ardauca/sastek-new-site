@@ -14,13 +14,6 @@ const activeTeam=team.filter((p)=>p.isActive).sort((a,b)=>a.order-b.order).slice
 const title=locale==='tr'?'İletişim':'Contact';
 const desc=locale==='tr'?'SASTEK yönetimi ve sosyal medya hesaplarıyla iletişim kurun.':'Contact the SASTEK board and follow our social media accounts.';
 
-const initials=(name:string)=>name
-  .split(' ')
-  .filter(Boolean)
-  .slice(0,2)
-  .map((part)=>part[0])
-  .join('')
-  .toLocaleUpperCase(locale==='tr'?'tr-TR':'en-US');
 ---
 <BaseLayout title={title} description={desc} locale={locale}>
   <PageHero eyebrow="SASTEK / CONTACT" title={title} text={desc} />
@@ -56,22 +49,40 @@ const initials=(name:string)=>name
 
       <div class="board-panel">
         <div class="board-heading">
-          <p class="eyebrow">{locale==='tr'?'Yönetim İletişimi':'Board Contact'}</p>
           <h2>{locale==='tr'?'Yönetim Ekibi':'Club board'}</h2>
         </div>
 
         <div class="board-cards" aria-label={locale==='tr'?'Yönetim Ekibi':'Club board'}>
           {activeTeam.map((person)=>(
             <article class="board-card glass">
-              <div class:list={['avatar', person.photo && 'has-photo']} aria-hidden="true">
-                {person.photo ? <img src={person.photo} alt="" width="96" height="96" loading="lazy" /> : initials(person.name)}
+              <div class="avatar" aria-hidden="true">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  stroke-width="2" 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  class="avatar-svg"
+                >
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
               </div>
               <div class="person-info">
-                <span>{person.role[locale]}</span>
+                <span class="role-title">{person.role[locale]}</span>
                 <h3>{person.name}</h3>
                 <div class="person-actions">
-                  {person.email ? <a href={`mailto:${person.email}`}>{person.email}</a> : <p>{locale==='tr'?'E-posta güncellenecek':'Email to be updated'}</p>}
-                  {person.linkedinUrl && <a class="linkedin-link" href={person.linkedinUrl} target="_blank" rel="noreferrer">LinkedIn</a>}
+                  {person.email ? <a class="email-link" href={`mailto:${person.email}`}>{person.email}</a> : <p>{locale==='tr'?'E-posta güncellenecek':'Email to be updated'}</p>}
+                  {person.linkedinUrl && (
+                    <a class="linkedin-link" href={person.linkedinUrl} target="_blank" rel="noreferrer">
+                      <svg class="linkedin-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                      </svg>
+                      <span>LinkedIn</span>
+                    </a>
+                  )}
                 </div>
               </div>
             </article>
@@ -97,23 +108,26 @@ const initials=(name:string)=>name
   .social-links a{display:inline-flex;align-items:center;gap:.5rem;min-height:2.75rem;border:1px solid rgba(84,119,151,.42);border-radius:999px;background:rgba(5,14,25,.42);padding:.55rem .9rem;color:#fff;font-weight:850;transition:border-color .2s,background .2s,transform .2s}
   .social-links a:hover{border-color:rgba(255,107,26,.65);background:rgba(255,107,26,.1);transform:translateY(-2px)}
   .social-links :global(.social-icon){width:1rem;height:1rem;fill:currentColor}
-  .board-panel{display:grid;grid-template-rows:auto 1fr;gap:1rem;min-width:0}
-  .board-heading{display:flex;align-items:end;justify-content:space-between;gap:1rem;width:100%;padding:.35rem 0}
+  .board-panel{display:grid;grid-template-rows:auto 1fr;gap:1.8rem;min-width:0}
+  .board-heading{display:flex;align-items:flex-end;width:100%;padding-bottom:.5rem;border-bottom:1px solid rgba(84,119,151,.15)}
   .board-heading h2{margin:0;color:#fff;font-size:clamp(1.55rem,3vw,2.35rem);line-height:1.05}
-  .board-heading .eyebrow{margin:0}
-  .board-cards{display:grid;grid-template-rows:repeat(3,1fr);gap:1rem;width:100%;height:100%}
-  .board-card{display:grid;grid-template-columns:5.15rem minmax(0,1fr);gap:1.05rem;align-items:center;width:100%;min-width:0;border-color:rgba(130,164,196,.2);border-radius:1.15rem;padding:1rem 1.05rem;transition:border-color .2s,transform .2s,background .2s}
-  .board-card:hover{border-color:rgba(255,107,26,.35);background:linear-gradient(145deg,rgba(16,43,70,.86),rgba(7,21,38,.76));transform:translateY(-2px)}
-  .avatar{display:grid;place-items:center;width:5.15rem;height:5.15rem;overflow:hidden;border:1px solid rgba(128,174,213,.28);border-radius:1.05rem;background:linear-gradient(145deg,rgba(255,107,26,.12),rgba(128,174,213,.1));color:#fff;font-size:1.45rem;font-weight:950;letter-spacing:.04em}
-  .avatar.has-photo{border-color:rgba(128,174,213,.32);background:#071526}
-  .avatar img{width:100%;height:100%;object-fit:cover}
-  .person-info span{display:inline-flex;margin-bottom:.35rem;border:1px solid rgba(128,174,213,.22);border-radius:999px;padding:.18rem .55rem;color:#bad0e4;font-size:.72rem;font-weight:850}
-  .person-info h3{margin:0;color:#fff;font-size:clamp(1.15rem,2vw,1.55rem);line-height:1.1}
-  .person-actions{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-top:.35rem}
-  .person-actions a,.person-actions p{display:inline-flex;margin:0;color:#ff9a62;font-size:.95rem}
-  .person-actions a:hover{color:#fff}
-  .linkedin-link{border:1px solid rgba(128,174,213,.24);border-radius:999px;padding:.12rem .55rem;color:#bad0e4!important;font-size:.78rem!important;font-weight:850}
-  .linkedin-link:hover{border-color:rgba(255,107,26,.45);color:#fff!important}
+  .board-cards{display:grid;grid-template-rows:repeat(3,1fr);gap:1.5rem;width:100%;height:100%}
+  .board-card{display:grid;grid-template-columns:3.5rem minmax(0,1fr);gap:1.5rem;align-items:center;width:100%;min-width:0;border:1px solid rgba(130,164,196,.18);border-radius:1.15rem;padding:1.25rem 1.4rem;background:rgba(13, 32, 53, 0.45);box-shadow:0 4px 30px rgba(0,0,0,.15);backdrop-filter:blur(10px);transition:border-color .3s,transform .3s,background .3s,box-shadow .3s}
+  .board-card:hover{border-color:var(--color-signal);background:linear-gradient(145deg,rgba(13,32,53,.85),rgba(7,21,38,.85));transform:translateY(-3px);box-shadow:0 12px 30px rgba(255,107,26,.06),0 2px 10px rgba(0,0,0,.3)}
+  .avatar{display:flex;align-items:center;justify-content:center;width:3.5rem;height:3.5rem;overflow:hidden;border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);transition:border-color .3s,background .3s,box-shadow .3s;flex-shrink:0}
+  .avatar-svg{width:1.5rem;height:1.5rem;margin:0;display:block;color:rgba(255,255,255,0.7);transition:color .3s,filter .3s,transform .3s;flex-shrink:0}
+  .board-card:hover .avatar{border-color:var(--color-signal-soft);background:rgba(255,107,26,.12);box-shadow:0 0 15px rgba(255,107,26,.15)}
+  .board-card:hover .avatar-svg{color:var(--color-signal-soft);filter:drop-shadow(0 0 6px var(--color-signal-soft));transform:scale(1.05)}
+  .role-title{display:block;margin-bottom:.25rem;color:var(--color-signal-soft);font-size:.88rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+  .person-info h3{margin:0 0 .4rem;color:#fff;font-size:clamp(1.2rem,2.2vw,1.6rem);line-height:1.1;font-weight:700}
+  .person-actions{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+  .person-actions .email-link{display:inline-flex;color:#ff9a62;font-size:.95rem;transition:color .2s}
+  .person-actions .email-link:hover{color:#fff}
+  .person-actions p{display:inline-flex;margin:0;color:#5a7d99;font-size:.95rem}
+  .linkedin-link{display:inline-flex;align-items:center;gap:.45rem;border:1px solid rgba(84,119,151,.42);border-radius:999px;background:rgba(5,14,25,.42);padding:.35rem .85rem;color:#fff!important;font-size:.82rem!important;font-weight:800;transition:border-color .2s,color .2s,background-color .2s;cursor:pointer}
+  .linkedin-icon{width:.9rem;height:.9rem;fill:currentColor;transition:transform .2s}
+  .linkedin-link:hover{border-color:var(--color-signal);color:var(--color-signal)!important;background-color:rgba(255,107,26,.08)}
+  .linkedin-link:hover .linkedin-icon{transform:scale(1.1)}
   @media(max-width:860px){.contact-layout{grid-template-columns:1fr}.board-panel{grid-template-rows:auto}.board-cards{grid-template-rows:none;height:auto}.board-heading{align-items:flex-start;flex-direction:column}.follow-box{margin-top:2rem}}
   @media(max-width:520px){.identity-card{padding:1.2rem}.estu-logo{width:7.6rem;height:7.6rem}.social-links{display:grid;grid-template-columns:1fr 1fr}.social-links a{justify-content:center}.board-card{grid-template-columns:1fr}.avatar{width:4.5rem;height:4.5rem}.person-actions a,.person-actions p{font-size:.88rem;word-break:break-word}}
 </style>
