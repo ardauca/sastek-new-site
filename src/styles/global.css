@@ -148,6 +148,7 @@ button, a, input, select, textarea { outline-offset: 4px; }
    1366px and below: untouched.
    ──────────────────────────────────────────────────────────────────────── */
 @media (min-width: 1600px) {
-  .container { width: min(1280px, calc(100% - 2rem)); }
+  .container { width: min(1320px, calc(100% - 2rem)); }
   .section   { padding-block: 8rem; }
+  .grid-auto { gap: 1.6rem; }
 }
