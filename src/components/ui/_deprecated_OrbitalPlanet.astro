@@ -1,0 +1,47 @@
+---
+/**
+ * _deprecated_OrbitalPlanet.astro
+ * DEPRECATED — Eski 3D gezegen / orbital hero görseli.
+ * RadarHud.astro ile değiştirildi (2026-07-17).
+ * Kullanıcı onayı bekleniyor; onaydan sonra bu dosya silinebilir.
+ */
+---
+
+<!--
+  KULLANIM: Bu bileşen artık HomePage.astro'da import edilmiyor.
+  Referans için korunuyor. Silmek için kullanıcıdan onay al.
+
+  Orijinal CSS sınıfları:
+    .visual-panel, .core, .core::after, .core img, .core strong, .core span,
+    .orbit, .orbit-a, .orbit-b,
+    .signal, .signal span, .signal b, .s1, .s2, .s3
+-->
+
+<div class="visual-panel">
+  <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
+  <div class="core">
+    <img src="/images/logo/sastek-logo.png" alt="" />
+    <strong>SASTEK</strong>
+    <span>ESTÜ</span>
+  </div>
+  <div class="signal s1"><span>01</span><b>TECH</b></div>
+  <div class="signal s2"><span>02</span><b>INDUSTRY</b></div>
+  <div class="signal s3"><span>03</span><b>DEFENCE</b></div>
+</div>
+
+<style>
+  .visual-panel{position:relative;display:grid;place-items:center;width:min(100%,500px);aspect-ratio:1;overflow:visible;filter:drop-shadow(0 28px 64px rgba(0,0,0,.2))}
+  .visual-panel::before{content:"";position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle,rgba(38,89,132,.2),transparent 66%);filter:blur(10px)}
+  .core{position:relative;z-index:3;width:192px;aspect-ratio:1;border-radius:50%;overflow:hidden;background:radial-gradient(ellipse 44% 24% at 48% 17%,rgba(120,178,235,.28) 0%,rgba(50,110,185,.1) 26%,transparent 50%),radial-gradient(circle at 52% 44%,rgba(16,44,84,.98) 0%,rgba(7,20,44,.99) 52%,rgba(3,10,24,1) 100%);box-shadow:0 0 0 1px rgba(255,255,255,.22),0 0 28px rgba(15,50,110,.28),0 0 55px rgba(8,30,75,.12),0 22px 55px rgba(0,0,0,.55),inset 0 1px 0 rgba(120,180,240,.05)}
+  .core::after{content:"";position:absolute;inset:0;z-index:0;border-radius:50%;background:radial-gradient(circle at 50% 50%,transparent 54%,rgba(30,75,155,.13) 72%,rgba(15,50,120,.22) 100%);pointer-events:none}
+  .core img{position:absolute;top:20%;left:50%;transform:translate(-50%,-50%);z-index:1;width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5)) brightness(1.1)}
+  .core strong{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;white-space:nowrap;font-size:1.65rem;font-weight:960;letter-spacing:.18em;color:#ccdcef;text-shadow:0 4px 14px rgba(0,0,0,1),0 1px 4px rgba(0,0,0,.85),0 0 28px rgba(80,140,220,.28),1px 1px 0 rgba(255,255,255,.07)}
+  .core span{position:absolute;top:80%;left:50%;transform:translate(-50%,-50%);z-index:1;color:#b8642e;font-size:.72rem;font-weight:900;letter-spacing:.38em;text-shadow:0 3px 10px rgba(0,0,0,1),0 1px 4px rgba(0,0,0,.85)}
+  .orbit{position:absolute;z-index:2;border:1px solid rgba(140,185,230,.28);border-radius:50%;pointer-events:none}
+  .orbit-a{width:370px;height:182px;transform:rotate(-26deg)}
+  .orbit-b{width:496px;height:258px;transform:rotate(-21deg);border-color:rgba(110,160,210,.2)}
+  .signal{position:absolute;z-index:5;display:grid;gap:.32rem;color:#7fa0bd;font:800 .66rem/1.1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase}
+  .signal span{color:#80c4ff}
+  .signal b{color:#f1f8ff}
+  .s1{top:21%;right:12%}.s2{bottom:20%;left:3%}.s3{bottom:29%;right:8%}
+</style>

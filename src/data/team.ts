@@ -3,7 +3,7 @@ import type { TeamMember } from '../types/content';
 export const team: TeamMember[] = [
   {
     id: 'president',
-    name: 'Emre ',
+    name: 'Emre Uça',
     role: { tr: 'Kulüp Başkanı', en: 'Club President' },
     email: 'emreuca.sastek@gmail.com',
     isActive: true,

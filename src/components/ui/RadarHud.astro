@@ -1,0 +1,304 @@
+---
+/**
+ * RadarHud.astro
+ * Radar / HUD tarama ekranı — Hero bölümü sağ panel görseli.
+ * Tüm animasyonlar saf CSS; JS bağımlılığı yok.
+ * Renk tokenleri: src/styles/global.css @theme'den gelir, değiştirilmez.
+ */
+
+// Bilingual uyum notu: Bu bileşendeki tüm etiketler kasıtlı olarak
+// teknik/kod dilinde bırakıldı (SEC, TARGETS, koordinat vb.).
+// Kullanıcıya anlamlı bir çeviri gerektiren metin yok; t() helper'ı gerekmez.
+---
+
+<div class="rh-hud" aria-hidden="true">
+
+  <!-- SVG katmanı: eksen çizgileri + eşmerkezli halkalar -->
+  <svg class="rh-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+    <!-- Eksen çizgileri -->
+    <line x1="200" y1="6"   x2="200" y2="394" stroke="var(--color-line)" stroke-width="0.7" opacity="0.9"/>
+    <line x1="6"   y1="200" x2="394" y2="200" stroke="var(--color-line)" stroke-width="0.7" opacity="0.9"/>
+    <!-- Diyagonal yardımcı çizgiler (ince) -->
+    <line x1="60"  y1="60"  x2="340" y2="340" stroke="var(--color-line)" stroke-width="0.4" opacity="0.45"/>
+    <line x1="340" y1="60"  x2="60"  y2="340" stroke="var(--color-line)" stroke-width="0.4" opacity="0.45"/>
+    <!-- 4 eşmerkezli halka -->
+    <circle cx="200" cy="200" r="52"  fill="none" stroke="var(--color-line)" stroke-width="0.9" opacity="1.0"/>
+    <circle cx="200" cy="200" r="100" fill="none" stroke="var(--color-line)" stroke-width="0.7" opacity="0.85"/>
+    <circle cx="200" cy="200" r="148" fill="none" stroke="var(--color-line)" stroke-width="0.6" opacity="0.70"/>
+    <circle cx="200" cy="200" r="192" fill="none" stroke="var(--color-line)" stroke-width="0.6" opacity="0.55"/>
+    <!-- Merkez nokta -->
+    <circle cx="200" cy="200" r="2.5" fill="var(--color-line)" opacity="0.8"/>
+    <!-- Halka etiketleri (küçük mesafe göstergesi) -->
+    <text x="204" y="152" font-family="ui-monospace,monospace" font-size="9" fill="var(--color-line)" opacity="0.5">48km</text>
+    <text x="204" y="104" font-family="ui-monospace,monospace" font-size="9" fill="var(--color-line)" opacity="0.4">96km</text>
+  </svg>
+
+  <!-- Tarama huzmesi: fan (circle-clipped) -->
+  <div class="rh-sweep-wrap">
+    <div class="rh-sweep-fan"></div>
+  </div>
+  <!-- Tarama huzmesi: leading edge çizgisi (clip dışı, tam görünür) -->
+  <div class="rh-sweep-line"></div>
+
+  <!-- Blip 1 — TECH bölgesi (sağ üst) -->
+  <div class="rh-blip rh-b1">
+    <div class="rh-pulse"></div>
+  </div>
+
+  <!-- Blip 2 — DEFENCE bölgesi (sağ alt) -->
+  <div class="rh-blip rh-b2">
+    <div class="rh-pulse"></div>
+  </div>
+
+  <!-- Blip 3 — merkeze yakın (sol orta) -->
+  <div class="rh-blip rh-b3">
+    <div class="rh-pulse"></div>
+  </div>
+
+  <!-- Köşe telemetri etiketleri (sadece masaüstü) -->
+  <div class="rh-corner rh-tl">
+    <div class="rh-ch rh-ch-tl"></div>
+    <span>SEC 01 // TECH</span>
+  </div>
+  <div class="rh-corner rh-tr">
+    <div class="rh-ch rh-ch-tr"></div>
+    <span>SEC 03 // DEFENCE</span>
+  </div>
+  <div class="rh-corner rh-bl">
+    <div class="rh-ch rh-ch-bl"></div>
+    <span>39.7767°N 30.5206°E</span>
+  </div>
+  <div class="rh-corner rh-br">
+    <div class="rh-ch rh-ch-br"></div>
+    <span>TARGETS: 03 ACTIVE</span>
+  </div>
+
+  <!-- Merkez rozet: logo + SASTEK + ESTÜ (orijinal top:20%/50%/80% yapısı korundu) -->
+  <div class="rh-rosette">
+    <img src="/images/logo/sastek-logo.png" alt="" />
+    <strong>SASTEK</strong>
+    <span>ESTÜ</span>
+  </div>
+
+</div>
+
+<style>
+  /* ── Container ──────────────────────────────────────────────────────── */
+  .rh-hud {
+    position: relative;
+    width: clamp(220px, 40vw, 400px);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    /* Subtle ambient glow behind radar */
+    filter: drop-shadow(0 24px 60px rgba(0,0,0,.28));
+  }
+
+  /* ── SVG (halkalar + eksenler) ──────────────────────────────────────── */
+  .rh-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+  }
+
+  /* ── Sweep fan (daire içine clip) ───────────────────────────────────── */
+  .rh-sweep-wrap {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;  /* EN ALTTA — halkalar ve diğer elemanlar üstte */
+  }
+
+  .rh-sweep-fan {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    /*
+     * Çizgi animasyonu: 0deg'den başlar (12 o'clock), saat yönünde döner.
+     * Fan: 300deg–360deg aralığını kapsar = çizginin 60° gerisinde (solunda).
+     * İkisi de aynı rh-rotate animasyonuyla döndüğünden senkronize kalırlar.
+     */
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent              0deg,
+      transparent            300deg,
+      rgba(255, 107, 26, 0.04) 315deg,
+      rgba(255, 107, 26, 0.14) 340deg,
+      rgba(255, 107, 26, 0.22) 360deg
+    );
+    animation: rh-rotate 10s linear infinite;
+  }
+
+  /* ── Sweep leading edge (clip dışı, tam görünür) ────────────────────── */
+  .rh-sweep-line {
+    position: absolute;
+    top: 0;
+    left: calc(50% - 0.6px);
+    width: 1.2px;
+    height: 50%;
+    background: linear-gradient(
+      to top,
+      var(--color-signal)        0%,
+      rgba(255, 107, 26, 0.5)   60%,
+      rgba(255, 107, 26, 0.0)  100%
+    );
+    transform-origin: bottom center;
+    animation: rh-rotate 10s linear infinite;
+    z-index: 1; /* sweep ile aynı katman — halkalardan altta */
+    pointer-events: none;
+  }
+
+  /* ── Blips ──────────────────────────────────────────────────────────── */
+  .rh-blip {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-signal-soft);
+    box-shadow: 0 0 10px var(--color-signal-soft), 0 0 4px var(--color-signal);
+    z-index: 3;
+  }
+
+  /* Blip konumları — orijinal .s1/.s3 koordinatlarına yakın */
+  .rh-b1 { top: 21%; right: 14%; }
+  .rh-b2 { bottom: 30%; right: 9%; }
+  .rh-b3 { top: 55%; left: 27%; }
+
+  .rh-pulse {
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-signal-soft);
+    animation: rh-pulse 2s ease-out infinite;
+    opacity: 0;
+  }
+
+  .rh-b1 .rh-pulse { animation-delay: 0s; }
+  .rh-b2 .rh-pulse { animation-delay: 0.7s; }
+  .rh-b3 .rh-pulse { animation-delay: 1.4s; }
+
+  /* ── Köşe telemetri etiketleri ──────────────────────────────────────── */
+  .rh-corner {
+    position: absolute;
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: #7aa3c0;
+    letter-spacing: 0.07em;
+    line-height: 1.2;
+    z-index: 3;
+  }
+
+  .rh-tl { top:  7px; left:  7px; flex-direction: row; }
+  .rh-tr { top:  7px; right: 7px; flex-direction: row-reverse; text-align: right; }
+  .rh-bl { bottom: 7px; left:  7px; flex-direction: row;         align-items: flex-end; }
+  .rh-br { bottom: 7px; right: 7px; flex-direction: row-reverse; align-items: flex-end; text-align: right; }
+
+  /* L-şeklinde crosshair köşe işaretleri */
+  .rh-ch { width: 9px; height: 9px; flex-shrink: 0; }
+  .rh-ch-tl { border-top:    1.5px solid var(--color-line); border-left:  1.5px solid var(--color-line); }
+  .rh-ch-tr { border-top:    1.5px solid var(--color-line); border-right: 1.5px solid var(--color-line); }
+  .rh-ch-bl { border-bottom: 1.5px solid var(--color-line); border-left:  1.5px solid var(--color-line); }
+  .rh-ch-br { border-bottom: 1.5px solid var(--color-line); border-right: 1.5px solid var(--color-line); }
+
+  /* ── Merkez rozet ───────────────────────────────────────────────────── */
+  .rh-rosette {
+    position: relative;
+    z-index: 4;
+    /* r=52 halkasına denk: 104px/400px = 26% */
+    width: 26%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid var(--color-signal);
+    background: var(--color-panel);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.08),
+      0 0 20px rgba(255,107,26,.22),
+      inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  .rh-rosette img {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    width: 38%;
+    height: 38%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)) brightness(1.1);
+  }
+
+  .rh-rosette strong {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    white-space: nowrap;
+    font-size: clamp(0.58rem, 1.3vw, 1.0rem);
+    font-weight: 960;
+    letter-spacing: .16em;
+    color: #ccdcef;
+    text-shadow:
+      0 3px 10px rgba(0,0,0,1),
+      0 1px 4px rgba(0,0,0,.9),
+      0 0 22px rgba(80,140,220,.3);
+  }
+
+  .rh-rosette span {
+    position: absolute;
+    top: 80%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    white-space: nowrap;
+    color: var(--color-signal-soft);
+    font-size: clamp(0.4rem, 0.9vw, 0.68rem);
+    font-weight: 900;
+    letter-spacing: .30em;
+    text-shadow: 0 2px 8px rgba(0,0,0,1);
+  }
+
+  /* ── Keyframes ──────────────────────────────────────────────────────── */
+  @keyframes rh-rotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  @keyframes rh-pulse {
+    0%   { transform: scale(1);   opacity: 0.9; }
+    100% { transform: scale(2.8); opacity: 0; }
+  }
+
+  /* ── Tablet (900px) ─────────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .rh-hud { width: clamp(220px, 52vw, 300px); }
+    .rh-corner { display: none; }
+  }
+
+  /* ── Mobile (650px) ─────────────────────────────────────────────────── */
+  @media (max-width: 650px) {
+    .rh-hud { width: clamp(190px, 70vw, 250px); }
+  }
+
+  /* ── Large Desktop (1600px+) ─────────────────────────────────────────── */
+  @media (min-width: 1600px) {
+    .rh-hud { width: min(100%, 480px); }
+  }
+
+  /* ── Reduced motion ─────────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .rh-sweep-fan,
+    .rh-sweep-line,
+    .rh-pulse { animation: none; }
+  }
+</style>
