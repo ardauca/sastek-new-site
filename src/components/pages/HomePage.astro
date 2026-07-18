@@ -58,7 +58,7 @@ const pageTitle = locale === 'tr'
     </div>
   </section>
 
-  <section class="section about"><div class="container about-grid"><div><SectionHeading eyebrow={copy.aboutEyebrow} title={copy.aboutTitle} text={copy.aboutText} /><a class="btn btn-secondary" href={path('/hakkimizda','/about')}>{copy.all} →</a></div><div class="pillars"><div><span>01</span><b>{locale==='tr'?'Savunma Sanayii':'Defence Industry'}</b></div><div><span>02</span><b>{locale==='tr'?'Havacılık & Uzay':'Aviation & Space'}</b></div><div><span>03</span><b>{locale==='tr'?'Mühendislik':'Engineering'}</b></div><div><span>04</span><b>Ar-Ge · R&D</b></div></div></div></section>
+  <section class="section about"><div class="container about-grid"><div><SectionHeading eyebrow={locale==='tr'?'SASTEK / HAKKIMIZDA':'SASTEK / ABOUT'} title={copy.aboutTitle} text={copy.aboutText} /><a class="btn btn-secondary" href={path('/hakkimizda','/about')}>{copy.all} →</a></div><div class="pillars"><div><span>01</span><b>{locale==='tr'?'Savunma Sanayii':'Defence Industry'}</b></div><div><span>02</span><b>{locale==='tr'?'Havacılık & Uzay':'Aviation & Space'}</b></div><div><span>03</span><b>{locale==='tr'?'Mühendislik':'Engineering'}</b></div><div><span>04</span><b>{locale==='tr'?'Ar-Ge':'R&D'}</b></div></div></div></section>
 
   <section class="section"><div class="container"><SectionHeading eyebrow="SASTEK / EVENTS" title={copy.eventTitle} text={copy.eventText} /><div class="grid-auto">{featuredEvents.map((event) => <EventCard event={event} locale={locale} />)}</div><div class="section-link"><a class="btn btn-secondary" href={path('/etkinlikler','/events')}>{copy.all} →</a></div></div></section>
 
