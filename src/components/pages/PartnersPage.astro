@@ -82,7 +82,7 @@ const labels=locale==='tr' ? {
             <div class="map-list-items">
               {mapPartners.length ? mapPartners.map((partner)=>(
                 <button type="button" class="map-list-item" data-map-partner={partner.id}>
-                  <img src={partner.logo} alt="" width="44" height="44" loading="lazy" />
+                  <img src={partner.logo} alt={`${partner.name} logo`} width="44" height="44" loading="lazy" />
                   <span>
                     <b>{partner.name}</b>
                     <small>{partner.location || partner.category}</small>
@@ -190,7 +190,7 @@ const labels=locale==='tr' ? {
     const mapsButton=partner.mapUrl ? `<a class="popup-map-link" href="${escapeHtml(partner.mapUrl)}" target="_blank" rel="noopener">${escapeHtml(labels.openMaps || 'Open in Maps')}</a>` : '';
     const location=partner.location ? `<p class="popup-location">⌖ ${escapeHtml(partner.location)}</p>` : '';
     return `<div class="partner-popup">
-      <div class="popup-head"><img src="${escapeHtml(partner.logo)}" alt="" /><div><strong>${escapeHtml(partner.name)}</strong><span>${escapeHtml(partner.category)}</span></div></div>
+      <div class="popup-head"><img src="${escapeHtml(partner.logo)}" alt="${escapeHtml(partner.name)} logo" /><div><strong>${escapeHtml(partner.name)}</strong><span>${escapeHtml(partner.category)}</span></div></div>
       <p class="popup-offer">${escapeHtml(partner.discount)}</p>
       ${location}
       ${mapsButton}
@@ -233,7 +233,7 @@ const labels=locale==='tr' ? {
           markerNode.type='button';
           markerNode.className='map-logo-marker';
           markerNode.setAttribute('aria-label',partner.name);
-          markerNode.innerHTML=`<img src="${escapeHtml(partner.logo)}" alt="" />`;
+          markerNode.innerHTML=`<img src="${escapeHtml(partner.logo)}" alt="${escapeHtml(partner.name)} logo" />`;
           const popup=new mapboxgl.Popup({offset:28, closeButton:true}).setHTML(popupHtml(partner));
           const marker=new mapboxgl.Marker({element:markerNode, anchor:'center'}).setLngLat([partner.lng,partner.lat]).setPopup(popup).addTo(map);
           markers.set(partner.id, marker);

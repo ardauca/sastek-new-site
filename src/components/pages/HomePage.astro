@@ -39,8 +39,11 @@ const copy = locale === 'tr' ? {
   galleryTitle: 'Life at SASTEK', galleryText: 'Moments where technical curiosity, team spirit and new connections come together.',
   cta: 'Looking toward the same future?', ctaText: 'Get in touch about SASTEK events, projects and collaborations.', all: 'View all',
 };
+const pageTitle = locale === 'tr'
+  ? 'SASTEK | Eskişehir Teknik Üniversitesi Savunma Sanayii ve Teknolojileri Kulübü'
+  : 'SASTEK | Eskişehir Technical University Defence Industry & Technology Club';
 ---
-<BaseLayout title="SASTEK" description={copy.hero} locale={locale}>
+<BaseLayout title={pageTitle} description={copy.hero} locale={locale}>
   <section class="hero">
     <div class="container hero-grid">
       <div class="hero-copy">

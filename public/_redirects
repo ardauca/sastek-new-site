@@ -1,0 +1,4 @@
+# 301 Redirects for domain normalization (www to non-www)
+https://www.sastek.org/* https://sastek.org/:splat 301!
+http://www.sastek.org/* https://sastek.org/:splat 301!
+http://sastek.org/* https://sastek.org/:splat 301!

@@ -7,40 +7,45 @@ import type { Locale } from '../types/content';
 
 interface Props { title: string; description: string; locale?: Locale; image?: string; }
 const { title, description, locale = 'tr', image = '/images/backgrounds/space.jpg' } = Astro.props;
-const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
-const canonical = new URL(Astro.url.pathname, site.url);
-const fullTitle = title === 'SASTEK' ? title : `${title} | SASTEK`;
+const cleanPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+const canonical = new URL(cleanPath, site.url).href;
+const fullTitle = title.includes('SASTEK') ? title : `${title} | SASTEK`;
+
 const routePairs: Record<string, string> = {
   '/': '/en', '/hakkimizda': '/en/about', '/etkinlikler': '/en/events',
   '/anlasmali-noktalar': '/en/partners', '/sponsorlar': '/en/sponsors',
   '/galeri': '/en/gallery', '/iletisim': '/en/contact',
 };
-const cleanPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+
 let trPath = cleanPath;
 let enPath = routePairs[cleanPath] ?? '/en';
 if (cleanPath.startsWith('/en/events/')) { trPath = cleanPath.replace('/en/events/', '/etkinlikler/'); enPath = cleanPath; }
 else if (cleanPath.startsWith('/etkinlikler/')) { trPath = cleanPath; enPath = cleanPath.replace('/etkinlikler/', '/en/events/'); }
 else if (cleanPath.startsWith('/en')) { enPath = cleanPath; trPath = Object.entries(routePairs).find(([, en]) => en === cleanPath)?.[0] ?? '/'; }
+
+const trUrl = locale === 'tr' ? canonical : new URL(trPath, site.url).href;
+const enUrl = locale === 'en' ? canonical : new URL(enPath, site.url).href;
+const xDefaultUrl = new URL(trPath, site.url).href;
 ---
 <!doctype html>
 <html lang={locale}>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
     <meta name="theme-color" content="#071526" />
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <link rel="alternate" hreflang="tr" href={new URL(trPath, site.url)} />
-    <link rel="alternate" hreflang="en" href={new URL(enPath, site.url)} />
-    <link rel="alternate" hreflang="x-default" href={new URL(trPath, site.url)} />
+    <link rel="alternate" hreflang="tr" href={trUrl} />
+    <link rel="alternate" hreflang="en" href={enUrl} />
+    <link rel="alternate" hreflang="x-default" href={xDefaultUrl} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="SASTEK" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL(image, site.url)} />
+    <meta property="og:image" content={new URL(image, site.url).href} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
@@ -48,7 +53,7 @@ else if (cleanPath.startsWith('/en')) { enPath = cleanPath; trPath = Object.entr
   </head>
   <body>
     <a class="skip" href="#content">{locale === 'tr' ? 'İçeriğe geç' : 'Skip to content'}</a>
-    <Header locale={locale} currentPath={currentPath} />
+    <Header locale={locale} currentPath={cleanPath} />
     <main id="content"><slot /></main>
     <Footer locale={locale} />
   </body>

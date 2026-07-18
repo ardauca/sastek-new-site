@@ -16,7 +16,7 @@ const status = {
 
 <article class="event-card glass" data-filter-card data-category={t(event.category, locale).toLowerCase()} data-search={`${t(event.title, locale)} ${t(event.summary, locale)}`.toLowerCase()}>
   <a href={href} class="visual" aria-label={t(event.title, locale)}>
-    <img src={event.image} alt="" width="600" height="360" loading="lazy" />
+    <img src={event.image} alt={t(event.title, locale)} width="600" height="360" loading="lazy" />
   </a>
   <div class="body">
     <div class="meta">

@@ -15,7 +15,7 @@ const desc=locale==='tr'?'Etkinliklerden, teknik buluşmalardan ve kulüp yaşam
 <BaseLayout title={title} description={desc} locale={locale}>
   <PageHero eyebrow="SASTEK / GALLERY" title={title} text={desc} />
   <section class="section"><div class="container" data-filter-root><FilterControls locale={locale} categories={categories} showSearch={false} /><div class="gallery-grid">{sorted.map((item,index)=><button data-filter-card data-category={t(item.category,locale).toLowerCase()} data-search={t(item.alt,locale).toLowerCase()} data-lightbox-src={item.src} data-lightbox-alt={t(item.alt,locale)} aria-label={`${locale==='tr'?'Görseli büyüt':'Enlarge image'}: ${t(item.alt,locale)}`}><img src={item.src} alt={t(item.alt,locale)} width="720" height="520" loading={index>1?'lazy':'eager'} /><span>{t(item.category,locale)}</span></button>)}</div></div></section>
-  <dialog id="lightbox" aria-label={locale==='tr'?'Galeri görseli':'Gallery image'}><button class="close" aria-label={locale==='tr'?'Kapat':'Close'}><span aria-hidden="true">×</span></button><img alt="" /></dialog>
+  <dialog id="lightbox" aria-label={locale==='tr'?'Galeri görseli':'Gallery image'}><button class="close" aria-label={locale==='tr'?'Kapat':'Close'}><span aria-hidden="true">×</span></button><img alt={locale==='tr'?'Seçilen galeri görseli':'Selected gallery image'} /></dialog>
 </BaseLayout>
 <script>
   const dialog=document.querySelector<HTMLDialogElement>('#lightbox'); const image=dialog?.querySelector<HTMLImageElement>('img');
