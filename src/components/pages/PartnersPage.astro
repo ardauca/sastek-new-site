@@ -25,7 +25,7 @@ const mapPartners=active
     lng:p.coordinates?.lng,
   }));
 const categories=[...new Set(active.map((p)=>t(p.category,locale)))];
-const title=locale==='tr'?'Anlaşmalı Noktalar':'Student Partners';
+const title=locale==='tr'?'Anlaşmalı Noktalar':'Partners';
 const desc=locale==='tr'?'SASTEK üyelerine özel avantaj ve kampanyaların modüler vitrini.':'A modular showcase of benefits and offers for SASTEK members.';
 const mapboxToken=import.meta.env.PUBLIC_MAPBOX_TOKEN ?? '';
 const labels=locale==='tr' ? {
@@ -39,7 +39,7 @@ const labels=locale==='tr' ? {
 } : {
   grid:'Grid View',
   map:'Map View',
-  partners:'Student Partners',
+  partners:'Partners',
   openMaps:'Open in Maps',
   tokenMissing:'PUBLIC_MAPBOX_TOKEN is required for the map view.',
   emptyMap:'No partners with coordinates to show on the map.',
