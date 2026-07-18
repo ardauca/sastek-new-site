@@ -37,7 +37,7 @@ const desc=locale==='tr'?'SASTEK yönetimi ve sosyal medya hesaplarıyla iletiş
               {activeSocials.map((social)=>(
                 <a href={social.url} target="_blank" rel="noreferrer" aria-label={`${social.label} ${locale==='tr'?'sayfasını yeni sekmede aç':'opens in a new tab'}`}>
                   <SocialIcon icon={social.icon} />
-                  <span>{social.icon==='x'?'Twitter/X':social.label}</span>
+                  <span>{social.label}</span>
                 </a>
               ))}
             </div>
@@ -49,10 +49,10 @@ const desc=locale==='tr'?'SASTEK yönetimi ve sosyal medya hesaplarıyla iletiş
 
       <div class="board-panel">
         <div class="board-heading">
-          <h2>{locale==='tr'?'Yönetim Ekibi':'Club board'}</h2>
+          <h2>{locale==='tr'?'Yönetim Ekibi':'Club Board'}</h2>
         </div>
 
-        <div class="board-cards" aria-label={locale==='tr'?'Yönetim Ekibi':'Club board'}>
+        <div class="board-cards" aria-label={locale==='tr'?'Yönetim Ekibi':'Club Board'}>
           {activeTeam.map((person)=>(
             <article class="board-card glass">
               <div class="avatar" aria-hidden="true">

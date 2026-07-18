@@ -17,9 +17,9 @@ export const partners: Partner[] = [
     coordinates: { lat: 39.77758361376617, lng: 30.5139965830759 }, 
     mapUrl: 'https://maps.app.goo.gl/AAxUxLVudZxujrnF6',
 
-    showOnMap: true, isActive: true, isFeatured: true, isVerified: true, order: 1 },
+    showOnMap: true, isActive: true, isFeatured: true, isVerified: false, order: 1 },
   
-    { id: 'jardin', name: 'Jardin', category: { tr: 'Kafe', en: 'Café' }, discountLabel: pending, description, logo: '/images/partners/jardin.png', isActive: true, isFeatured: true, isVerified: false, order: 2 },
+    { id: 'jardin', name: 'Jardin', category: { tr: 'Kafe', en: 'Café' }, discountLabel: pending, description, logo: '/images/partners/jardin.png', isActive: false, isFeatured: false, isVerified: false, order: 2 },
   
     { id: 'meeple', name: 'Meeple', category: { tr: 'Sosyal Mekân', en: 'Social Venue' }, discountLabel: pending, description, logo: '/images/partners/meeple.png', isActive: true, isFeatured: true, isVerified: false, order: 3 },
   

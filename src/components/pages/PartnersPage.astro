@@ -49,7 +49,7 @@ const labels=locale==='tr' ? {
 <BaseLayout title={title} description={desc} locale={locale}>
   <PageHero eyebrow="SASTEK / PARTNERS" title={title} text={desc} />
   <section class="section">
-    <div class="container partners-page" data-filter-root data-partners-view data-map-token={mapboxToken}>
+    <div class="container partners-page" data-filter-root data-partners-view data-map-token={mapboxToken} data-locale={locale}>
       <div class="notice">{locale==='tr'?'Anlaşmalı noktalar doğrulanmış güncel liste ile değiştirilmek üzere örnek olarak gösterilmektedir.':'The partner locations are shown for illustrative purposes only and will be replaced with the verified, up-to-date list.'}</div>
 
       <div class="view-toggle" role="group" aria-label={locale==='tr'?'Anlaşmalı noktalar görünümü':'Student partners view'}>
@@ -95,9 +95,9 @@ const labels=locale==='tr' ? {
       </div>
 
       <div class="partners-cta">
-        <h2>{locale==='tr'?'Sponsor Olmak İster misiniz?':'Would You Like to Become a Sponsor?'}</h2>
-        <p>{locale==='tr'?'SASTEK Kulübü ile iş birliği yaparak topluluğumuza katkıda bulunun.':'Collaborate with SASTEK Club and contribute to our community.'}</p>
-        <a class="btn btn-primary" href={locale==='tr'?'/iletisim/':'/en/contact/'}>{locale==='tr'?'İletişime Geçin':'Contact Us'}</a>
+        <h2>{locale==='tr'?'Anlaşmalı Nokta Olmak İster misiniz?':'Become a Partner?'}</h2>
+        <p>{locale==='tr'?'SASTEK üyeleri ile iş birliği yaparak topluluğumuza katkıda bulunun.':'Work with SASTEK members and contribute to our community.'}</p>
+        <a class="btn btn-primary" href={locale==='tr'?'/iletisim':'/en/contact'}>{locale==='tr'?'İletişime Geçin':'Contact Us'}</a>
       </div>
 
       <script is:inline type="application/json" id="partners-map-data" set:html={JSON.stringify({ partners: mapPartners, labels })} />
@@ -243,7 +243,8 @@ const labels=locale==='tr' ? {
       });
     }catch(error){
       mapStarted=false;
-      mapMessage.textContent='Harita yüklenemedi. Lütfen Mapbox token ve bağlantıyı kontrol edin.';
+      const pageLocale=root?.dataset.locale ?? 'tr';
+      mapMessage.textContent=pageLocale==='tr'?'Harita yüklenemedi. Lütfen Mapbox token ve bağlantıyı kontrol edin.':'Map failed to load. Please check the Mapbox token and your connection.';
     }
   }
 

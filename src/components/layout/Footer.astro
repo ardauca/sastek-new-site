@@ -22,12 +22,12 @@ const activeSocials = socials
     </nav>
     <div>
       <p class="eyebrow">{locale === 'tr' ? 'Bağlantıda kal' : 'Stay connected'}</p>
-      {activeSocials.length > 0 ? <div class="socials">{activeSocials.map((item) => <a href={item.url} rel="noreferrer" target="_blank" aria-label={`${item.label} ${locale === 'tr' ? 'sayfasını yeni sekmede aç' : 'opens in a new tab'}`}><SocialIcon icon={item.icon} /><span>{item.icon === 'x' ? 'Twitter/X' : item.label}</span></a>)}</div> : <p class="muted small">{locale === 'tr' ? 'Sosyal medya bağlantıları güncellenecek.' : 'Social links will be updated.'}</p>}
+      {activeSocials.length > 0 ? <div class="socials">{activeSocials.map((item) => <a href={item.url} rel="noreferrer" target="_blank" aria-label={`${item.label} ${locale === 'tr' ? 'sayfasını yeni sekmede aç' : 'opens in a new tab'}`}><SocialIcon icon={item.icon} /><span>{item.label}</span></a>)}</div> : <p class="muted small">{locale === 'tr' ? 'Sosyal medya bağlantıları güncellenecek.' : 'Social links will be updated.'}</p>}
     </div>
   </div>
   <div class="container copyright">
     <p class="text-sm text-white/50">
-      &copy; 2026 SASTEK. Tüm hakları saklıdır. | Developed by <a href="https://github.com/ardauca" target="_blank" rel="noopener noreferrer" class="text-white/70 hover:text-[#ff6b1a] transition-colors underline underline-offset-4">Arda Uça</a>
+      &copy; {new Date().getFullYear()} SASTEK. {locale === 'tr' ? 'Tüm hakları saklıdır.' : 'All rights reserved.'} | Developed by <a href="https://github.com/ardauca" target="_blank" rel="noopener noreferrer" class="text-white/70 hover:text-[#ff6b1a] transition-colors underline underline-offset-4">Arda Uça</a>
     </p>
   </div>
 </footer>
