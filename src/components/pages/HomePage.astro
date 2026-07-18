@@ -40,15 +40,15 @@ const copy = locale === 'tr' ? {
   cta: 'Looking toward the same future?', ctaText: 'Get in touch about SASTEK events, projects and collaborations.', all: 'View all',
 };
 const pageTitle = locale === 'tr'
-  ? 'SASTEK | Eskişehir Teknik Üniversitesi Savunma Sanayii ve Teknolojileri Kulübü'
-  : 'SASTEK | Eskişehir Technical University Defence Industry & Technology Club';
+  ? 'SASTEK | ESTÜ Savunma Sanayii ve Teknolojileri Kulübü'
+  : 'SASTEK | ESTU Defence Industry & Technology Club';
 ---
 <BaseLayout title={pageTitle} description={copy.hero} locale={locale}>
   <section class="hero">
     <div class="container hero-grid">
       <div class="hero-copy">
         <p class="eyebrow">{copy.badge}</p>
-        <h1 class="display">{copy.titleA}<br /><span>{copy.titleB}</span><br />{copy.titleC}</h1>
+        <h1 class="display">{copy.titleA} <span>{copy.titleB}</span> {copy.titleC}</h1>
         <p class="lead muted">{copy.hero}</p>
         <div class="actions"><a class="btn btn-primary" href={path('/etkinlikler','/events')}>{copy.events} <span>↗</span></a><a class="btn btn-secondary" href={path('/iletisim','/contact')}>{copy.contact}</a></div>
       </div>
@@ -77,7 +77,7 @@ const pageTitle = locale === 'tr'
   .hero-copy{position:relative;z-index:1;max-width:760px}
   .hero .eyebrow{color:#ff8a49}
   .display{max-width:820px;margin:.8rem 0 1.25rem;font-size:clamp(3.25rem,8.1vw,7.35rem);line-height:.88;letter-spacing:-.075em;text-wrap:balance}
-  .display span{color:#ff7a2f;text-shadow:0 0 22px rgba(255,107,26,.12)}
+  .display span{display:block;color:#ff7a2f;text-shadow:0 0 22px rgba(255,107,26,.12)}
   .lead{max-width:610px;color:#bdcad8;font-size:clamp(1rem,1.5vw,1.16rem);line-height:1.75}
   .actions{display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;margin-top:2.15rem}
   .actions .btn{min-height:3.15rem;padding-inline:1.2rem}
