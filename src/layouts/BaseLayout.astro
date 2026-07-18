@@ -41,6 +41,7 @@ const xDefaultUrl = new URL(trPath, site.url).href;
     <link rel="alternate" hreflang="x-default" href={xDefaultUrl} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="SASTEK" />
     <meta property="og:title" content={fullTitle} />
@@ -50,6 +51,24 @@ const xDefaultUrl = new URL(trPath, site.url).href;
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "StudentOrganization",
+      "name": "SASTEK",
+      "alternateName": locale === 'tr' ? site.fullName.tr : site.fullName.en,
+      "url": canonical,
+      "logo": new URL("/images/logo/sastek-logo.png", site.url).href,
+      "parentOrganization": {
+        "@type": "CollegeOrUniversity",
+        "name": locale === 'tr' ? site.institution.tr : site.institution.en
+      },
+      "sameAs": [
+        "https://www.instagram.com/esastek/",
+        "https://www.linkedin.com/company/savunma-sanayii-ve-teknolojileri-kul%C3%BCb%C3%BC/",
+        "https://x.com/esastek",
+        "https://www.youtube.com/channel/UCFzo4lHVQfCmF-lChl7Xbgw"
+      ]
+    })} />
     <title>{fullTitle}</title>
   </head>
   <body>

@@ -1,0 +1,15 @@
+# SASTEK - Savunma Sanayii ve Teknolojileri Kulübü
+> Eskişehir Teknik Üniversitesi (ESTÜ) bünyesinde faaliyet gösteren resmi öğrenci kulübü.
+
+## Hakkında
+SASTEK (Savunma Sanayii ve Teknolojileri Kulübü); mühendislik, havacılık, uzay, Ar-Ge ve savunma sanayii alanlarına ilgi duyan öğrencileri bir araya getiren teknik ve sosyal bir topluluktur.
+
+## Sayfalar & Bağlantılar
+- Ana Sayfa: https://sastek.org/
+- Hakkımızda: https://sastek.org/hakkimizda
+- Etkinlikler: https://sastek.org/etkinlikler
+- Anlaşmalı Noktalar: https://sastek.org/anlasmali-noktalar
+- Sponsorlar: https://sastek.org/sponsorlar
+- Galeri: https://sastek.org/galeri
+- İletişim: https://sastek.org/iletisim
+- Sosyal Medya: https://www.instagram.com/esastek/

@@ -9,8 +9,8 @@ export const site = {
     en: 'Eskişehir Technical University',
   },
   description: {
-    tr: 'Mühendislik, havacılık, uzay, savunma sanayii ve teknoloji alanlarına ilgi duyan öğrencileri bir araya getiriyoruz.',
-    en: 'We bring together students interested in engineering, aviation, space, defence industries and technology.',
+    tr: 'Eskişehir Teknik Üniversitesi Savunma Sanayii ve Teknolojileri Kulübü (SASTEK); mühendislik, havacılık, uzay ve teknoloji alanında öğrencileri bir araya getirir.',
+    en: 'Defence Industry and Technologies Club (SASTEK) at Eskişehir Technical University brings together students interested in engineering, aviation, space and tech.',
   },
   email: '',
   url: 'https://sastek.org',
