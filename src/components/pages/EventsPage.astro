@@ -36,6 +36,8 @@ try {
   // Use static fallback
 }
 
+const activeEvents = rawEvents.filter(e => e.status !== 'inactive');
+
 const title = locale === 'tr' ? 'Etkinlikler' : 'Events';
 const desc  = locale === 'tr' ? 'Teknik bilgi, sektör deneyimi ve güçlü bir topluluk için tasarlanan SASTEK etkinlikleri.' : 'SASTEK events designed for technical knowledge, industry experience and a strong community.';
 ---
@@ -45,7 +47,7 @@ const desc  = locale === 'tr' ? 'Teknik bilgi, sektör deneyimi ve güçlü bir 
   <section class="section">
     <div class="container" data-events-root data-locale={locale} data-api="https://admin.sastek.org/api">
       <div class="grid-auto" id="events-grid-container">
-        {rawEvents.map((event) => <EventCard event={event} locale={locale} />)}
+        {activeEvents.map((event) => <EventCard event={event} locale={locale} />)}
       </div>
     </div>
   </section>
@@ -71,7 +73,7 @@ const desc  = locale === 'tr' ? 'Teknik bilgi, sektör deneyimi ve güçlü bir 
       if (!Array.isArray(apiEvents)) return;
 
       if (apiEvents.length === 0) {
-        gridContainer.innerHTML = `<p style="text-align:center;color:#a9bbce;margin:2rem auto">${pageLocale === 'tr' ? 'Etkinlik bulunamadı.' : 'No events found.'}</p>`;
+        gridContainer.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#a9bbce;margin:2rem auto">${pageLocale === 'tr' ? 'Etkinlik bulunamadı.' : 'No events found.'}</p>`;
         return;
       }
 
@@ -79,22 +81,54 @@ const desc  = locale === 'tr' ? 'Teknik bilgi, sektör deneyimi ve güçlü bir 
         const titleText = pageLocale === 'tr' ? e.title_tr : (e.title_en || e.title_tr);
         const summaryText = pageLocale === 'tr' ? (e.summary_tr || '') : (e.summary_en || '');
         const categoryText = pageLocale === 'tr' ? (e.category_tr || 'Etkinlik') : (e.category_en || 'Event');
-        const locationText = pageLocale === 'tr' ? (e.location_tr || 'Konum güncellenecek') : (e.location_en || 'Location to be announced');
         let image = e.image_url || '/images/events/coffeetalk.png';
         if (image.startsWith('/images/')) image = 'https://sastek.org' + image;
 
         const href = pageLocale === 'tr' ? `/etkinlikler/${e.slug}` : `/en/events/${e.slug}`;
+        const exploreText = pageLocale === 'tr' ? 'İncele' : 'Explore';
 
-        return `<article class="event-card glass">
-          <div class="media"><img src="${escapeHtml(image)}" alt="${escapeHtml(titleText)} görseli" loading="lazy" /></div>
+        return `<article class="event-card glass" data-filter-card data-category="${escapeHtml(categoryText.toLowerCase())}" data-search="${escapeHtml(titleText.toLowerCase())} ${escapeHtml(summaryText.toLowerCase())}">
+          <a href="${href}" class="visual" aria-label="${escapeHtml(titleText)}">
+            <img src="${escapeHtml(image)}" alt="${escapeHtml(titleText)}" width="600" height="360" loading="lazy" />
+          </a>
           <div class="body">
-            <span class="chip">${escapeHtml(categoryText)}</span>
-            <h3>${escapeHtml(titleText)}</h3>
-            <p class="summary">${escapeHtml(summaryText)}</p>
-            <div class="footer"><span class="loc">📍 ${escapeHtml(locationText)}</span></div>
+            <div class="meta">
+              <span class="chip">${escapeHtml(categoryText)}</span>
+            </div>
+            <h3><a href="${href}">${escapeHtml(titleText)}</a></h3>
+            <p class="muted">${escapeHtml(summaryText)}</p>
+            <div class="foot">
+              <a class="read-more" href="${href}">${exploreText} <span aria-hidden="true">→</span></a>
+            </div>
           </div>
         </article>`;
       }).join('');
     } catch {}
   })();
 </script>
+
+<style>
+  :global(.event-card){position:relative;overflow:hidden;border-radius:1.25rem;transition:border-color .2s,transform .2s,background .2s,box-shadow .2s}
+  :global(.event-card::after){content:"";position:absolute;right:-4.5rem;bottom:-5rem;width:13rem;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,107,26,.1),transparent 66%);pointer-events:none}
+  :global(.event-card:hover){border-color:rgba(255,107,26,.34);background:linear-gradient(145deg,rgba(16,43,70,.74),rgba(7,21,38,.82));box-shadow:0 22px 60px rgba(0,0,0,.18);transform:translateY(-3px)}
+  :global(.event-card .visual){position:relative;display:grid;place-items:center;min-height:205px;overflow:hidden;background:radial-gradient(circle at 50% 35%,rgba(31,74,112,.52),rgba(6,18,32,.96) 68%)}
+  :global(.event-card .visual::before){content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.08),transparent 34%,rgba(255,107,26,.08));opacity:.72}
+  :global(.event-card .visual::after){content:"";position:absolute;left:1rem;right:1rem;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(128,174,213,.32),transparent)}
+  :global(.event-card .visual img){position:relative;z-index:1;width:78%;height:158px;object-fit:contain;filter:drop-shadow(0 18px 26px rgba(0,0,0,.32));transition:transform .25s,filter .25s}
+  :global(.event-card:hover .visual img){transform:scale(1.035);filter:drop-shadow(0 22px 32px rgba(0,0,0,.38))}
+  :global(.event-card .body){position:relative;z-index:1;display:grid;padding:1.25rem 1.25rem 1.15rem}
+  :global(.event-card .meta),:global(.event-card .foot){display:flex;align-items:center;justify-content:space-between;gap:1rem}
+  :global(.event-card .meta){min-height:2rem;font-size:.75rem;color:#8fa6bb}
+  :global(.event-card .chip){border-color:rgba(128,174,213,.28);background:rgba(128,174,213,.08);color:#dce9f5}
+  :global(.event-card .status){color:#9fb2c5;font-weight:800}
+  :global(.event-card .body h3){margin:.95rem 0 .4rem;font-size:clamp(1.25rem,2vw,1.5rem);line-height:1.12;letter-spacing:-.035em}
+  :global(.event-card .body h3 a){color:#fff}
+  :global(.event-card .body h3 a:hover){color:#ffb184}
+  :global(.event-card .body p){margin:0;min-height:3.6rem;color:#b5c5d5;line-height:1.65}
+  :global(.event-card .foot){margin-top:1.15rem;padding-top:1rem;border-top:1px solid rgba(84,119,151,.18);font-size:.78rem;color:#8fa6bb}
+  :global(.event-card .read-more){display:inline-flex;align-items:center;gap:.35rem;margin-left:auto;color:#ff9a62;font-weight:900}
+  :global(.event-card .read-more span){transition:transform .2s}
+  :global(.event-card .read-more:hover){color:#fff}
+  :global(.event-card .read-more:hover span){transform:translateX(3px)}
+  @media(max-width:560px){:global(.event-card .visual){min-height:180px}:global(.event-card .visual img){height:138px}:global(.event-card .body){padding:1.05rem}:global(.event-card .body p){min-height:auto}:global(.event-card .foot){align-items:flex-start;flex-direction:column}:global(.event-card .read-more){margin-left:0}}
+</style>
