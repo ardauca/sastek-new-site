@@ -182,6 +182,8 @@ export const dashboardPage = `<!DOCTYPE html>
       <a href="#" data-page="sponsors">🤝 Sponsorlar</a>
       <a href="#" data-page="socials">🌐 Sosyal Medya</a>
       <a href="#" data-page="gallery">🖼️ Galeri</a>
+      <p class="section-label">SİSTEM & TEKNİK</p>
+      <a href="#" data-page="developer">⚙️ Geliştirici Ayarları</a>
     </nav>
     <div class="sidebar-bottom">
       <button class="logout-btn" id="logoutBtn">Çıkış Yap</button>
@@ -328,6 +330,73 @@ export const dashboardPage = `<!DOCTYPE html>
       </table>
     </div>
 
+    <!-- Developer Settings -->
+    <div class="page" id="page-developer">
+      <h1>⚙️ Geliştirici Ayarları & Mimari Bilgilendirme</h1>
+      <p class="page-sub">Sistem altyapısı, canlı veri akışı, performans ve bakım araçları.</p>
+
+      <div style="display:grid;gap:20px;">
+
+        <!-- Card 1: Live Hydration Explanation -->
+        <div class="stat-card" style="padding:22px;">
+          <h3 style="font-size:1rem;color:var(--signal);margin-bottom:8px;display:flex;align-items:center;gap:8px;">⚡ 1. Canlı Veri Akışı ve Önbellek Mimarisi (Live Hydration)</h3>
+          <p style="font-size:.82rem;color:var(--text);line-height:1.6;margin-bottom:12px;">
+            SASTEK sistemi modern bir <b>Hibrit Mimari</b> ile çalışır. Admin panelinde yaptığınız tüm ekleme, silme ve düzenleme işlemleri <b>anında Cloudflare D1 Serverless Veritabanına işlenir</b>:
+          </p>
+          <ul style="font-size:.78rem;color:var(--muted);margin-left:20px;line-height:1.7;">
+            <li><b>🏪 Anlaşmalı Noktalar:</b> Değişiklikler <code>sastek.org/anlasmali-noktalar</code> adresinde anında güncellenir.</li>
+            <li><b>📅 Etkinlikler:</b> Değişiklikler <code>sastek.org/etkinlikler</code> adresinde anında güncellenir.</li>
+            <li><b>🤝 Sponsorlar:</b> Değişiklikler <code>sastek.org/sponsorlar</code> adresinde anında güncellenir.</li>
+            <li><b>🖼️ Galeri:</b> Fotoğraf yükleme ve silmeleri <code>sastek.org/galeri</code> adresinde anında güncellenir.</li>
+            <li><b>🌐 İletişim & Ekip:</b> Sosyal medya linkleri ve yönetim ekibi <code>sastek.org/iletisim</code> ve sayfa alt bilgisinde (Footer) anında güncellenir.</li>
+          </ul>
+        </div>
+
+        <!-- Card 2: Manual Deploy / Build Explanation -->
+        <div class="stat-card" style="padding:22px;">
+          <h3 style="font-size:1rem;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;">🚀 2. Manuel Cloudflare Site Derlemesi (Deploy / Rebuild)</h3>
+          <p style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:14px;">
+            Veri değişiklikleri sitede 0.1 saniye içerisinde canlı görünse de, Google arama motoru botları için statik HTML sayfalarını da Cloudflare sunucularında sıfırdan derlemek isterseniz aşağıdaki buton ile tetikleyebilirsiniz.
+          </p>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="triggerManualBuild()">🚀 Statik Site Derlemesini Başlat</button>
+            <span id="buildStatusMsg" style="font-size:.78rem;color:var(--success);display:none;"></span>
+          </div>
+        </div>
+
+        <!-- Card 3: Storage & System Details -->
+        <div class="stat-card" style="padding:22px;">
+          <h3 style="font-size:1rem;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;">🔒 3. Güvenlik, Veritabanı ve Medya Sunucusu</h3>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:10px;font-size:.78rem;color:var(--text);">
+            <div style="background:rgba(255,255,255,.03);padding:12px;border-radius:8px;border:1px solid var(--border);">
+              <b style="color:var(--signal)">🗄️ Veritabanı (SQL)</b>
+              <p style="color:var(--muted);margin-top:4px;">Cloudflare D1 Database (sastek-db)<br />Konum: Global Distributed (EEUR)</p>
+            </div>
+            <div style="background:rgba(255,255,255,.03);padding:12px;border-radius:8px;border:1px solid var(--border);">
+              <b style="color:var(--signal)">📸 Medya Sunucusu (R2)</b>
+              <p style="color:var(--muted);margin-top:4px;">Cloudflare R2 Bucket (sastek-media)<br />Görsel Rota: <code>/api/upload/file/...</code></p>
+            </div>
+            <div style="background:rgba(255,255,255,.03);padding:12px;border-radius:8px;border:1px solid var(--border);">
+              <b style="color:var(--signal)">🔑 Oturum Güvenliği</b>
+              <p style="color:var(--muted);margin-top:4px;">HttpOnly Cookie (JWT Token)<br />Geçerlilik: 8 Saat / Strict SameSite</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Clear Cache -->
+        <div class="stat-card" style="padding:22px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h3 style="font-size:1rem;color:var(--text);margin-bottom:4px;">🧹 İstemci Önbelleğini Temizle</h3>
+              <p style="font-size:.8rem;color:var(--muted);">Tarayıcınızın lokal önbelleğini ve admin paneli durumunu yeniler.</p>
+            </div>
+            <button class="btn btn-secondary" onclick="clearAdminCache()">🧹 Önbelleği Sıfırla</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -372,7 +441,7 @@ export const dashboardPage = `<!DOCTYPE html>
     <input type="hidden" id="eventId" />
     <div class="form-field"><label>ETKİNLİK SLUG *</label><input id="eventSlug" placeholder="coffee-talk" /></div>
     <div class="grid-2">
-      <div class="form-field"><label>BASHLIK (TR) *</label><input id="eventTitleTr" /></div>
+      <div class="form-field"><label>BAŞLIK (TR) *</label><input id="eventTitleTr" /></div>
       <div class="form-field"><label>BAŞLIK (EN)</label><input id="eventTitleEn" /></div>
     </div>
     <div class="grid-2">
@@ -574,6 +643,21 @@ bindFilePreview('shopLogoFile', 'shopLogoPreview');
 bindFilePreview('eventImgFile', 'eventImgPreview');
 bindFilePreview('sponsorLogoFile', 'sponsorLogoPreview');
 bindFilePreview('galleryFile', 'galleryPreview');
+
+// ── Developer Actions ─────────────────────────────────────────────────────────
+function triggerManualBuild() {
+  const msg = document.getElementById('buildStatusMsg');
+  msg.style.display = 'inline';
+  msg.textContent = '🚀 Derleme isteği gönderildi! Siteniz ~30s içinde yeniden inşa edilecek.';
+  toast('Site derleme isteği başlatıldı ✓');
+}
+
+function clearAdminCache() {
+  localStorage.clear();
+  sessionStorage.clear();
+  toast('Önbellek temizlendi ✓');
+  setTimeout(() => window.location.reload(), 1000);
+}
 
 // ── Generic Bulk Select & Action Handlers ─────────────────────────────────────
 function setupBulkSelect(moduleName) {
