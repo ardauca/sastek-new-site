@@ -33,11 +33,11 @@ try {
   if (gRes.ok) { const data = await gRes.json(); if (Array.isArray(data)) rawGallery = data; }
 } catch (e) {}
 
-const featuredEvents: EventItem[] = (rawEvents !== null && rawEvents.length > 0)
-  ? (() => {
-      const feat = rawEvents.filter((e: any) => e.is_featured === 1 || e.is_featured === true);
-      const pool = feat.length > 0 ? feat : rawEvents;
-      return pool.slice(0, 3).map((e: any) => ({
+const featuredEvents: EventItem[] = (rawEvents !== null)
+  ? rawEvents
+      .filter((e: any) => e.is_featured === 1 || e.is_featured === true)
+      .slice(0, 3)
+      .map((e: any) => ({
         id: String(e.id),
         slug: e.slug,
         title: { tr: e.title_tr, en: e.title_en || e.title_tr },
@@ -49,15 +49,14 @@ const featuredEvents: EventItem[] = (rawEvents !== null && rawEvents.length > 0)
         status: e.status || 'planned',
         isFeatured: Boolean(e.is_featured),
         showDetails: Boolean(e.show_details),
-      }));
-    })()
+      }))
   : (rawEvents === null ? staticEvents.filter((item) => item.isFeatured).slice(0, 3) : []);
 
-const featuredPartners: Partner[] = (rawPartners !== null && rawPartners.length > 0)
-  ? (() => {
-      const feat = rawPartners.filter((s: any) => s.is_featured === 1 || s.is_featured === true);
-      const pool = feat.length > 0 ? feat : rawPartners;
-      return pool.slice(0, 3).map((s: any) => ({
+const featuredPartners: Partner[] = (rawPartners !== null)
+  ? rawPartners
+      .filter((s: any) => s.is_featured === 1 || s.is_featured === true)
+      .slice(0, 3)
+      .map((s: any) => ({
         id: String(s.id),
         name: s.name,
         category: { tr: s.category_tr || 'Diğer', en: s.category_en || 'Other' },
@@ -65,8 +64,7 @@ const featuredPartners: Partner[] = (rawPartners !== null && rawPartners.length 
         description: { tr: s.description_tr || '', en: s.description_en || '' },
         logo: s.logo_url || '/images/partners/arc-logo.png',
         isActive: Boolean(s.is_active === 1 || s.is_active === true),
-      }));
-    })()
+      }))
   : (rawPartners === null ? staticPartners.filter((item) => item.isActive && item.isFeatured).sort((a,b) => (a.order||0)-(b.order||0)).slice(0, 3) : []);
 
 const featuredSponsors = (rawSponsors !== null)
@@ -231,12 +229,11 @@ const pageTitle = locale === 'tr'
           const events = await res.json();
           if (Array.isArray(events)) {
             const feat = events.filter((e: any) => e.is_featured === 1 || e.is_featured === true);
-            const pool = feat.length > 0 ? feat : events;
-            if (pool.length === 0) {
+            if (feat.length === 0) {
               if (homeEventsSection) homeEventsSection.style.display = 'none';
             } else {
               if (homeEventsSection) homeEventsSection.style.display = '';
-              homeEventsGrid.innerHTML = pool.slice(0, 3).map((e: any) => {
+              homeEventsGrid.innerHTML = feat.slice(0, 3).map((e: any) => {
                 let img = e.image_url || '/images/events/coffeetalk.png';
                 if (img.startsWith('/images/')) img = 'https://sastek.org' + img;
                 return `<article class="event-card glass">
@@ -264,12 +261,11 @@ const pageTitle = locale === 'tr'
           const shops = await res.json();
           if (Array.isArray(shops)) {
             const feat = shops.filter((s: any) => s.is_featured === 1 || s.is_featured === true);
-            const pool = feat.length > 0 ? feat : shops;
-            if (pool.length === 0) {
+            if (feat.length === 0) {
               if (homePartnersSection) homePartnersSection.style.display = 'none';
             } else {
               if (homePartnersSection) homePartnersSection.style.display = '';
-              homePartnersGrid.innerHTML = pool.slice(0, 3).map((s: any) => {
+              homePartnersGrid.innerHTML = feat.slice(0, 3).map((s: any) => {
                 let logo = s.logo_url || '/images/partners/arc-logo.png';
                 if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
                 return `<article class="partner glass">
