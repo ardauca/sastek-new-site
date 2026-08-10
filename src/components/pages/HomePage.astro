@@ -15,10 +15,10 @@ import type { Locale, EventItem, Partner } from '../../types/content';
 interface Props { locale: Locale; }
 const { locale } = Astro.props;
 
-let rawEvents: any[] = [];
-let rawPartners: any[] = [];
-let rawSponsors: any[] = [];
-let rawGallery: any[] = [];
+let rawEvents: any[] | null = null;
+let rawPartners: any[] | null = null;
+let rawSponsors: any[] | null = null;
+let rawGallery: any[] | null = null;
 
 try {
   const [eRes, pRes, sRes, gRes] = await Promise.all([
@@ -27,38 +27,47 @@ try {
     fetch('https://admin.sastek.org/api/sponsors', { headers: { 'Accept': 'application/json' } }),
     fetch('https://admin.sastek.org/api/gallery', { headers: { 'Accept': 'application/json' } })
   ]);
-  if (eRes.ok) { const data = await eRes.json(); if (Array.isArray(data) && data.length > 0) rawEvents = data; }
-  if (pRes.ok) { const data = await pRes.json(); if (Array.isArray(data) && data.length > 0) rawPartners = data; }
-  if (sRes.ok) { const data = await sRes.json(); if (Array.isArray(data) && data.length > 0) rawSponsors = data; }
-  if (gRes.ok) { const data = await gRes.json(); if (Array.isArray(data) && data.length > 0) rawGallery = data; }
+  if (eRes.ok) { const data = await eRes.json(); if (Array.isArray(data)) rawEvents = data; }
+  if (pRes.ok) { const data = await pRes.json(); if (Array.isArray(data)) rawPartners = data; }
+  if (sRes.ok) { const data = await sRes.json(); if (Array.isArray(data)) rawSponsors = data; }
+  if (gRes.ok) { const data = await gRes.json(); if (Array.isArray(data)) rawGallery = data; }
 } catch (e) {}
 
-const featuredEvents: EventItem[] = rawEvents.length ? rawEvents.slice(0, 3).map((e: any) => ({
-  id: String(e.id),
-  slug: e.slug,
-  title: { tr: e.title_tr, en: e.title_en || e.title_tr },
-  summary: { tr: e.summary_tr || '', en: e.summary_en || '' },
-  description: { tr: e.description_tr || '', en: e.description_en || '' },
-  category: { tr: e.category_tr || 'Etkinlik', en: e.category_en || 'Event' },
-  location: { tr: e.location_tr || 'Konum güncellenecek', en: e.location_en || 'To be announced' },
-  image: e.image_url || '/images/events/coffeetalk.png',
-  status: e.status || 'planned',
-  isFeatured: Boolean(e.is_featured),
-  showDetails: Boolean(e.show_details),
-})) : staticEvents.filter((item) => item.isFeatured).slice(0, 3);
+const featuredEvents: EventItem[] = (rawEvents !== null)
+  ? rawEvents.slice(0, 3).map((e: any) => ({
+      id: String(e.id),
+      slug: e.slug,
+      title: { tr: e.title_tr, en: e.title_en || e.title_tr },
+      summary: { tr: e.summary_tr || '', en: e.summary_en || '' },
+      description: { tr: e.description_tr || '', en: e.description_en || '' },
+      category: { tr: e.category_tr || 'Etkinlik', en: e.category_en || 'Event' },
+      location: { tr: e.location_tr || 'Konum güncellenecek', en: e.location_en || 'To be announced' },
+      image: e.image_url || '/images/events/coffeetalk.png',
+      status: e.status || 'planned',
+      isFeatured: Boolean(e.is_featured),
+      showDetails: Boolean(e.show_details),
+    }))
+  : staticEvents.filter((item) => item.isFeatured).slice(0, 3);
 
-const featuredPartners: Partner[] = rawPartners.length ? rawPartners.slice(0, 3).map((s: any) => ({
-  id: String(s.id),
-  name: s.name,
-  category: { tr: s.category_tr || 'Diğer', en: s.category_en || 'Other' },
-  discountLabel: { tr: s.discount || 'Kampanya bilgisi güncellenecek', en: s.discount || 'Offer details to be updated' },
-  description: { tr: s.description_tr || '', en: s.description_en || '' },
-  logo: s.logo_url || '/images/partners/arc-logo.png',
-  isActive: Boolean(s.is_active === 1 || s.is_active === true),
-})) : staticPartners.filter((item) => item.isActive && item.isFeatured).sort((a,b) => (a.order||0)-(b.order||0)).slice(0, 3);
+const featuredPartners: Partner[] = (rawPartners !== null)
+  ? rawPartners.slice(0, 3).map((s: any) => ({
+      id: String(s.id),
+      name: s.name,
+      category: { tr: s.category_tr || 'Diğer', en: s.category_en || 'Other' },
+      discountLabel: { tr: s.discount || 'Kampanya bilgisi güncellenecek', en: s.discount || 'Offer details to be updated' },
+      description: { tr: s.description_tr || '', en: s.description_en || '' },
+      logo: s.logo_url || '/images/partners/arc-logo.png',
+      isActive: Boolean(s.is_active === 1 || s.is_active === true),
+    }))
+  : staticPartners.filter((item) => item.isActive && item.isFeatured).sort((a,b) => (a.order||0)-(b.order||0)).slice(0, 3);
 
-const featuredSponsors = rawSponsors.length ? rawSponsors : staticSponsors.map(s => ({ name: s.name, logo_url: s.logo }));
-const featuredGallery = rawGallery.length ? rawGallery.slice(0, 3) : staticGallery.slice(0, 3).map(g => ({ url: g.src, caption_tr: g.alt.tr }));
+const featuredSponsors = (rawSponsors !== null)
+  ? rawSponsors
+  : staticSponsors.map(s => ({ name: s.name, logo_url: s.logo }));
+
+const featuredGallery = (rawGallery !== null)
+  ? rawGallery.slice(0, 3)
+  : staticGallery.slice(0, 3).map(g => ({ url: g.src, caption_tr: g.alt.tr }));
 
 const path = (tr: string, en: string) => locale === 'tr' ? tr : `/en${en}`;
 const copy = locale === 'tr' ? {
@@ -117,49 +126,57 @@ const pageTitle = locale === 'tr'
   </section>
 
   <!-- Featured Events -->
-  <section class="section">
-    <div class="container">
-      <SectionHeading eyebrow="SASTEK / EVENTS" title={copy.eventTitle} text={copy.eventText} />
-      <div class="grid-auto">{featuredEvents.map((event) => <EventCard event={event} locale={locale} />)}</div>
-      <div class="section-link"><a class="btn btn-secondary" href={path('/etkinlikler','/events')}>{copy.all} →</a></div>
-    </div>
-  </section>
+  {featuredEvents.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <SectionHeading eyebrow="SASTEK / EVENTS" title={copy.eventTitle} text={copy.eventText} />
+        <div class="grid-auto">{featuredEvents.map((event) => <EventCard event={event} locale={locale} />)}</div>
+        <div class="section-link"><a class="btn btn-secondary" href={path('/etkinlikler','/events')}>{copy.all} →</a></div>
+      </div>
+    </section>
+  )}
 
   <!-- Featured Partners -->
-  <section class="section band">
-    <div class="container">
-      <SectionHeading eyebrow="SASTEK / PARTNERS" title={copy.partnerTitle} text={copy.partnerText} />
-      <div class="grid-auto">{featuredPartners.map((partner) => <PartnerCard partner={partner} locale={locale} />)}</div>
-      <div class="section-link"><a class="btn btn-secondary" href={path('/anlasmali-noktalar','/partners')}>{copy.all} →</a></div>
-    </div>
-  </section>
+  {featuredPartners.length > 0 && (
+    <section class="section band">
+      <div class="container">
+        <SectionHeading eyebrow="SASTEK / PARTNERS" title={copy.partnerTitle} text={copy.partnerText} />
+        <div class="grid-auto">{featuredPartners.map((partner) => <PartnerCard partner={partner} locale={locale} />)}</div>
+        <div class="section-link"><a class="btn btn-secondary" href={path('/anlasmali-noktalar','/partners')}>{copy.all} →</a></div>
+      </div>
+    </section>
+  )}
 
   <!-- Featured Sponsors -->
-  <section class="section">
-    <div class="container sponsor-row">
-      <SectionHeading eyebrow="SASTEK / SUPPORT" title={copy.sponsorTitle} text={copy.sponsorText} />
-      <div class="sponsor-list">
-        {featuredSponsors.map((sponsor: any) => (
-          <div class="sponsor glass">
-            <img src={sponsor.logo_url?.startsWith('/images/') ? 'https://sastek.org' + sponsor.logo_url : (sponsor.logo_url || sponsor.logo || '/images/sponsors/sample-sponsor.png')} alt={`${sponsor.name} logo`} loading="lazy" />
-          </div>
-        ))}
+  {featuredSponsors.length > 0 && (
+    <section class="section">
+      <div class="container sponsor-row">
+        <SectionHeading eyebrow="SASTEK / SUPPORT" title={copy.sponsorTitle} text={copy.sponsorText} />
+        <div class="sponsor-list">
+          {featuredSponsors.map((sponsor: any) => (
+            <div class="sponsor glass">
+              <img src={sponsor.logo_url?.startsWith('/images/') ? 'https://sastek.org' + sponsor.logo_url : (sponsor.logo_url || sponsor.logo || '/images/sponsors/sample-sponsor.png')} alt={`${sponsor.name} logo`} loading="lazy" />
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
 
   <!-- Featured Gallery -->
-  <section class="section">
-    <div class="container">
-      <SectionHeading eyebrow="SASTEK / GALLERY" title={copy.galleryTitle} text={copy.galleryText} />
-      <div class="gallery-preview">
-        {featuredGallery.map((item: any, index: number) => (
-          <img class={`g${index+1}`} src={(item.url || item.src)?.startsWith('/images/') ? 'https://sastek.org' + (item.url || item.src) : (item.url || item.src)} alt={item.caption_tr || 'SASTEK Fotoğraf'} width="720" height="520" loading="lazy" />
-        ))}
+  {featuredGallery.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <SectionHeading eyebrow="SASTEK / GALLERY" title={copy.galleryTitle} text={copy.galleryText} />
+        <div class="gallery-preview">
+          {featuredGallery.map((item: any, index: number) => (
+            <img class={`g${index+1}`} src={(item.url || item.src)?.startsWith('/images/') ? 'https://sastek.org' + (item.url || item.src) : (item.url || item.src)} alt={item.caption_tr || 'SASTEK Fotoğraf'} width="720" height="520" loading="lazy" />
+          ))}
+        </div>
+        <div class="section-link"><a class="btn btn-secondary" href={path('/galeri','/gallery')}>{copy.all} →</a></div>
       </div>
-      <div class="section-link"><a class="btn btn-secondary" href={path('/galeri','/gallery')}>{copy.all} →</a></div>
-    </div>
-  </section>
+    </section>
+  )}
 
   <section class="section">
     <div class="container cta glass">
