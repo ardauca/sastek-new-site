@@ -4,6 +4,9 @@ import { authRoutes } from './routes/auth';
 import { shopRoutes } from './routes/shops';
 import { sponsorRoutes } from './routes/sponsors';
 import { galleryRoutes } from './routes/gallery';
+import { eventRoutes } from './routes/events';
+import { teamRoutes } from './routes/team';
+import { socialRoutes } from './routes/socials';
 import { uploadRoutes } from './routes/upload';
 import { adminApp } from './routes/admin';
 import type { Env } from './lib/types';
@@ -16,11 +19,14 @@ app.use('*', cors({
   credentials: true,
 }));
 
-// ── Public API ────────────────────────────────────────────────────────────────
+// ── Public & Protected API ───────────────────────────────────────────────────
 app.route('/api/auth', authRoutes);
 app.route('/api/shops', shopRoutes);
 app.route('/api/sponsors', sponsorRoutes);
 app.route('/api/gallery', galleryRoutes);
+app.route('/api/events', eventRoutes);
+app.route('/api/team', teamRoutes);
+app.route('/api/socials', socialRoutes);
 app.route('/api/upload', uploadRoutes);
 
 // ── Admin Panel (serves HTML) ─────────────────────────────────────────────────

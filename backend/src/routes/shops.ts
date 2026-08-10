@@ -6,7 +6,7 @@ export const shopRoutes = new Hono<{ Bindings: Env }>();
 
 // ── Public ────────────────────────────────────────────────────────────────────
 
-// GET /api/shops — list all active shops (with category info)
+// GET /api/shops — list active shops
 shopRoutes.get('/', async (c) => {
   const shops = await c.env.DB.prepare(`
     SELECT s.*, c.name_tr as category_tr, c.name_en as category_en, c.icon as category_icon
@@ -36,14 +36,24 @@ shopRoutes.get('/:id', async (c) => {
 
 // ── Protected (Admin Only) ────────────────────────────────────────────────────
 
+// GET /api/shops/admin/all — all shops including inactive
+shopRoutes.get('/admin/all', requireAuth(), async (c) => {
+  const shops = await c.env.DB.prepare(`
+    SELECT s.*, c.name_tr as category_tr, c.name_en as category_en
+    FROM shops s LEFT JOIN categories c ON s.category_id = c.id
+    ORDER BY s.created_at DESC
+  `).all();
+  return c.json(shops.results);
+});
+
 // POST /api/shops — create shop
 shopRoutes.post('/', requireAuth(), async (c) => {
   const data = await c.req.json<Partial<Shop>>();
   if (!data.name) return c.json({ error: 'Name is required' }, 400);
 
   const result = await c.env.DB.prepare(`
-    INSERT INTO shops (name, category_id, discount, description_tr, description_en, logo_url, website, address, phone, is_active)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO shops (name, category_id, discount, description_tr, description_en, logo_url, website, address, phone, lat, lng, map_url, is_active)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     data.name,
     data.category_id ?? null,
@@ -54,6 +64,9 @@ shopRoutes.post('/', requireAuth(), async (c) => {
     data.website ?? null,
     data.address ?? null,
     data.phone ?? null,
+    data.lat ?? null,
+    data.lng ?? null,
+    data.map_url ?? null,
     data.is_active ?? 1,
   ).run();
 
@@ -76,6 +89,9 @@ shopRoutes.put('/:id', requireAuth(), async (c) => {
       website = ?,
       address = ?,
       phone = ?,
+      lat = ?,
+      lng = ?,
+      map_url = ?,
       is_active = COALESCE(?, is_active),
       updated_at = datetime('now')
     WHERE id = ?
@@ -89,6 +105,9 @@ shopRoutes.put('/:id', requireAuth(), async (c) => {
     data.website ?? null,
     data.address ?? null,
     data.phone ?? null,
+    data.lat ?? null,
+    data.lng ?? null,
+    data.map_url ?? null,
     data.is_active ?? null,
     id,
   ).run();
@@ -102,12 +121,28 @@ shopRoutes.delete('/:id', requireAuth(), async (c) => {
   return c.json({ ok: true });
 });
 
-// GET /api/shops/admin/all — all shops including inactive (admin only)
-shopRoutes.get('/admin/all', requireAuth(), async (c) => {
-  const shops = await c.env.DB.prepare(`
-    SELECT s.*, c.name_tr as category_tr, c.name_en as category_en
-    FROM shops s LEFT JOIN categories c ON s.category_id = c.id
-    ORDER BY s.created_at DESC
-  `).all();
-  return c.json(shops.results);
+// POST /api/shops/bulk-status — Toplu görünürlük değiştirme (active=0/1)
+shopRoutes.post('/bulk-status', requireAuth(), async (c) => {
+  const { ids, is_active } = await c.req.json<{ ids: number[]; is_active: number }>();
+  if (!Array.isArray(ids) || !ids.length) return c.json({ error: 'IDs array required' }, 400);
+
+  const placeholders = ids.map(() => '?').join(',');
+  await c.env.DB.prepare(`UPDATE shops SET is_active = ? WHERE id IN (${placeholders})`)
+    .bind(is_active, ...ids)
+    .run();
+
+  return c.json({ ok: true, count: ids.length });
+});
+
+// POST /api/shops/bulk-delete — Toplu silme
+shopRoutes.post('/bulk-delete', requireAuth(), async (c) => {
+  const { ids } = await c.req.json<{ ids: number[] }>();
+  if (!Array.isArray(ids) || !ids.length) return c.json({ error: 'IDs array required' }, 400);
+
+  const placeholders = ids.map(() => '?').join(',');
+  await c.env.DB.prepare(`DELETE FROM shops WHERE id IN (${placeholders})`)
+    .bind(...ids)
+    .run();
+
+  return c.json({ ok: true, count: ids.length });
 });
