@@ -82,7 +82,7 @@ export const dashboardPage = `<!DOCTYPE html>
     .stat-card .value { font-size:1.6rem;font-weight:700;color:var(--signal); }
 
     .toolbar { display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px; }
-    .bulk-actions { display:flex;gap:8px;align-items:center;flex-wrap:wrap; }
+    .bulk-actions { display:flex;gap:6px;align-items:center;flex-wrap:wrap; }
 
     .btn {
       padding:8px 16px;border-radius:7px;font-size:.8rem;font-weight:600;
@@ -95,7 +95,7 @@ export const dashboardPage = `<!DOCTYPE html>
     .btn-secondary:hover { border-color:var(--signal);color:var(--signal); }
     .btn-danger  { background:transparent;border:1px solid var(--error);color:var(--error); }
     .btn-danger:hover  { background:var(--error);color:var(--navy); }
-    .btn-sm { padding:5px 10px;font-size:.75rem; }
+    .btn-sm { padding:5px 9px;font-size:.72rem; }
 
     table { width:100%;border-collapse:collapse;font-size:.8rem; }
     th { text-align:left;padding:10px 12px;font-size:.65rem;font-weight:600;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border); }
@@ -123,7 +123,7 @@ export const dashboardPage = `<!DOCTYPE html>
     .modal-backdrop.open { display:flex; }
     .modal {
       background:var(--panel);border:1px solid var(--border);border-radius:14px;
-      padding:28px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;
+      padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;
     }
     .modal h3 { font-size:1rem;font-weight:600;margin-bottom:20px; }
     .grid-2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
@@ -209,20 +209,25 @@ export const dashboardPage = `<!DOCTYPE html>
     <!-- Shops -->
     <div class="page" id="page-shops">
       <h1>Anlaşmalı Noktalar</h1>
-      <p class="page-sub">Partner işletmeleri ve harita konumlarını yönetin.</p>
+      <p class="page-sub">Partner işletmeleri, harita konumlarını, öne çıkarma ve onay durumlarını yönetin.</p>
       <div class="toolbar">
         <div class="bulk-actions">
           <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
             <input type="checkbox" id="selectAllShops" /> Tümünü Seç
           </label>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('shops', 1, loadShops)">👁️ Görünür Yap</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('shops', 0, loadShops)">🙈 Görünmez Yap</button>
-          <button class="btn btn-danger btn-sm" onclick="bulkDelete('shops', loadShops)">🗑️ Seçilenleri Sil</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'is_featured', 1, loadShops)">⭐ Öne Çıkar</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'is_featured', 0, loadShops)">❌ Öne Çıkarma</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'show_on_map', 1, loadShops)">📍 Haritada Göster</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'show_on_map', 0, loadShops)">🙈 Harita Gizle</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'is_verified', 1, loadShops)">✅ Doğrula</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('shops', 1, loadShops)">👁️ Aktif Yap</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('shops', 0, loadShops)">🙈 Pasif Yap</button>
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('shops', loadShops)">🗑️ Sil</button>
         </div>
         <button class="btn btn-primary" onclick="openShopModal()">+ Yeni Ekle</button>
       </div>
       <table>
-        <thead><tr><th><input type="checkbox" id="selectAllShopsHeader" /></th><th>LOGO</th><th>İSİM</th><th>KATEGORİ</th><th>İNDİRİM</th><th>KOORDİNAT</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
+        <thead><tr><th><input type="checkbox" id="selectAllShopsHeader" /></th><th>LOGO</th><th>İSİM</th><th>KATEGORİ</th><th>İNDİRİM</th><th>DURUM & ÖZELLİKLER</th><th>SIRA</th><th>İŞLEM</th></tr></thead>
         <tbody id="shopTable"></tbody>
       </table>
     </div>
@@ -444,6 +449,14 @@ export const dashboardPage = `<!DOCTYPE html>
     <div class="form-field">
       <label>KOORDİNATLAR (Enlem, Boylam)</label>
       <input id="shopCoords" placeholder="39.7756, 30.5151 (Google Maps'ten yapıştırabilirsiniz)" />
+    </div>
+    <div class="grid-2">
+      <div class="form-field"><label>ÖNE ÇIKARILAN (Ana Sayfa)</label><select id="shopFeatured"><option value="1">⭐ Öne Çıkarılan (Evet)</option><option value="0">Normal (Hayır)</option></select></div>
+      <div class="form-field"><label>HARİTADA GÖSTER</label><select id="shopShowOnMap"><option value="1">📍 Göster (Evet)</option><option value="0">Gizle (Hayır)</option></select></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-field"><label>DOĞRULANMIŞ İŞLETME</label><select id="shopVerified"><option value="1">✅ Doğrulanmış (Evet)</option><option value="0">Bekliyor (Hayır)</option></select></div>
+      <div class="form-field"><label>SIRALAMA ÖNCELİĞİ</label><input id="shopOrderNum" type="number" value="1" /></div>
     </div>
     <div class="form-field"><label>HARİTA URL (Google Maps)</label><input id="shopMapUrl" placeholder="https://maps.app.goo.gl/..." /></div>
     <div class="form-field"><label>LOGO YÜKLE</label>
@@ -747,7 +760,7 @@ function getSelectedIds(moduleName) {
 async function bulkSetStatus(moduleName, isActive, reloadFn) {
   const ids = getSelectedIds(moduleName);
   if (!ids.length) { toast('Lütfen en az bir öğe seçin', 'error'); return; }
-  const actionName = isActive ? 'görünür (aktif)' : 'görünmez (pasif)';
+  const actionName = isActive ? 'aktif (görünür)' : 'pasif (görünmez)';
   if (!confirm(\`Seçilen \${ids.length} öğeyi \${actionName} yapmak istiyor musunuz?\`)) return;
 
   const r = await fetch(\`/api/\${moduleName}/bulk-status\`, {
@@ -756,6 +769,28 @@ async function bulkSetStatus(moduleName, isActive, reloadFn) {
     body: JSON.stringify({ ids, is_active: isActive })
   });
   if (r.ok) { toast(\`\${ids.length} öğe \${actionName} yapıldı ✓\`); reloadFn(); }
+  else toast('Hata oluştu', 'error');
+}
+
+async function bulkSetField(moduleName, field, value, reloadFn) {
+  const ids = getSelectedIds(moduleName);
+  if (!ids.length) { toast('Lütfen en az bir öğe seçin', 'error'); return; }
+
+  const labels = {
+    is_featured: value ? '⭐ Öne Çıkarılan' : 'Normal',
+    show_on_map: value ? '📍 Haritada Gösterilen' : 'Harita Gizli',
+    is_verified: value ? '✅ Doğrulanmış' : 'Doğrulanmamış',
+    is_active: value ? 'Aktif' : 'Pasif'
+  };
+  const label = labels[field] || (value ? 'Aktif' : 'Pasif');
+  if (!confirm(\`Seçilen \${ids.length} öğeyi \${label} yapmak istiyor musunuz?\`)) return;
+
+  const r = await fetch(\`/api/\${moduleName}/bulk-field\`, {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids, field, value })
+  });
+  if (r.ok) { toast(\`\${ids.length} öğe \${label} yapıldı ✓\`); reloadFn(); }
   else toast('Hata oluştu', 'error');
 }
 
@@ -808,8 +843,13 @@ async function loadShops() {
       <td><b>\${s.name}</b></td>
       <td>\${s.category_tr || '—'}</td>
       <td>\${s.discount || '—'}</td>
-      <td>\${s.lat && s.lng ? \`<span style="color:var(--success);font-size:.7rem">📍 \${s.lat.toFixed(3)}, \${s.lng.toFixed(3)}</span>\` : '<span style="color:var(--muted);font-size:.7rem">Yok</span>'}</td>
-      <td><span class="badge \${s.is_active ? 'badge-active' : 'badge-inactive'}">\${s.is_active ? 'Aktif' : 'Pasif'}</span></td>
+      <td>
+        <span class="badge \${s.is_active ? 'badge-active' : 'badge-inactive'}">\${s.is_active ? 'Aktif' : 'Pasif'}</span>
+        \${s.is_featured ? '<span class="badge badge-gold">⭐ Öne Çıkan</span>' : ''}
+        \${s.show_on_map ? '<span class="badge badge-platinum">📍 Harita</span>' : ''}
+        \${s.is_verified ? '<span class="badge badge-active">✅ Onaylı</span>' : ''}
+      </td>
+      <td>\${s.order_num || 1}</td>
       <td style="display:flex;gap:6px">
         <button class="btn btn-sm btn-primary" onclick="editShop(\${s.id})">Düzenle</button>
         <button class="btn btn-sm btn-danger" onclick="deleteShop(\${s.id})">Sil</button>
@@ -827,6 +867,10 @@ function openShopModal(shop = null) {
   document.getElementById('shopDescTr').value = shop?.description_tr || '';
   document.getElementById('shopDescEn').value = shop?.description_en || '';
   document.getElementById('shopCoords').value = (shop?.lat != null && shop?.lng != null) ? \`\${shop.lat}, \${shop.lng}\` : '';
+  document.getElementById('shopFeatured').value = String(shop?.is_featured ?? 0);
+  document.getElementById('shopShowOnMap').value = String(shop?.show_on_map ?? 1);
+  document.getElementById('shopVerified').value = String(shop?.is_verified ?? 1);
+  document.getElementById('shopOrderNum').value = shop?.order_num || 1;
   document.getElementById('shopMapUrl').value = shop?.map_url || '';
   document.getElementById('shopLogoUrl').value = shop?.logo_url || '';
   document.getElementById('shopWebsite').value = shop?.website || '';
@@ -878,8 +922,12 @@ async function saveShop() {
     discount: document.getElementById('shopDiscount').value,
     description_tr: document.getElementById('shopDescTr').value,
     description_en: document.getElementById('shopDescEn').value,
-    lat: lat,
-    lng: lng,
+    lat,
+    lng,
+    is_featured: parseInt(document.getElementById('shopFeatured').value),
+    show_on_map: parseInt(document.getElementById('shopShowOnMap').value),
+    is_verified: parseInt(document.getElementById('shopVerified').value),
+    order_num: parseInt(document.getElementById('shopOrderNum').value) || 1,
     map_url: document.getElementById('shopMapUrl').value,
     logo_url: logoUrl,
     website: document.getElementById('shopWebsite').value,

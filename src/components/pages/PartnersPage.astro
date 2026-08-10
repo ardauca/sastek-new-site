@@ -44,11 +44,11 @@ try {
           ? { lat: Number(s.lat), lng: Number(s.lng) }
           : undefined,
         mapUrl: s.map_url || s.website || '',
-        showOnMap: Boolean(s.lat != null && s.lng != null),
+        showOnMap: Boolean((s.show_on_map === 1 || s.show_on_map === true || s.show_on_map == null) && s.lat != null && s.lng != null),
         isActive: Boolean(s.is_active === 1 || s.is_active === true),
-        isFeatured: false,
-        isVerified: true,
-        order: s.id,
+        isFeatured: Boolean(s.is_featured === 1 || s.is_featured === true),
+        isVerified: Boolean(s.is_verified === 1 || s.is_verified === true),
+        order: Number(s.order_num || 1),
       }));
     }
   }

@@ -13,7 +13,7 @@ shopRoutes.get('/', async (c) => {
     FROM shops s
     LEFT JOIN categories c ON s.category_id = c.id
     WHERE s.is_active = 1
-    ORDER BY s.name ASC
+    ORDER BY s.order_num ASC, s.name ASC
   `).all<Shop & { category_tr: string; category_en: string; category_icon: string }>();
 
   return c.json(shops.results);
@@ -41,19 +41,19 @@ shopRoutes.get('/admin/all', requireAuth(), async (c) => {
   const shops = await c.env.DB.prepare(`
     SELECT s.*, c.name_tr as category_tr, c.name_en as category_en
     FROM shops s LEFT JOIN categories c ON s.category_id = c.id
-    ORDER BY s.created_at DESC
+    ORDER BY s.order_num ASC, s.created_at DESC
   `).all();
   return c.json(shops.results);
 });
 
 // POST /api/shops — create shop
 shopRoutes.post('/', requireAuth(), async (c) => {
-  const data = await c.req.json<Partial<Shop>>();
+  const data = await c.req.json<Partial<Shop> & { is_featured?: number; show_on_map?: number; is_verified?: number; order_num?: number }>();
   if (!data.name) return c.json({ error: 'Name is required' }, 400);
 
   const result = await c.env.DB.prepare(`
-    INSERT INTO shops (name, category_id, discount, description_tr, description_en, logo_url, website, address, phone, lat, lng, map_url, is_active)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO shops (name, category_id, discount, description_tr, description_en, logo_url, website, address, phone, lat, lng, map_url, is_active, is_featured, show_on_map, is_verified, order_num)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     data.name,
     data.category_id ?? null,
@@ -68,6 +68,10 @@ shopRoutes.post('/', requireAuth(), async (c) => {
     data.lng ?? null,
     data.map_url ?? null,
     data.is_active ?? 1,
+    data.is_featured ?? 0,
+    data.show_on_map ?? 1,
+    data.is_verified ?? 1,
+    data.order_num ?? 1,
   ).run();
 
   return c.json({ ok: true, id: result.meta.last_row_id }, 201);
@@ -75,7 +79,7 @@ shopRoutes.post('/', requireAuth(), async (c) => {
 
 // PUT /api/shops/:id — update shop
 shopRoutes.put('/:id', requireAuth(), async (c) => {
-  const data = await c.req.json<Partial<Shop>>();
+  const data = await c.req.json<Partial<Shop> & { is_featured?: number; show_on_map?: number; is_verified?: number; order_num?: number }>();
   const { id } = c.req.param();
 
   await c.env.DB.prepare(`
@@ -93,6 +97,10 @@ shopRoutes.put('/:id', requireAuth(), async (c) => {
       lng = ?,
       map_url = ?,
       is_active = COALESCE(?, is_active),
+      is_featured = COALESCE(?, is_featured),
+      show_on_map = COALESCE(?, show_on_map),
+      is_verified = COALESCE(?, is_verified),
+      order_num = COALESCE(?, order_num),
       updated_at = datetime('now')
     WHERE id = ?
   `).bind(
@@ -109,6 +117,10 @@ shopRoutes.put('/:id', requireAuth(), async (c) => {
     data.lng ?? null,
     data.map_url ?? null,
     data.is_active ?? null,
+    data.is_featured ?? null,
+    data.show_on_map ?? null,
+    data.is_verified ?? null,
+    data.order_num ?? null,
     id,
   ).run();
 
@@ -129,6 +141,22 @@ shopRoutes.post('/bulk-status', requireAuth(), async (c) => {
   const placeholders = ids.map(() => '?').join(',');
   await c.env.DB.prepare(`UPDATE shops SET is_active = ? WHERE id IN (${placeholders})`)
     .bind(is_active, ...ids)
+    .run();
+
+  return c.json({ ok: true, count: ids.length });
+});
+
+// POST /api/shops/bulk-field — Toplu alan güncelleme (is_featured, show_on_map, is_verified, is_active)
+shopRoutes.post('/bulk-field', requireAuth(), async (c) => {
+  const { ids, field, value } = await c.req.json<{ ids: number[]; field: string; value: number }>();
+  if (!Array.isArray(ids) || !ids.length) return c.json({ error: 'IDs array required' }, 400);
+
+  const allowedFields = ['is_featured', 'show_on_map', 'is_verified', 'is_active'];
+  if (!allowedFields.includes(field)) return c.json({ error: 'Invalid field' }, 400);
+
+  const placeholders = ids.map(() => '?').join(',');
+  await c.env.DB.prepare(`UPDATE shops SET ${field} = ? WHERE id IN (${placeholders})`)
+    .bind(value, ...ids)
     .run();
 
   return c.json({ ok: true, count: ids.length });
