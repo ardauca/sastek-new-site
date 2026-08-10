@@ -69,3 +69,29 @@ eventRoutes.delete('/:id', requireAuth(), async (c) => {
   await c.env.DB.prepare('DELETE FROM events WHERE id = ?').bind(c.req.param('id')).run();
   return c.json({ ok: true });
 });
+
+// POST /api/events/bulk-status — Bulk visibility toggle
+eventRoutes.post('/bulk-status', requireAuth(), async (c) => {
+  const { ids, is_active } = await c.req.json<{ ids: number[]; is_active: number }>();
+  if (!Array.isArray(ids) || !ids.length) return c.json({ error: 'IDs required' }, 400);
+
+  const placeholders = ids.map(() => '?').join(',');
+  await c.env.DB.prepare(`UPDATE events SET is_active = ? WHERE id IN (${placeholders})`)
+    .bind(is_active, ...ids)
+    .run();
+
+  return c.json({ ok: true, count: ids.length });
+});
+
+// POST /api/events/bulk-delete — Bulk delete
+eventRoutes.post('/bulk-delete', requireAuth(), async (c) => {
+  const { ids } = await c.req.json<{ ids: number[] }>();
+  if (!Array.isArray(ids) || !ids.length) return c.json({ error: 'IDs required' }, 400);
+
+  const placeholders = ids.map(() => '?').join(',');
+  await c.env.DB.prepare(`DELETE FROM events WHERE id IN (${placeholders})`)
+    .bind(...ids)
+    .run();
+
+  return c.json({ ok: true, count: ids.length });
+});

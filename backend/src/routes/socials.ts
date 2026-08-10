@@ -51,3 +51,29 @@ socialRoutes.delete('/:id', requireAuth(), async (c) => {
   await c.env.DB.prepare('DELETE FROM socials WHERE id = ?').bind(c.req.param('id')).run();
   return c.json({ ok: true });
 });
+
+// POST /api/socials/bulk-status
+socialRoutes.post('/bulk-status', requireAuth(), async (c) => {
+  const { ids, is_active } = await c.req.json<{ ids: number[]; is_active: number }>();
+  if (!Array.isArray(ids) || !ids.length) return c.json({ error: 'IDs required' }, 400);
+
+  const placeholders = ids.map(() => '?').join(',');
+  await c.env.DB.prepare(`UPDATE socials SET is_active = ? WHERE id IN (${placeholders})`)
+    .bind(is_active, ...ids)
+    .run();
+
+  return c.json({ ok: true, count: ids.length });
+});
+
+// POST /api/socials/bulk-delete
+socialRoutes.post('/bulk-delete', requireAuth(), async (c) => {
+  const { ids } = await c.req.json<{ ids: number[] }>();
+  if (!Array.isArray(ids) || !ids.length) return c.json({ error: 'IDs required' }, 400);
+
+  const placeholders = ids.map(() => '?').join(',');
+  await c.env.DB.prepare(`DELETE FROM socials WHERE id IN (${placeholders})`)
+    .bind(...ids)
+    .run();
+
+  return c.json({ ok: true, count: ids.length });
+});

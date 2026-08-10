@@ -82,7 +82,7 @@ export const dashboardPage = `<!DOCTYPE html>
     .stat-card .value { font-size:1.6rem;font-weight:700;color:var(--signal); }
 
     .toolbar { display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px; }
-    .bulk-actions { display:flex;gap:8px;align-items:center; }
+    .bulk-actions { display:flex;gap:8px;align-items:center;flex-wrap:wrap; }
 
     .btn {
       padding:8px 16px;border-radius:7px;font-size:.8rem;font-weight:600;
@@ -114,7 +114,7 @@ export const dashboardPage = `<!DOCTYPE html>
     .badge-silver  { background:rgba(148,163,184,.12);color:#94a3b8; }
     .badge-platinum{ background:rgba(0,212,255,.12);color:var(--signal); }
 
-    .logo-thumb { width:36px;height:36px;border-radius:6px;object-fit:contain;background:rgba(255,255,255,.05);padding:2px; }
+    .logo-thumb { width:44px;height:36px;border-radius:6px;object-fit:contain;background:rgba(255,255,255,.08);padding:2px; }
 
     .modal-backdrop {
       display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;
@@ -213,9 +213,9 @@ export const dashboardPage = `<!DOCTYPE html>
           <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
             <input type="checkbox" id="selectAllShops" /> Tümünü Seç
           </label>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetShopStatus(1)">👁️ Görünür Yap</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetShopStatus(0)">🙈 Görünmez Yap</button>
-          <button class="btn btn-danger btn-sm" onclick="bulkDeleteShops()">🗑️ Seçilenleri Sil</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('shops', 1, loadShops)">👁️ Görünür Yap</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('shops', 0, loadShops)">🙈 Görünmez Yap</button>
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('shops', loadShops)">🗑️ Seçilenleri Sil</button>
         </div>
         <button class="btn btn-primary" onclick="openShopModal()">+ Yeni Ekle</button>
       </div>
@@ -230,11 +230,18 @@ export const dashboardPage = `<!DOCTYPE html>
       <h1>Etkinlikler</h1>
       <p class="page-sub">Kulüp etkinliklerini düzenleyin.</p>
       <div class="toolbar">
-        <span id="eventCount" style="font-size:.8rem;color:var(--muted)"></span>
+        <div class="bulk-actions">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
+            <input type="checkbox" id="selectAllEvents" /> Tümünü Seç
+          </label>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('events', 1, loadEvents)">👁️ Görünür Yap</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('events', 0, loadEvents)">🙈 Görünmez Yap</button>
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('events', loadEvents)">🗑️ Seçilenleri Sil</button>
+        </div>
         <button class="btn btn-primary" onclick="openEventModal()">+ Yeni Etkinlik</button>
       </div>
       <table>
-        <thead><tr><th>GÖRSEL</th><th>BAŞLIK</th><th>KATEGORİ</th><th>SLUG</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
+        <thead><tr><th><input type="checkbox" id="selectAllEventsHeader" /></th><th>GÖRSEL</th><th>BAŞLIK</th><th>KATEGORİ</th><th>SLUG</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
         <tbody id="eventTable"></tbody>
       </table>
     </div>
@@ -244,11 +251,18 @@ export const dashboardPage = `<!DOCTYPE html>
       <h1>Ekip & Yönetim</h1>
       <p class="page-sub">Kulüp yönetim kurulu üyelerini yönetin.</p>
       <div class="toolbar">
-        <span id="teamCount" style="font-size:.8rem;color:var(--muted)"></span>
+        <div class="bulk-actions">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
+            <input type="checkbox" id="selectAllTeam" /> Tümünü Seç
+          </label>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('team', 1, loadTeam)">👁️ Görünür Yap</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('team', 0, loadTeam)">🙈 Görünmez Yap</button>
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('team', loadTeam)">🗑️ Seçilenleri Sil</button>
+        </div>
         <button class="btn btn-primary" onclick="openTeamModal()">+ Üye Ekle</button>
       </div>
       <table>
-        <thead><tr><th>İSİM</th><th>ROL (TR)</th><th>E-POSTA</th><th>SIRA</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
+        <thead><tr><th><input type="checkbox" id="selectAllTeamHeader" /></th><th>İSİM</th><th>ROL (TR)</th><th>E-POSTA</th><th>SIRA</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
         <tbody id="teamTable"></tbody>
       </table>
     </div>
@@ -258,11 +272,18 @@ export const dashboardPage = `<!DOCTYPE html>
       <h1>Sponsorlar</h1>
       <p class="page-sub">Sponsor kurumları yönetin.</p>
       <div class="toolbar">
-        <span id="sponsorCount" style="font-size:.8rem;color:var(--muted)"></span>
+        <div class="bulk-actions">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
+            <input type="checkbox" id="selectAllSponsors" /> Tümünü Seç
+          </label>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('sponsors', 1, loadSponsors)">👁️ Görünür Yap</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('sponsors', 0, loadSponsors)">🙈 Görünmez Yap</button>
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('sponsors', loadSponsors)">🗑️ Seçilenleri Sil</button>
+        </div>
         <button class="btn btn-primary" onclick="openSponsorModal()">+ Yeni Ekle</button>
       </div>
       <table>
-        <thead><tr><th>LOGO</th><th>İSİM</th><th>WEBSİTE</th><th>SEVİYE</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
+        <thead><tr><th><input type="checkbox" id="selectAllSponsorsHeader" /></th><th>LOGO</th><th>İSİM</th><th>WEBSİTE</th><th>SEVİYE</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
         <tbody id="sponsorTable"></tbody>
       </table>
     </div>
@@ -272,11 +293,18 @@ export const dashboardPage = `<!DOCTYPE html>
       <h1>Sosyal Medya</h1>
       <p class="page-sub">Sosyal medya hesap linklerini yönetin.</p>
       <div class="toolbar">
-        <span id="socialCount" style="font-size:.8rem;color:var(--muted)"></span>
+        <div class="bulk-actions">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
+            <input type="checkbox" id="selectAllSocials" /> Tümünü Seç
+          </label>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('socials', 1, loadSocials)">👁️ Görünür Yap</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('socials', 0, loadSocials)">🙈 Görünmez Yap</button>
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('socials', loadSocials)">🗑️ Seçilenleri Sil</button>
+        </div>
         <button class="btn btn-primary" onclick="openSocialModal()">+ Yeni Link</button>
       </div>
       <table>
-        <thead><tr><th>PLATFORM</th><th>LABEL</th><th>URL</th><th>SIRA</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
+        <thead><tr><th><input type="checkbox" id="selectAllSocialsHeader" /></th><th>PLATFORM</th><th>LABEL</th><th>URL</th><th>SIRA</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
         <tbody id="socialTable"></tbody>
       </table>
     </div>
@@ -286,11 +314,16 @@ export const dashboardPage = `<!DOCTYPE html>
       <h1>Galeri</h1>
       <p class="page-sub">Fotoğraf ve medya içeriklerini yönetin.</p>
       <div class="toolbar">
-        <span id="galleryCount" style="font-size:.8rem;color:var(--muted)"></span>
+        <div class="bulk-actions">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
+            <input type="checkbox" id="selectAllGallery" /> Tümünü Seç
+          </label>
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('gallery', loadGallery)">🗑️ Seçilenleri Sil</button>
+        </div>
         <button class="btn btn-primary" onclick="openGalleryModal()">+ Fotoğraf Yükle</button>
       </div>
       <table>
-        <thead><tr><th>GÖRSEL</th><th>ETİKET</th><th>BOYUT</th><th>YÜKLENDİ</th><th>İŞLEM</th></tr></thead>
+        <thead><tr><th><input type="checkbox" id="selectAllGalleryHeader" /></th><th>GÖRSEL</th><th>ETİKET</th><th>BOYUT</th><th>YÜKLENDİ</th><th>İŞLEM</th></tr></thead>
         <tbody id="galleryTable"></tbody>
       </table>
     </div>
@@ -298,6 +331,7 @@ export const dashboardPage = `<!DOCTYPE html>
   </main>
 </div>
 
+<!-- Modals -->
 <!-- Shop Modal -->
 <div class="modal-backdrop" id="shopModal">
   <div class="modal">
@@ -338,7 +372,7 @@ export const dashboardPage = `<!DOCTYPE html>
     <input type="hidden" id="eventId" />
     <div class="form-field"><label>ETKİNLİK SLUG *</label><input id="eventSlug" placeholder="coffee-talk" /></div>
     <div class="grid-2">
-      <div class="form-field"><label>BAŞLIK (TR) *</label><input id="eventTitleTr" /></div>
+      <div class="form-field"><label>BASHLIK (TR) *</label><input id="eventTitleTr" /></div>
       <div class="form-field"><label>BAŞLIK (EN)</label><input id="eventTitleEn" /></div>
     </div>
     <div class="grid-2">
@@ -464,6 +498,13 @@ export const dashboardPage = `<!DOCTYPE html>
 <div id="toast"></div>
 
 <script>
+// Image URL Helper — Prepends https://sastek.org to relative paths like /images/...
+function resolveImageUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('/images/')) return 'https://sastek.org' + url;
+  return url;
+}
+
 // ── Routing ──────────────────────────────────────────────────────────────────
 document.querySelectorAll('nav a').forEach(a => {
   a.addEventListener('click', e => {
@@ -502,7 +543,6 @@ async function checkAuth() {
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// File Upload helper
 async function uploadFile(file, folder) {
   const fd = new FormData();
   fd.append('file', file);
@@ -512,11 +552,9 @@ async function uploadFile(file, folder) {
     const err = await r.json().catch(() => ({}));
     throw new Error(err.error || 'Upload failed');
   }
-  const data = await r.json();
-  return data.url;
+  return (await r.json()).url;
 }
 
-// Live Image Selection Preview Handler
 function bindFilePreview(inputId, previewId) {
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -537,6 +575,56 @@ bindFilePreview('eventImgFile', 'eventImgPreview');
 bindFilePreview('sponsorLogoFile', 'sponsorLogoPreview');
 bindFilePreview('galleryFile', 'galleryPreview');
 
+// ── Generic Bulk Select & Action Handlers ─────────────────────────────────────
+function setupBulkSelect(moduleName) {
+  const cap = moduleName.charAt(0).toUpperCase() + moduleName.slice(1);
+  const selectAll = document.getElementById('selectAll' + cap);
+  const selectAllHeader = document.getElementById('selectAll' + cap + 'Header');
+
+  function updateCheckboxes(checked) {
+    document.querySelectorAll('.' + moduleName + '-select-cb').forEach(cb => cb.checked = checked);
+    if (selectAll) selectAll.checked = checked;
+    if (selectAllHeader) selectAllHeader.checked = checked;
+  }
+
+  selectAll?.addEventListener('change', e => updateCheckboxes(e.target.checked));
+  selectAllHeader?.addEventListener('change', e => updateCheckboxes(e.target.checked));
+}
+['shops', 'events', 'team', 'sponsors', 'socials', 'gallery'].forEach(setupBulkSelect);
+
+function getSelectedIds(moduleName) {
+  return Array.from(document.querySelectorAll('.' + moduleName + '-select-cb:checked')).map(cb => Number(cb.value));
+}
+
+async function bulkSetStatus(moduleName, isActive, reloadFn) {
+  const ids = getSelectedIds(moduleName);
+  if (!ids.length) { toast('Lütfen en az bir öğe seçin', 'error'); return; }
+  const actionName = isActive ? 'görünür (aktif)' : 'görünmez (pasif)';
+  if (!confirm(\`Seçilen \${ids.length} öğeyi \${actionName} yapmak istiyor musunuz?\`)) return;
+
+  const r = await fetch(\`/api/\${moduleName}/bulk-status\`, {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids, is_active: isActive })
+  });
+  if (r.ok) { toast(\`\${ids.length} öğe \${actionName} yapıldı ✓\`); reloadFn(); }
+  else toast('Hata oluştu', 'error');
+}
+
+async function bulkDelete(moduleName, reloadFn) {
+  const ids = getSelectedIds(moduleName);
+  if (!ids.length) { toast('Lütfen en az bir öğe seçin', 'error'); return; }
+  if (!confirm(\`Seçilen \${ids.length} öğeyi KALICI OLARAK silmek istiyor musunuz?\`)) return;
+
+  const r = await fetch(\`/api/\${moduleName}/bulk-delete\`, {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids })
+  });
+  if (r.ok) { toast(\`\${ids.length} öğe silindi ✓\`); reloadFn(); }
+  else toast('Hata oluştu', 'error');
+}
+
 // ── Stats ─────────────────────────────────────────────────────────────────────
 async function loadStats() {
   const [shops, events, team, sponsors, gallery] = await Promise.all([
@@ -553,7 +641,7 @@ async function loadStats() {
   document.getElementById('stat-gallery').textContent = gallery.length;
 }
 
-// ── Shops & Bulk Selection ────────────────────────────────────────────────────
+// ── Shops ─────────────────────────────────────────────────────────────────────
 let categories = [];
 let allShopsData = [];
 
@@ -567,8 +655,8 @@ async function loadShops() {
 
   document.getElementById('shopTable').innerHTML = allShopsData.map(s => \`
     <tr>
-      <td><input type="checkbox" class="shop-select-cb" value="\${s.id}" /></td>
-      <td>\${s.logo_url ? \`<img class="logo-thumb" src="\${s.logo_url}" alt="" />\` : '—'}</td>
+      <td><input type="checkbox" class="shops-select-cb" value="\${s.id}" /></td>
+      <td>\${s.logo_url ? \`<img class="logo-thumb" src="\${resolveImageUrl(s.logo_url)}" alt="" />\` : '—'}</td>
       <td><b>\${s.name}</b></td>
       <td>\${s.category_tr || '—'}</td>
       <td>\${s.discount || '—'}</td>
@@ -580,50 +668,6 @@ async function loadShops() {
       </td>
     </tr>
   \`).join('');
-}
-
-document.getElementById('selectAllShops')?.addEventListener('change', e => {
-  const checked = e.target.checked;
-  document.querySelectorAll('.shop-select-cb').forEach(cb => cb.checked = checked);
-  if (document.getElementById('selectAllShopsHeader')) document.getElementById('selectAllShopsHeader').checked = checked;
-});
-document.getElementById('selectAllShopsHeader')?.addEventListener('change', e => {
-  const checked = e.target.checked;
-  document.querySelectorAll('.shop-select-cb').forEach(cb => cb.checked = checked);
-  if (document.getElementById('selectAllShops')) document.getElementById('selectAllShops').checked = checked;
-});
-
-function getSelectedShopIds() {
-  return Array.from(document.querySelectorAll('.shop-select-cb:checked')).map(cb => Number(cb.value));
-}
-
-async function bulkSetShopStatus(isActive) {
-  const ids = getSelectedShopIds();
-  if (!ids.length) { toast('Lütfen en az bir işletme seçin', 'error'); return; }
-  const actionName = isActive ? 'görünür (aktif)' : 'görünmez (pasif)';
-  if (!confirm(\`Seçilen \${ids.length} işletmeyi \${actionName} yapmak istiyor musunuz?\`)) return;
-
-  const r = await fetch('/api/shops/bulk-status', {
-    method: 'POST', credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ids, is_active: isActive })
-  });
-  if (r.ok) { toast(\`\${ids.length} işletme \${actionName} yapıldı ✓\`); loadShops(); }
-  else toast('Hata oluştu', 'error');
-}
-
-async function bulkDeleteShops() {
-  const ids = getSelectedShopIds();
-  if (!ids.length) { toast('Lütfen en az bir işletme seçin', 'error'); return; }
-  if (!confirm(\`Seçilen \${ids.length} işletmeyi KALICI OLARAK silmek istiyor musunuz?\`)) return;
-
-  const r = await fetch('/api/shops/bulk-delete', {
-    method: 'POST', credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ids })
-  });
-  if (r.ok) { toast(\`\${ids.length} işletme silindi ✓\`); loadShops(); }
-  else toast('Hata oluştu', 'error');
 }
 
 function openShopModal(shop = null) {
@@ -645,16 +689,13 @@ function openShopModal(shop = null) {
 
   const preview = document.getElementById('shopLogoPreview');
   if (shop?.logo_url) {
-    preview.innerHTML = \`<img src="\${shop.logo_url}" alt="Mevcut Logo" />\`;
+    preview.innerHTML = \`<img src="\${resolveImageUrl(shop.logo_url)}" alt="Mevcut Logo" />\`;
   } else {
     preview.innerHTML = '';
   }
   openModal('shopModal');
 }
-function editShop(id) {
-  const s = allShopsData.find(x => x.id === id);
-  if (s) openShopModal(s);
-}
+function editShop(id) { const s = allShopsData.find(x => x.id === id); if (s) openShopModal(s); }
 
 async function saveShop() {
   const id = document.getElementById('shopId').value;
@@ -663,7 +704,7 @@ async function saveShop() {
 
   if (logoFile) {
     try {
-      toast('Fotoğraf yükleniyor...', 'info');
+      toast('Logo yükleniyor...', 'info');
       logoUrl = await uploadFile(logoFile, 'logos');
     } catch (e) {
       toast('Logo yüklenemedi: ' + (e.message || ''), 'error');
@@ -702,10 +743,10 @@ async function deleteShop(id) {
 let allEventsData = [];
 async function loadEvents() {
   allEventsData = await fetch('/api/events/admin/all', { credentials: 'include' }).then(r => r.json());
-  document.getElementById('eventCount').textContent = allEventsData.length + ' etkinlik';
   document.getElementById('eventTable').innerHTML = allEventsData.map(e => \`
     <tr>
-      <td>\${e.image_url ? \`<img class="logo-thumb" src="\${e.image_url}" alt="" />\` : '—'}</td>
+      <td><input type="checkbox" class="events-select-cb" value="\${e.id}" /></td>
+      <td>\${e.image_url ? \`<img class="logo-thumb" src="\${resolveImageUrl(e.image_url)}" alt="" />\` : '—'}</td>
       <td><b>\${e.title_tr}</b></td>
       <td>\${e.category_tr || '—'}</td>
       <td><code>\${e.slug}</code></td>
@@ -735,7 +776,7 @@ function openEventModal(ev = null) {
 
   const preview = document.getElementById('eventImgPreview');
   if (ev?.image_url) {
-    preview.innerHTML = \`<img src="\${ev.image_url}" alt="Mevcut Görsel" />\`;
+    preview.innerHTML = \`<img src="\${resolveImageUrl(ev.image_url)}" alt="Mevcut Görsel" />\`;
   } else {
     preview.innerHTML = '';
   }
@@ -785,9 +826,9 @@ async function deleteEvent(id) {
 let allTeamData = [];
 async function loadTeam() {
   allTeamData = await fetch('/api/team/admin/all', { credentials: 'include' }).then(r => r.json());
-  document.getElementById('teamCount').textContent = allTeamData.length + ' üye';
   document.getElementById('teamTable').innerHTML = allTeamData.map(t => \`
     <tr>
+      <td><input type="checkbox" class="team-select-cb" value="\${t.id}" /></td>
       <td><b>\${t.name}</b></td>
       <td>\${t.role_tr}</td>
       <td>\${t.email || '—'}</td>
@@ -841,10 +882,10 @@ async function deleteTeam(id) {
 let allSponsorsData = [];
 async function loadSponsors() {
   allSponsorsData = await fetch('/api/sponsors/admin/all', { credentials: 'include' }).then(r => r.json());
-  document.getElementById('sponsorCount').textContent = allSponsorsData.length + ' sponsor';
   document.getElementById('sponsorTable').innerHTML = allSponsorsData.map(s => \`
     <tr>
-      <td>\${s.logo_url ? \`<img class="logo-thumb" src="\${s.logo_url}" alt="" />\` : '—'}</td>
+      <td><input type="checkbox" class="sponsors-select-cb" value="\${s.id}" /></td>
+      <td>\${s.logo_url ? \`<img class="logo-thumb" src="\${resolveImageUrl(s.logo_url)}" alt="" />\` : '—'}</td>
       <td><b>\${s.name}</b></td>
       <td>\${s.website ? \`<a href="\${s.website}" target="_blank" style="color:var(--signal)">\${s.website}</a>\` : '—'}</td>
       <td><span class="badge badge-\${s.tier}">\${s.tier}</span></td>
@@ -868,7 +909,7 @@ function openSponsorModal(s = null) {
 
   const preview = document.getElementById('sponsorLogoPreview');
   if (s?.logo_url) {
-    preview.innerHTML = \`<img src="\${s.logo_url}" alt="Mevcut Logo" />\`;
+    preview.innerHTML = \`<img src="\${resolveImageUrl(s.logo_url)}" alt="Mevcut Logo" />\`;
   } else {
     preview.innerHTML = '';
   }
@@ -912,9 +953,9 @@ async function deleteSponsor(id) {
 let allSocialsData = [];
 async function loadSocials() {
   allSocialsData = await fetch('/api/socials/admin/all', { credentials: 'include' }).then(r => r.json());
-  document.getElementById('socialCount').textContent = allSocialsData.length + ' link';
   document.getElementById('socialTable').innerHTML = allSocialsData.map(s => \`
     <tr>
+      <td><input type="checkbox" class="socials-select-cb" value="\${s.id}" /></td>
       <td><b>\${s.platform}</b></td>
       <td>\${s.label}</td>
       <td><a href="\${s.url}" target="_blank" style="color:var(--signal)">\${s.url}</a></td>
@@ -963,10 +1004,10 @@ async function deleteSocial(id) {
 // ── Gallery ───────────────────────────────────────────────────────────────────
 async function loadGallery() {
   const items = await fetch('/api/gallery', { credentials: 'include' }).then(r => r.json());
-  document.getElementById('galleryCount').textContent = items.length + ' fotoğraf';
   document.getElementById('galleryTable').innerHTML = items.map(g => \`
     <tr>
-      <td><img class="logo-thumb" src="\${g.url}" alt="" style="width:48px;height:36px" /></td>
+      <td><input type="checkbox" class="gallery-select-cb" value="\${g.id}" /></td>
+      <td><img class="logo-thumb" src="\${resolveImageUrl(g.url)}" alt="" style="width:48px;height:36px" /></td>
       <td>\${g.event_tag || '—'}</td>
       <td>\${g.file_size ? Math.round(g.file_size/1024) + ' KB' : '—'}</td>
       <td style="font-size:.75rem;color:var(--muted)">\${g.uploaded_at?.slice(0,10) || ''}</td>
