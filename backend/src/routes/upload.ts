@@ -8,7 +8,21 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_FOLDERS = ['logos', 'gallery', 'sponsors'];
 
-// POST /api/upload
+// GET /api/upload/file/:key{.+} — Serve images directly from Cloudflare R2
+uploadRoutes.get('/file/:key{.+}', async (c) => {
+  const key = c.req.param('key');
+  const object = await c.env.MEDIA.get(key);
+  if (!object) return c.json({ error: 'File not found' }, 404);
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('etag', object.httpEtag);
+  headers.set('cache-control', 'public, max-age=31536000');
+
+  return new Response(object.body, { headers });
+});
+
+// POST /api/upload — Upload new file to R2
 uploadRoutes.post('/', requireAuth(), async (c) => {
   const form = await c.req.formData();
   const file = form.get('file') as File | null;
@@ -36,12 +50,12 @@ uploadRoutes.post('/', requireAuth(), async (c) => {
     httpMetadata: { contentType: file.type },
   });
 
-  const publicUrl = `https://pub-REPLACE_WITH_R2_PUBLIC_ID.r2.dev/${key}`;
+  const publicUrl = `https://admin.sastek.org/api/upload/file/${key}`;
 
   return c.json({ ok: true, url: publicUrl, key });
 });
 
-// DELETE /api/upload/:key
+// DELETE /api/upload/:key — Delete file from R2
 uploadRoutes.delete('/:key{.+}', requireAuth(), async (c) => {
   const key = c.req.param('key') || '';
   await c.env.MEDIA.delete(key);

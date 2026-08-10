@@ -147,8 +147,8 @@ export const dashboardPage = `<!DOCTYPE html>
       text-align:center;cursor:pointer;transition:border-color .15s;font-size:.8rem;color:var(--muted);
     }
     .upload-area:hover { border-color:var(--signal); }
-    .upload-preview { margin-top:10px; }
-    .upload-preview img { max-width:100%;max-height:100px;border-radius:6px;object-fit:contain; }
+    .upload-preview { margin-top:10px; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
+    .upload-preview img { max-width:100%;max-height:100px;border-radius:6px;object-fit:contain;border:1px solid var(--border); }
 
     #toast {
       position:fixed;bottom:24px;right:24px;
@@ -320,7 +320,7 @@ export const dashboardPage = `<!DOCTYPE html>
       </div>
       <input type="file" id="shopLogoFile" accept="image/jpeg,image/png,image/webp" style="display:none" />
     </div>
-    <div class="form-field"><label>LOGO URL (mevcut)</label><input id="shopLogoUrl" placeholder="https://..." /></div>
+    <div class="form-field"><label>LOGO URL (mevcut veya dış link)</label><input id="shopLogoUrl" placeholder="https://..." /></div>
     <div class="form-field"><label>WEBSİTE</label><input id="shopWebsite" placeholder="https://..." /></div>
     <div class="form-field"><label>ADRES</label><input id="shopAddress" /></div>
     <div class="form-field"><label>DURUM</label><select id="shopActive"><option value="1">Aktif (Görünür)</option><option value="0">Pasif (Görünmez)</option></select></div>
@@ -502,14 +502,40 @@ async function checkAuth() {
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
+// File Upload helper
 async function uploadFile(file, folder) {
   const fd = new FormData();
   fd.append('file', file);
   fd.append('folder', folder);
   const r = await fetch('/api/upload', { method: 'POST', credentials: 'include', body: fd });
-  if (!r.ok) throw new Error('Upload failed');
-  return (await r.json()).url;
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.error || 'Upload failed');
+  }
+  const data = await r.json();
+  return data.url;
 }
+
+// Live Image Selection Preview Handler
+function bindFilePreview(inputId, previewId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.addEventListener('change', e => {
+    const preview = document.getElementById(previewId);
+    if (!preview) return;
+    preview.innerHTML = '';
+    const files = Array.from(e.target.files || []);
+    files.forEach(f => {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(f);
+      preview.appendChild(img);
+    });
+  });
+}
+bindFilePreview('shopLogoFile', 'shopLogoPreview');
+bindFilePreview('eventImgFile', 'eventImgPreview');
+bindFilePreview('sponsorLogoFile', 'sponsorLogoPreview');
+bindFilePreview('galleryFile', 'galleryPreview');
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
 async function loadStats() {
@@ -556,7 +582,6 @@ async function loadShops() {
   \`).join('');
 }
 
-// Select All checkboxes
 document.getElementById('selectAllShops')?.addEventListener('change', e => {
   const checked = e.target.checked;
   document.querySelectorAll('.shop-select-cb').forEach(cb => cb.checked = checked);
@@ -590,7 +615,7 @@ async function bulkSetShopStatus(isActive) {
 async function bulkDeleteShops() {
   const ids = getSelectedShopIds();
   if (!ids.length) { toast('Lütfen en az bir işletme seçin', 'error'); return; }
-  if (!confirm(\`Seçilen \${ids.length} işletmeyi KALICI OLAARAK silmek istiyor musunuz?\`)) return;
+  if (!confirm(\`Seçilen \${ids.length} işletmeyi KALICI OLARAK silmek istiyor musunuz?\`)) return;
 
   const r = await fetch('/api/shops/bulk-delete', {
     method: 'POST', credentials: 'include',
@@ -616,7 +641,14 @@ function openShopModal(shop = null) {
   document.getElementById('shopWebsite').value = shop?.website || '';
   document.getElementById('shopAddress').value = shop?.address || '';
   document.getElementById('shopActive').value = String(shop?.is_active ?? 1);
-  document.getElementById('shopLogoPreview').innerHTML = '';
+  document.getElementById('shopLogoFile').value = '';
+
+  const preview = document.getElementById('shopLogoPreview');
+  if (shop?.logo_url) {
+    preview.innerHTML = \`<img src="\${shop.logo_url}" alt="Mevcut Logo" />\`;
+  } else {
+    preview.innerHTML = '';
+  }
   openModal('shopModal');
 }
 function editShop(id) {
@@ -628,10 +660,17 @@ async function saveShop() {
   const id = document.getElementById('shopId').value;
   const logoFile = document.getElementById('shopLogoFile').files[0];
   let logoUrl = document.getElementById('shopLogoUrl').value;
+
   if (logoFile) {
-    try { logoUrl = await uploadFile(logoFile, 'logos'); }
-    catch { toast('Logo yüklenemedi', 'error'); return; }
+    try {
+      toast('Fotoğraf yükleniyor...', 'info');
+      logoUrl = await uploadFile(logoFile, 'logos');
+    } catch (e) {
+      toast('Logo yüklenemedi: ' + (e.message || ''), 'error');
+      return;
+    }
   }
+
   const body = {
     name: document.getElementById('shopName').value,
     category_id: document.getElementById('shopCategory').value || null,
@@ -692,6 +731,14 @@ function openEventModal(ev = null) {
   document.getElementById('eventCatEn').value = ev?.category_en || '';
   document.getElementById('eventImgUrl').value = ev?.image_url || '';
   document.getElementById('eventActive').value = String(ev?.is_active ?? 1);
+  document.getElementById('eventImgFile').value = '';
+
+  const preview = document.getElementById('eventImgPreview');
+  if (ev?.image_url) {
+    preview.innerHTML = \`<img src="\${ev.image_url}" alt="Mevcut Görsel" />\`;
+  } else {
+    preview.innerHTML = '';
+  }
   openModal('eventModal');
 }
 function editEvent(id) { const ev = allEventsData.find(x => x.id === id); if (ev) openEventModal(ev); }
@@ -701,7 +748,13 @@ async function saveEvent() {
   const imgFile = document.getElementById('eventImgFile').files[0];
   let imgUrl = document.getElementById('eventImgUrl').value;
   if (imgFile) {
-    try { imgUrl = await uploadFile(imgFile, 'gallery'); } catch {}
+    try {
+      toast('Fotoğraf yükleniyor...', 'info');
+      imgUrl = await uploadFile(imgFile, 'gallery');
+    } catch (e) {
+      toast('Görsel yüklenemedi: ' + (e.message || ''), 'error');
+      return;
+    }
   }
   const body = {
     slug: document.getElementById('eventSlug').value,
@@ -811,6 +864,14 @@ function openSponsorModal(s = null) {
   document.getElementById('sponsorLogoUrl').value = s?.logo_url || '';
   document.getElementById('sponsorWebsite').value = s?.website || '';
   document.getElementById('sponsorActive').value = String(s?.is_active ?? 1);
+  document.getElementById('sponsorLogoFile').value = '';
+
+  const preview = document.getElementById('sponsorLogoPreview');
+  if (s?.logo_url) {
+    preview.innerHTML = \`<img src="\${s.logo_url}" alt="Mevcut Logo" />\`;
+  } else {
+    preview.innerHTML = '';
+  }
   openModal('sponsorModal');
 }
 function editSponsor(id) { const s = allSponsorsData.find(x => x.id === id); if (s) openSponsorModal(s); }
@@ -820,7 +881,13 @@ async function saveSponsor() {
   const logoFile = document.getElementById('sponsorLogoFile').files[0];
   let logoUrl = document.getElementById('sponsorLogoUrl').value;
   if (logoFile) {
-    try { logoUrl = await uploadFile(logoFile, 'sponsors'); } catch {}
+    try {
+      toast('Logo yükleniyor...', 'info');
+      logoUrl = await uploadFile(logoFile, 'sponsors');
+    } catch (e) {
+      toast('Logo yüklenemedi: ' + (e.message || ''), 'error');
+      return;
+    }
   }
   const body = {
     name: document.getElementById('sponsorName').value,
@@ -907,13 +974,19 @@ async function loadGallery() {
     </tr>
   \`).join('');
 }
-function openGalleryModal() { openModal('galleryModal'); }
+function openGalleryModal() {
+  document.getElementById('galleryFile').value = '';
+  document.getElementById('galleryPreview').innerHTML = '';
+  document.getElementById('galleryTag').value = '';
+  openModal('galleryModal');
+}
 
 async function uploadGallery() {
   const files = document.getElementById('galleryFile').files;
-  if (!files.length) { toast('Dosya seçin', 'error'); return; }
+  if (!files.length) { toast('Lütfen en az bir dosya seçin', 'error'); return; }
   const tag = document.getElementById('galleryTag').value;
   let ok = 0;
+  toast('Fotoğraflar yükleniyor...', 'info');
   for (const file of files) {
     try {
       const url = await uploadFile(file, 'gallery');
@@ -923,7 +996,7 @@ async function uploadGallery() {
         body: JSON.stringify({ url, event_tag: tag || null, file_size: file.size }),
       });
       ok++;
-    } catch { toast('Yükleme hatası', 'error'); }
+    } catch (e) { toast('Yükleme hatası: ' + (e.message || ''), 'error'); }
   }
   closeModal('galleryModal');
   toast(\`\${ok} fotoğraf yüklendi ✓\`);
