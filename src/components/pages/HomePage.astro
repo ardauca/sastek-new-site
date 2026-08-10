@@ -33,7 +33,7 @@ try {
   if (gRes.ok) { const data = await gRes.json(); if (Array.isArray(data)) rawGallery = data; }
 } catch (e) {}
 
-const featuredEvents: EventItem[] = (rawEvents !== null)
+const featuredEvents: EventItem[] = (rawEvents !== null && rawEvents.length > 0)
   ? rawEvents.slice(0, 3).map((e: any) => ({
       id: String(e.id),
       slug: e.slug,
@@ -47,9 +47,9 @@ const featuredEvents: EventItem[] = (rawEvents !== null)
       isFeatured: Boolean(e.is_featured),
       showDetails: Boolean(e.show_details),
     }))
-  : staticEvents.filter((item) => item.isFeatured).slice(0, 3);
+  : (rawEvents === null ? staticEvents.filter((item) => item.isFeatured).slice(0, 3) : []);
 
-const featuredPartners: Partner[] = (rawPartners !== null)
+const featuredPartners: Partner[] = (rawPartners !== null && rawPartners.length > 0)
   ? rawPartners.slice(0, 3).map((s: any) => ({
       id: String(s.id),
       name: s.name,
@@ -59,15 +59,15 @@ const featuredPartners: Partner[] = (rawPartners !== null)
       logo: s.logo_url || '/images/partners/arc-logo.png',
       isActive: Boolean(s.is_active === 1 || s.is_active === true),
     }))
-  : staticPartners.filter((item) => item.isActive && item.isFeatured).sort((a,b) => (a.order||0)-(b.order||0)).slice(0, 3);
+  : (rawPartners === null ? staticPartners.filter((item) => item.isActive && item.isFeatured).sort((a,b) => (a.order||0)-(b.order||0)).slice(0, 3) : []);
 
 const featuredSponsors = (rawSponsors !== null)
   ? rawSponsors
   : staticSponsors.map(s => ({ name: s.name, logo_url: s.logo }));
 
-const featuredGallery = (rawGallery !== null)
+const featuredGallery = (rawGallery !== null && rawGallery.length > 0)
   ? rawGallery.slice(0, 3)
-  : staticGallery.slice(0, 3).map(g => ({ url: g.src, caption_tr: g.alt.tr }));
+  : (rawGallery === null ? staticGallery.slice(0, 3).map(g => ({ url: g.src, caption_tr: g.alt.tr })) : []);
 
 const path = (tr: string, en: string) => locale === 'tr' ? tr : `/en${en}`;
 const copy = locale === 'tr' ? {
@@ -126,57 +126,49 @@ const pageTitle = locale === 'tr'
   </section>
 
   <!-- Featured Events -->
-  {featuredEvents.length > 0 && (
-    <section class="section">
-      <div class="container">
-        <SectionHeading eyebrow="SASTEK / EVENTS" title={copy.eventTitle} text={copy.eventText} />
-        <div class="grid-auto">{featuredEvents.map((event) => <EventCard event={event} locale={locale} />)}</div>
-        <div class="section-link"><a class="btn btn-secondary" href={path('/etkinlikler','/events')}>{copy.all} →</a></div>
-      </div>
-    </section>
-  )}
+  <section class="section" id="home-events-section" style={featuredEvents.length > 0 ? '' : 'display:none;'}>
+    <div class="container">
+      <SectionHeading eyebrow="SASTEK / EVENTS" title={copy.eventTitle} text={copy.eventText} />
+      <div class="grid-auto" id="home-events-grid">{featuredEvents.map((event) => <EventCard event={event} locale={locale} />)}</div>
+      <div class="section-link"><a class="btn btn-secondary" href={path('/etkinlikler','/events')}>{copy.all} →</a></div>
+    </div>
+  </section>
 
   <!-- Featured Partners -->
-  {featuredPartners.length > 0 && (
-    <section class="section band">
-      <div class="container">
-        <SectionHeading eyebrow="SASTEK / PARTNERS" title={copy.partnerTitle} text={copy.partnerText} />
-        <div class="grid-auto">{featuredPartners.map((partner) => <PartnerCard partner={partner} locale={locale} />)}</div>
-        <div class="section-link"><a class="btn btn-secondary" href={path('/anlasmali-noktalar','/partners')}>{copy.all} →</a></div>
-      </div>
-    </section>
-  )}
+  <section class="section band" id="home-partners-section" style={featuredPartners.length > 0 ? '' : 'display:none;'}>
+    <div class="container">
+      <SectionHeading eyebrow="SASTEK / PARTNERS" title={copy.partnerTitle} text={copy.partnerText} />
+      <div class="grid-auto" id="home-partners-grid">{featuredPartners.map((partner) => <PartnerCard partner={partner} locale={locale} />)}</div>
+      <div class="section-link"><a class="btn btn-secondary" href={path('/anlasmali-noktalar','/partners')}>{copy.all} →</a></div>
+    </div>
+  </section>
 
   <!-- Featured Sponsors -->
-  {featuredSponsors.length > 0 && (
-    <section class="section">
-      <div class="container sponsor-row">
-        <SectionHeading eyebrow="SASTEK / SUPPORT" title={copy.sponsorTitle} text={copy.sponsorText} />
-        <div class="sponsor-list">
-          {featuredSponsors.map((sponsor: any) => (
-            <div class="sponsor glass">
-              <img src={sponsor.logo_url?.startsWith('/images/') ? 'https://sastek.org' + sponsor.logo_url : (sponsor.logo_url || sponsor.logo || '/images/sponsors/sample-sponsor.png')} alt={`${sponsor.name} logo`} loading="lazy" />
-            </div>
-          ))}
-        </div>
+  <section class="section" id="home-sponsors-section" style={featuredSponsors.length > 0 ? '' : 'display:none;'}>
+    <div class="container sponsor-row">
+      <SectionHeading eyebrow="SASTEK / SUPPORT" title={copy.sponsorTitle} text={copy.sponsorText} />
+      <div class="sponsor-list" id="home-sponsors-grid">
+        {featuredSponsors.map((sponsor: any) => (
+          <div class="sponsor glass">
+            <img src={sponsor.logo_url?.startsWith('/images/') ? 'https://sastek.org' + sponsor.logo_url : (sponsor.logo_url || sponsor.logo || '/images/sponsors/sample-sponsor.png')} alt={`${sponsor.name} logo`} loading="lazy" />
+          </div>
+        ))}
       </div>
-    </section>
-  )}
+    </div>
+  </section>
 
   <!-- Featured Gallery -->
-  {featuredGallery.length > 0 && (
-    <section class="section">
-      <div class="container">
-        <SectionHeading eyebrow="SASTEK / GALLERY" title={copy.galleryTitle} text={copy.galleryText} />
-        <div class="gallery-preview">
-          {featuredGallery.map((item: any, index: number) => (
-            <img class={`g${index+1}`} src={(item.url || item.src)?.startsWith('/images/') ? 'https://sastek.org' + (item.url || item.src) : (item.url || item.src)} alt={item.caption_tr || 'SASTEK Fotoğraf'} width="720" height="520" loading="lazy" />
-          ))}
-        </div>
-        <div class="section-link"><a class="btn btn-secondary" href={path('/galeri','/gallery')}>{copy.all} →</a></div>
+  <section class="section" id="home-gallery-section" style={featuredGallery.length > 0 ? '' : 'display:none;'}>
+    <div class="container">
+      <SectionHeading eyebrow="SASTEK / GALLERY" title={copy.galleryTitle} text={copy.galleryText} />
+      <div class="gallery-preview" id="home-gallery-grid">
+        {featuredGallery.map((item: any, index: number) => (
+          <img class={`g${index+1}`} src={(item.url || item.src)?.startsWith('/images/') ? 'https://sastek.org' + (item.url || item.src) : (item.url || item.src)} alt={item.caption_tr || 'SASTEK Fotoğraf'} width="720" height="520" loading="lazy" />
+        ))}
       </div>
-    </section>
-  )}
+      <div class="section-link"><a class="btn btn-secondary" href={path('/galeri','/gallery')}>{copy.all} →</a></div>
+    </div>
+  </section>
 
   <section class="section">
     <div class="container cta glass">
@@ -189,6 +181,101 @@ const pageTitle = locale === 'tr'
     </div>
   </section>
 </BaseLayout>
+
+<script>
+  (async () => {
+    const apiBase = 'https://admin.sastek.org/api';
+    function escapeHtml(val: string) {
+      return String(val).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c] || c));
+    }
+
+    // Live Re-hydrate Home Sponsors
+    const homeSponsorsGrid = document.getElementById('home-sponsors-grid');
+    const homeSponsorsSection = document.getElementById('home-sponsors-section');
+    if (homeSponsorsGrid) {
+      try {
+        const res = await fetch(`${apiBase}/sponsors`);
+        if (res.ok) {
+          const sponsors = await res.json();
+          if (Array.isArray(sponsors)) {
+            if (sponsors.length === 0) {
+              if (homeSponsorsSection) homeSponsorsSection.style.display = 'none';
+            } else {
+              if (homeSponsorsSection) homeSponsorsSection.style.display = '';
+              homeSponsorsGrid.innerHTML = sponsors.map((s: any) => {
+                let logo = s.logo_url || '/images/sponsors/sample-sponsor.png';
+                if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
+                return `<div class="sponsor glass"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" loading="lazy" /></div>`;
+              }).join('');
+            }
+          }
+        }
+      } catch {}
+    }
+
+    // Live Re-hydrate Home Events
+    const homeEventsGrid = document.getElementById('home-events-grid');
+    const homeEventsSection = document.getElementById('home-events-section');
+    if (homeEventsGrid) {
+      try {
+        const res = await fetch(`${apiBase}/events`);
+        if (res.ok) {
+          const events = await res.json();
+          if (Array.isArray(events)) {
+            if (events.length === 0) {
+              if (homeEventsSection) homeEventsSection.style.display = 'none';
+            } else {
+              if (homeEventsSection) homeEventsSection.style.display = '';
+              homeEventsGrid.innerHTML = events.slice(0, 3).map((e: any) => {
+                let img = e.image_url || '/images/events/coffeetalk.png';
+                if (img.startsWith('/images/')) img = 'https://sastek.org' + img;
+                return `<article class="event-card glass">
+                  <a href="/etkinlikler/${escapeHtml(e.slug)}" class="visual"><img src="${escapeHtml(img)}" alt="${escapeHtml(e.title_tr)}" /></a>
+                  <div class="body">
+                    <span class="chip">${escapeHtml(e.category_tr || 'Etkinlik')}</span>
+                    <h3><a href="/etkinlikler/${escapeHtml(e.slug)}">${escapeHtml(e.title_tr)}</a></h3>
+                    <p class="muted">${escapeHtml(e.summary_tr || '')}</p>
+                  </div>
+                </article>`;
+              }).join('');
+            }
+          }
+        }
+      } catch {}
+    }
+
+    // Live Re-hydrate Home Partners
+    const homePartnersGrid = document.getElementById('home-partners-grid');
+    const homePartnersSection = document.getElementById('home-partners-section');
+    if (homePartnersGrid) {
+      try {
+        const res = await fetch(`${apiBase}/shops`);
+        if (res.ok) {
+          const shops = await res.json();
+          if (Array.isArray(shops)) {
+            if (shops.length === 0) {
+              if (homePartnersSection) homePartnersSection.style.display = 'none';
+            } else {
+              if (homePartnersSection) homePartnersSection.style.display = '';
+              homePartnersGrid.innerHTML = shops.slice(0, 3).map((s: any) => {
+                let logo = s.logo_url || '/images/partners/arc-logo.png';
+                if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
+                return `<article class="partner glass">
+                  <div class="logo"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" /></div>
+                  <div class="body">
+                    <span class="chip">${escapeHtml(s.category_tr || 'Diğer')}</span>
+                    <h3>${escapeHtml(s.name)}</h3>
+                    <p class="offer">${escapeHtml(s.discount || '')}</p>
+                  </div>
+                </article>`;
+              }).join('');
+            }
+          }
+        }
+      } catch {}
+    }
+  })();
+</script>
 
 <style>
   .hero{position:relative;min-height:calc(100svh - 4.75rem);display:grid;align-items:center;overflow:hidden;padding:clamp(4rem,7vw,6.2rem) 0 clamp(3rem,6vw,5.2rem)}
@@ -214,15 +301,38 @@ const pageTitle = locale === 'tr'
   .section-link{display:flex;justify-content:center;margin-top:2rem}
   .band{background:rgba(6,17,30,.56);border-block:1px solid rgba(84,119,151,.16)}
   .sponsor-row{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
-  .sponsor-list{display:grid;gap:1rem}
-  .sponsor{min-height:170px;border-radius:1.2rem;display:grid;place-items:center;padding:1rem}
-  .sponsor img{max-width:260px;max-height:100px;object-fit:contain;filter:grayscale(1) brightness(1.5)}
-  .sponsor span{font-size:.72rem;color:#ff9a62}
+  :global(.sponsor-list){display:grid;gap:1rem}
+  :global(.sponsor){min-height:170px;border-radius:1.2rem;display:grid;place-items:center;padding:1rem}
+  :global(.sponsor img){max-width:260px;max-height:100px;object-fit:contain;filter:grayscale(1) brightness(1.5)}
+  :global(.sponsor span){font-size:.72rem;color:#ff9a62}
   .gallery-preview{display:grid;grid-template-columns:1.2fr .8fr;grid-template-rows:230px 230px;gap:1rem}
   .gallery-preview img{width:100%;height:100%;object-fit:cover;border-radius:1rem;border:1px solid rgba(84,119,151,.24)}
   .gallery-preview .g1{grid-row:1/3}
   .cta{display:flex;align-items:center;justify-content:space-between;gap:2rem;border-radius:1.5rem;padding:clamp(1.5rem,5vw,3.5rem)}
   .cta p{max-width:650px}.cta .muted{margin-bottom:0}
+
+  :global(.event-card){position:relative;overflow:hidden;border-radius:1.25rem;transition:border-color .2s,transform .2s,background .2s,box-shadow .2s}
+  :global(.event-card::after){content:"";position:absolute;right:-4.5rem;bottom:-5rem;width:13rem;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,107,26,.1),transparent 66%);pointer-events:none}
+  :global(.event-card:hover){border-color:rgba(255,107,26,.34);background:linear-gradient(145deg,rgba(16,43,70,.74),rgba(7,21,38,.82));box-shadow:0 22px 60px rgba(0,0,0,.18);transform:translateY(-3px)}
+  :global(.event-card .visual){position:relative;display:grid;place-items:center;min-height:205px;overflow:hidden;background:radial-gradient(circle at 50% 35%,rgba(31,74,112,.52),rgba(6,18,32,.96) 68%)}
+  :global(.event-card .visual::before){content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.08),transparent 34%,rgba(255,107,26,.08));opacity:.72}
+  :global(.event-card .visual::after){content:"";position:absolute;left:1rem;right:1rem;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(128,174,213,.32),transparent)}
+  :global(.event-card .visual img){position:relative;z-index:1;width:78%;height:158px;object-fit:contain;filter:drop-shadow(0 18px 26px rgba(0,0,0,.32));transition:transform .25s,filter .25s}
+  :global(.event-card:hover .visual img){transform:scale(1.035);filter:drop-shadow(0 22px 32px rgba(0,0,0,.38))}
+  :global(.event-card .body){position:relative;z-index:1;display:grid;padding:1.25rem 1.25rem 1.15rem}
+  :global(.event-card .meta),:global(.event-card .foot){display:flex;align-items:center;justify-content:space-between;gap:1rem}
+  :global(.event-card .meta){min-height:2rem;font-size:.75rem;color:#8fa6bb}
+  :global(.event-card .chip){border-color:rgba(128,174,213,.28);background:rgba(128,174,213,.08);color:#dce9f5}
+  :global(.event-card .body h3){margin:.95rem 0 .4rem;font-size:clamp(1.25rem,2vw,1.5rem);line-height:1.12;letter-spacing:-.035em}
+  :global(.event-card .body h3 a){color:#fff;text-decoration:none}
+  :global(.event-card .body h3 a:hover){color:#ffb184}
+  :global(.event-card .body p){margin:0;min-height:3.6rem;color:#b5c5d5;line-height:1.65}
+
+  :global(.partner){display:grid;grid-template-columns:110px 1fr;align-items:center;gap:1.1rem;border-radius:1rem;padding:1rem}
+  :global(.partner .logo){display:grid;place-items:center;aspect-ratio:1;border-radius:.75rem;background:#f2f3f4;overflow:hidden}
+  :global(.partner .logo img){width:85%;height:85%;object-fit:contain}
+  :global(.partner .body h3){margin:.55rem 0 .1rem;font-size:1.15rem}
+  :global(.partner .offer){margin:0;color:#d9e6f2;font-size:.88rem}
 
   @media(max-width:900px){.hero{padding-top:3.4rem}.hero-grid,.about-grid,.sponsor-row{grid-template-columns:1fr}.hero-copy{max-width:720px}.hero-visual{min-height:360px;order:2}.about-grid{gap:2.5rem}}
   @media(max-width:650px){.hero{min-height:auto;padding:3.2rem 0 3.6rem}.display{font-size:clamp(3rem,16vw,4.7rem);line-height:.92;letter-spacing:-.065em}.lead{font-size:1rem;line-height:1.7}.actions{display:grid;grid-template-columns:1fr;gap:.7rem;margin-top:1.7rem}.actions .btn{justify-content:center;width:100%}.hero-visual{display:grid;min-height:300px;margin-top:.4rem}.pillars{grid-template-columns:1fr 1fr}.pillars div{min-height:110px}.pillars b{margin-top:1.5rem}.gallery-preview{grid-template-columns:1fr;grid-template-rows:240px 180px 180px}.gallery-preview .g1{grid-row:auto}.cta{align-items:flex-start;flex-direction:column}}
