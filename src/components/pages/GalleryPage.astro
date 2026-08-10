@@ -141,6 +141,17 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
       }).join('');
 
       bindLightboxButtons();
+
+      // Dynamically update gallery category dropdown options and re-trigger filter
+      const categorySelect = root.querySelector<HTMLSelectElement>('[data-filter-category]');
+      if (categorySelect) {
+        const existingVal = categorySelect.value;
+        const apiCategories = [...new Set(items.map((item: any) => item.event_tag || (pageLocale === 'tr' ? 'Genel' : 'General')))];
+        categorySelect.innerHTML = `<option value="">${pageLocale === 'tr' ? 'Tüm kategoriler' : 'All categories'}</option>` +
+          apiCategories.map((c: string) => `<option value="${escapeHtml(c.toLowerCase())}">${escapeHtml(c)}</option>`).join('');
+        categorySelect.value = existingVal;
+        categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     } catch {}
   })();
 </script>

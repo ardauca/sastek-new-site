@@ -10,16 +10,20 @@ const { locale, categories, showSearch = true } = Astro.props;
   document.querySelectorAll('[data-filter-root]').forEach((root) => {
     const search = root.querySelector<HTMLInputElement>('[data-filter-search]');
     const select = root.querySelector<HTMLSelectElement>('[data-filter-category]');
-    const cards = root.querySelectorAll<HTMLElement>('[data-filter-card]');
+
     const apply = () => {
       const term = search?.value.trim().toLocaleLowerCase('tr') ?? '';
       const category = select?.value ?? '';
+      const cards = root.querySelectorAll<HTMLElement>('[data-filter-card]');
       cards.forEach((card) => {
-        const matchesTerm = !term || card.dataset.search?.toLocaleLowerCase('tr').includes(term);
-        const matchesCategory = !category || card.dataset.category === category;
+        const cardSearch = card.dataset.search?.toLocaleLowerCase('tr') ?? '';
+        const cardCat = card.dataset.category ?? '';
+        const matchesTerm = !term || cardSearch.includes(term);
+        const matchesCategory = !category || cardCat === category;
         card.hidden = !(matchesTerm && matchesCategory);
       });
     };
+
     search?.addEventListener('input', apply);
     select?.addEventListener('change', apply);
   });

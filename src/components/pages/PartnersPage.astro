@@ -311,7 +311,6 @@ const labels = locale === 'tr' ? {
   }));
 
   // ── Live Client-Side Hydration ────────────────────────────────────────────────
-  // Re-fetches latest shops from D1 API on page load so Admin Panel changes reflect live without rebuild
   (async () => {
     try {
       const res = await fetch(`${apiBase}/shops`);
@@ -325,8 +324,10 @@ const labels = locale === 'tr' ? {
       const newCardsHtml = apiShops.map((s: any) => {
         const cat = pageLocale === 'tr' ? (s.category_tr || 'Diğer') : (s.category_en || 'Other');
         const offer = s.discount || (pageLocale === 'tr' ? 'Kampanya bilgisi güncellenecek' : 'Offer details to be updated');
-        const logo = s.logo_url || '/images/partners/arc-logo.png';
-        const searchStr = `${s.name} ${cat}`.toLowerCase();
+        let logo = s.logo_url || '/images/partners/arc-logo.png';
+        if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
+
+        const searchStr = `${s.name} ${cat} ${offer}`.toLowerCase();
 
         return `<article class="partner glass" data-filter-card data-category="${escapeHtml(cat.toLowerCase())}" data-search="${escapeHtml(searchStr)}">
           <div class="logo"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" width="240" height="160" loading="lazy" /></div>
@@ -340,12 +341,22 @@ const labels = locale === 'tr' ? {
 
       gridContainer.innerHTML = newCardsHtml;
 
+      // Update category select dropdown options dynamically
+      const categorySelect = root?.querySelector<HTMLSelectElement>('[data-filter-category]');
+      if (categorySelect) {
+        const existingVal = categorySelect.value;
+        const apiCategories = [...new Set(apiShops.map((s: any) => pageLocale === 'tr' ? (s.category_tr || 'Diğer') : (s.category_en || 'Other')))];
+        categorySelect.innerHTML = `<option value="">${pageLocale === 'tr' ? 'Tüm kategoriler' : 'All categories'}</option>` +
+          apiCategories.map((c: string) => `<option value="${escapeHtml(c.toLowerCase())}">${escapeHtml(c)}</option>`).join('');
+        categorySelect.value = existingVal;
+      }
+
       // Re-trigger filter listener if user typed in search or category filter
       const searchInput = root?.querySelector<HTMLInputElement>('[data-filter-search]');
-      const categorySelect = root?.querySelector<HTMLSelectElement>('[data-filter-category]');
       if (searchInput || categorySelect) {
         const event = new Event('input', { bubbles: true });
         searchInput?.dispatchEvent(event);
+        categorySelect?.dispatchEvent(new Event('change', { bubbles: true }));
       }
     } catch {}
   })();
