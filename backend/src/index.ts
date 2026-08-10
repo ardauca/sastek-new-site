@@ -8,6 +8,7 @@ import { eventRoutes } from './routes/events';
 import { teamRoutes } from './routes/team';
 import { socialRoutes } from './routes/socials';
 import { uploadRoutes } from './routes/upload';
+import { settingRoutes } from './routes/settings';
 import { adminApp } from './routes/admin';
 import type { Env } from './lib/types';
 
@@ -28,6 +29,7 @@ app.route('/api/events', eventRoutes);
 app.route('/api/team', teamRoutes);
 app.route('/api/socials', socialRoutes);
 app.route('/api/upload', uploadRoutes);
+app.route('/api/settings', settingRoutes);
 
 // ── Admin Panel (serves HTML) ─────────────────────────────────────────────────
 app.route('/', adminApp);

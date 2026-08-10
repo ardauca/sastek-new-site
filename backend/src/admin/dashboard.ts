@@ -333,13 +333,43 @@ export const dashboardPage = `<!DOCTYPE html>
     <!-- Developer Settings -->
     <div class="page" id="page-developer">
       <h1>⚙️ Geliştirici Ayarları & Mimari Bilgilendirme</h1>
-      <p class="page-sub">Sistem altyapısı, canlı veri akışı, performans ve bakım araçları.</p>
+      <p class="page-sub">Sistem altyapısı, canlı veri akışı, performans ve duyuru bandı ayarları.</p>
 
       <div style="display:grid;gap:20px;">
 
+        <!-- Card: Site Notice Banners Toggle -->
+        <div class="stat-card" style="padding:22px;">
+          <h3 style="font-size:1rem;color:var(--signal);margin-bottom:8px;display:flex;align-items:center;gap:8px;">📢 Site Uyarı Yazıları Kontrolü (Aç / Kapa)</h3>
+          <p style="font-size:.8rem;color:var(--muted);margin-bottom:16px;">Sitedeki Anlaşmalı Noktalar ve Sponsorlar sayfalarında bulunan örnek/doğrulama bilgilendirme bantlarının görünürlüğünü tek tıkla yönetin.</p>
+
+          <div style="display:grid;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.03);padding:14px 18px;border-radius:8px;border:1px solid var(--border);">
+              <div>
+                <b style="font-size:.85rem;color:var(--text)">🏪 Anlaşmalı Noktalar Uyarı Bandı</b>
+                <p style="font-size:.75rem;color:var(--muted);margin-top:2px;">"Anlaşmalı noktalar doğrulanmış güncel liste ile değiştirilmek üzere örnek olarak gösterilmektedir."</p>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:.8rem">
+                <input type="checkbox" id="togglePartnersNotice" onchange="saveSiteSettings()" style="width:18px;height:18px;" />
+                <span id="labelPartnersNotice">AÇIK</span>
+              </label>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.03);padding:14px 18px;border-radius:8px;border:1px solid var(--border);">
+              <div>
+                <b style="font-size:.85rem;color:var(--text)">🤝 Sponsorlar Uyarı Bandı</b>
+                <p style="font-size:.75rem;color:var(--muted);margin-top:2px;">"Sponsor kayıtları doğrulanmış güncel liste ile değiştirilmek üzere örnek olarak gösterilmektedir."</p>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:.8rem">
+                <input type="checkbox" id="toggleSponsorsNotice" onchange="saveSiteSettings()" style="width:18px;height:18px;" />
+                <span id="labelSponsorsNotice">AÇIK</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
         <!-- Card 1: Live Hydration Explanation -->
         <div class="stat-card" style="padding:22px;">
-          <h3 style="font-size:1rem;color:var(--signal);margin-bottom:8px;display:flex;align-items:center;gap:8px;">⚡ 1. Canlı Veri Akışı ve Önbellek Mimarisi (Live Hydration)</h3>
+          <h3 style="font-size:1rem;color:var(--signal);margin-bottom:8px;display:flex;align-items:center;gap:8px;">⚡ Canlı Veri Akışı ve Önbellek Mimarisi (Live Hydration)</h3>
           <p style="font-size:.82rem;color:var(--text);line-height:1.6;margin-bottom:12px;">
             SASTEK sistemi modern bir <b>Hibrit Mimari</b> ile çalışır. Admin panelinde yaptığınız tüm ekleme, silme ve düzenleme işlemleri <b>anında Cloudflare D1 Serverless Veritabanına işlenir</b>:
           </p>
@@ -354,7 +384,7 @@ export const dashboardPage = `<!DOCTYPE html>
 
         <!-- Card 2: Manual Deploy / Build Explanation -->
         <div class="stat-card" style="padding:22px;">
-          <h3 style="font-size:1rem;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;">🚀 2. Manuel Cloudflare Site Derlemesi (Deploy / Rebuild)</h3>
+          <h3 style="font-size:1rem;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;">🚀 Manuel Cloudflare Site Derlemesi (Deploy / Rebuild)</h3>
           <p style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:14px;">
             Veri değişiklikleri sitede 0.1 saniye içerisinde canlı görünse de, Google arama motoru botları için statik HTML sayfalarını da Cloudflare sunucularında sıfırdan derlemek isterseniz aşağıdaki buton ile tetikleyebilirsiniz.
           </p>
@@ -366,7 +396,7 @@ export const dashboardPage = `<!DOCTYPE html>
 
         <!-- Card 3: Storage & System Details -->
         <div class="stat-card" style="padding:22px;">
-          <h3 style="font-size:1rem;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;">🔒 3. Güvenlik, Veritabanı ve Medya Sunucusu</h3>
+          <h3 style="font-size:1rem;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;">🔒 Güvenlik, Veritabanı ve Medya Sunucusu</h3>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:10px;font-size:.78rem;color:var(--text);">
             <div style="background:rgba(255,255,255,.03);padding:12px;border-radius:8px;border:1px solid var(--border);">
               <b style="color:var(--signal)">🗄️ Veritabanı (SQL)</b>
@@ -589,6 +619,7 @@ document.querySelectorAll('nav a').forEach(a => {
     if (page === 'sponsors') loadSponsors();
     if (page === 'socials') loadSocials();
     if (page === 'gallery') loadGallery();
+    if (page === 'developer') loadSiteSettings();
   });
 });
 
@@ -644,7 +675,40 @@ bindFilePreview('eventImgFile', 'eventImgPreview');
 bindFilePreview('sponsorLogoFile', 'sponsorLogoPreview');
 bindFilePreview('galleryFile', 'galleryPreview');
 
-// ── Developer Actions ─────────────────────────────────────────────────────────
+// ── Developer Actions & Settings ─────────────────────────────────────────────
+async function loadSiteSettings() {
+  try {
+    const res = await fetch('/api/settings');
+    if (!res.ok) return;
+    const settings = await res.json();
+    const partnersCb = document.getElementById('togglePartnersNotice');
+    const sponsorsCb = document.getElementById('toggleSponsorsNotice');
+    if (partnersCb) partnersCb.checked = Boolean(settings.show_partners_notice);
+    if (sponsorsCb) sponsorsCb.checked = Boolean(settings.show_sponsors_notice);
+    document.getElementById('labelPartnersNotice').textContent = partnersCb?.checked ? 'AÇIK' : 'KAPALI';
+    document.getElementById('labelSponsorsNotice').textContent = sponsorsCb?.checked ? 'AÇIK' : 'KAPALI';
+  } catch {}
+}
+
+async function saveSiteSettings() {
+  const partnersCb = document.getElementById('togglePartnersNotice');
+  const sponsorsCb = document.getElementById('toggleSponsorsNotice');
+  const body = {
+    show_partners_notice: partnersCb.checked ? 1 : 0,
+    show_sponsors_notice: sponsorsCb.checked ? 1 : 0,
+  };
+  document.getElementById('labelPartnersNotice').textContent = partnersCb.checked ? 'AÇIK' : 'KAPALI';
+  document.getElementById('labelSponsorsNotice').textContent = sponsorsCb.checked ? 'AÇIK' : 'KAPALI';
+
+  const r = await fetch('/api/settings', {
+    method: 'PUT', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (r.ok) toast('Uyarı yazısı ayarları güncellendi ✓');
+  else toast('Ayarlar kaydedilemedi', 'error');
+}
+
 function triggerManualBuild() {
   const msg = document.getElementById('buildStatusMsg');
   msg.style.display = 'inline';
