@@ -1,0 +1,32 @@
+name = "sastek-backend"
+main = "src/index.ts"
+compatibility_date = "2024-10-22"
+workers_dev = false
+
+[[routes]]
+pattern = "admin.sastek.org/*"
+custom_domain = true
+compatibility_flags = ["nodejs_compat"]
+
+# ─── D1 Database ─────────────────────────────────────────────────────────────
+[[d1_databases]]
+binding  = "DB"          # accessed as env.DB in Worker
+database_name = "sastek-db"
+database_id   = "291d0fb1-9a76-4bf8-8f55-68cf2379f0ef"
+
+# ─── API Route (also: sastek.org/api/* to be added via Cloudflare Dashboard) ─
+# Routes above handle: admin.sastek.org/*
+# For sastek.org/api/* add a Worker Route manually in Cloudflare Dashboard
+
+# ─── R2 Bucket ───────────────────────────────────────────────────────────────
+[[r2_buckets]]
+binding     = "MEDIA"    # accessed as env.MEDIA in Worker
+bucket_name = "sastek-media"
+
+# ─── Secrets (set via: wrangler secret put JWT_SECRET) ───────────────────────
+# JWT_SECRET  → signing key for auth tokens (never hardcode here)
+# ADMIN_USER  → initial admin username for first-run setup
+
+# ─── Local Dev ────────────────────────────────────────────────────────────────
+[dev]
+port = 8787
