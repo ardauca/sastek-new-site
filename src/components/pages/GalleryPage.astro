@@ -2,26 +2,163 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../ui/PageHero.astro';
 import FilterControls from '../ui/FilterControls.astro';
-import { gallery } from '../../data/gallery';
+import { gallery as staticGallery } from '../../data/gallery';
 import { t } from '../../lib/content';
 import type { Locale } from '../../types/content';
+
 interface Props { locale: Locale; }
-const { locale }=Astro.props;
-const sorted=[...gallery].sort((a,b)=>a.order-b.order);
-const categories=[...new Set(sorted.map((item)=>t(item.category,locale)))];
-const title=locale==='tr'?'Galeri':'Gallery';
-const desc=locale==='tr'?'Etkinliklerden, teknik buluşmalardan ve kulüp yaşamından seçilmiş anlar.':'Selected moments from events, technical meetups and club life.';
+const { locale } = Astro.props;
+
+let rawGallery: any[] = [];
+try {
+  const response = await fetch('https://admin.sastek.org/api/gallery', {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (response.ok) {
+    const apiItems = await response.json();
+    if (Array.isArray(apiItems) && apiItems.length > 0) {
+      rawGallery = apiItems.map((item: any) => ({
+        id: String(item.id),
+        src: item.url,
+        alt: { tr: item.caption_tr || 'SASTEK Etkinlik Görseli', en: item.caption_en || 'SASTEK Event Photo' },
+        category: { tr: item.event_tag || 'Genel', en: item.event_tag || 'General' },
+        order: item.id,
+      }));
+    }
+  }
+} catch (e) {
+  // Use static fallback if API fails
+}
+
+if (!rawGallery.length) {
+  rawGallery = staticGallery.map((g, idx) => ({
+    id: g.id,
+    src: g.src,
+    alt: g.alt,
+    category: g.category,
+    order: g.order || idx + 1,
+  }));
+}
+
+const categories = [...new Set(rawGallery.map((item) => t(item.category, locale)))];
+const title = locale === 'tr' ? 'Galeri' : 'Gallery';
+const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp yaşamından seçilmiş anlar.' : 'Selected moments from events, technical meetups and club life.';
 ---
+
 <BaseLayout title={title} description={desc} locale={locale}>
   <PageHero eyebrow="SASTEK / GALLERY" title={title} text={desc} />
-  <section class="section"><div class="container" data-filter-root><FilterControls locale={locale} categories={categories} showSearch={false} /><div class="gallery-grid">{sorted.map((item,index)=><button data-filter-card data-category={t(item.category,locale).toLowerCase()} data-search={t(item.alt,locale).toLowerCase()} data-lightbox-src={item.src} data-lightbox-alt={t(item.alt,locale)} aria-label={`${locale==='tr'?'Görseli büyüt':'Enlarge image'}: ${t(item.alt,locale)}`}><img src={item.src} alt={t(item.alt,locale)} width="720" height="520" loading={index>1?'lazy':'eager'} /><span>{t(item.category,locale)}</span></button>)}</div></div></section>
-  <dialog id="lightbox" aria-label={locale==='tr'?'Galeri görseli':'Gallery image'}><button class="close" aria-label={locale==='tr'?'Kapat':'Close'}><span aria-hidden="true">×</span></button><img alt={locale==='tr'?'Seçilen galeri görseli':'Selected gallery image'} /></dialog>
+  <section class="section">
+    <div class="container" data-filter-root data-gallery-root data-locale={locale} data-api="https://admin.sastek.org/api">
+      <FilterControls locale={locale} categories={categories} showSearch={false} />
+      <div class="gallery-grid" id="gallery-grid-container">
+        {rawGallery.map((item, index) => (
+          <button
+            type="button"
+            data-filter-card
+            data-category={t(item.category, locale).toLowerCase()}
+            data-search={t(item.alt, locale).toLowerCase()}
+            data-lightbox-src={item.src.startsWith('/images/') ? 'https://sastek.org' + item.src : item.src}
+            data-lightbox-alt={t(item.alt, locale)}
+            aria-label={`${locale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}: ${t(item.alt, locale)}`}
+          >
+            <img src={item.src.startsWith('/images/') ? 'https://sastek.org' + item.src : item.src} alt={t(item.alt, locale)} width="720" height="520" loading={index > 1 ? 'lazy' : 'eager'} />
+            <span>{t(item.category, locale)}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <dialog id="lightbox" aria-label={locale === 'tr' ? 'Galeri görseli' : 'Gallery image'}>
+    <button class="close" aria-label={locale === 'tr' ? 'Kapat' : 'Close'}><span aria-hidden="true">×</span></button>
+    <img alt={locale === 'tr' ? 'Seçilen galeri görseli' : 'Selected gallery image'} />
+  </dialog>
 </BaseLayout>
+
 <script>
-  const dialog=document.querySelector<HTMLDialogElement>('#lightbox'); const image=dialog?.querySelector<HTMLImageElement>('img');
-  document.querySelectorAll<HTMLButtonElement>('[data-lightbox-src]').forEach((button)=>button.addEventListener('click',()=>{if(image&&dialog){image.src=button.dataset.lightboxSrc??'';image.alt=button.dataset.lightboxAlt??'';dialog.showModal();}}));
-  dialog?.querySelector('.close')?.addEventListener('click',()=>dialog.close());
-  dialog?.addEventListener('close',()=>{if(image){image.removeAttribute('src');image.alt='';}});
-  dialog?.addEventListener('click',(event)=>{if(event.target===dialog)dialog.close();});
+  const dialog = document.querySelector<HTMLDialogElement>('#lightbox');
+  const image = dialog?.querySelector<HTMLImageElement>('img');
+
+  function bindLightboxButtons() {
+    document.querySelectorAll<HTMLButtonElement>('[data-lightbox-src]').forEach((button) => {
+      button.onclick = () => {
+        if (image && dialog) {
+          image.src = button.dataset.lightboxSrc ?? '';
+          image.alt = button.dataset.lightboxAlt ?? '';
+          dialog.showModal();
+        }
+      };
+    });
+  }
+  bindLightboxButtons();
+
+  dialog?.querySelector('.close')?.addEventListener('click', () => dialog.close());
+  dialog?.addEventListener('close', () => { if (image) { image.removeAttribute('src'); image.alt = ''; } });
+  dialog?.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+
+  // ── Live Client-Side Hydration ────────────────────────────────────────────────
+  (async () => {
+    const root = document.querySelector<HTMLElement>('[data-gallery-root]');
+    if (!root) return;
+    const pageLocale = (root.dataset.locale || 'tr') as 'tr' | 'en';
+    const apiBase = root.dataset.api || 'https://admin.sastek.org/api';
+    const gridContainer = document.getElementById('gallery-grid-container');
+    if (!gridContainer) return;
+
+    function escapeHtml(value: string) {
+      return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char] || char));
+    }
+
+    try {
+      const res = await fetch(`${apiBase}/gallery`);
+      if (!res.ok) return;
+      const items = await res.json();
+      if (!Array.isArray(items)) return;
+
+      if (items.length === 0) {
+        gridContainer.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#a9bbce;margin:2rem auto">${pageLocale === 'tr' ? 'Galeride gösterilecek fotoğraf yok.' : 'No photos in gallery.'}</p>`;
+        return;
+      }
+
+      gridContainer.innerHTML = items.map((item: any, index: number) => {
+        const cat = item.event_tag || (pageLocale === 'tr' ? 'Genel' : 'General');
+        const alt = item.caption_tr || (pageLocale === 'tr' ? 'SASTEK Etkinlik Görseli' : 'SASTEK Event Photo');
+        let src = item.url;
+        if (src.startsWith('/images/')) src = 'https://sastek.org' + src;
+
+        return `<button
+          type="button"
+          data-filter-card
+          data-category="${escapeHtml(cat.toLowerCase())}"
+          data-search="${escapeHtml(alt.toLowerCase())}"
+          data-lightbox-src="${escapeHtml(src)}"
+          data-lightbox-alt="${escapeHtml(alt)}"
+          aria-label="${pageLocale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}: ${escapeHtml(alt)}"
+        >
+          <img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" width="720" height="520" loading="${index > 1 ? 'lazy' : 'eager'}" />
+          <span>${escapeHtml(cat)}</span>
+        </button>`;
+      }).join('');
+
+      bindLightboxButtons();
+    } catch {}
+  })();
 </script>
-<style>.gallery-grid{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:260px;gap:1rem}.gallery-grid button{position:relative;grid-column:span 5;overflow:hidden;border:1px solid rgba(84,119,151,.25);border-radius:1rem;background:#071526;padding:0;cursor:zoom-in}.gallery-grid button:nth-child(3n+1){grid-column:span 7}.gallery-grid img{width:100%;height:100%;object-fit:cover;transition:transform .35s}.gallery-grid button:hover img{transform:scale(1.03)}.gallery-grid span{position:absolute;left:.8rem;bottom:.8rem;border-radius:999px;background:rgba(5,11,20,.8);padding:.3rem .7rem;font-size:.72rem;font-weight:800}dialog{position:fixed;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(1120px,calc(100vw - 3rem));height:auto;max-width:none;max-height:calc(100dvh - 3rem);margin:0;overflow:hidden;border:1px solid rgba(128,174,213,.38);border-radius:1.25rem;background:rgba(3,7,13,.96);padding:clamp(.8rem,2vw,1.2rem);box-shadow:0 28px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.03)}dialog[open]{display:grid;place-items:center}dialog::backdrop{background:rgba(0,0,0,.82);backdrop-filter:blur(7px)}dialog img{display:block;max-width:100%;max-height:calc(100dvh - 5.4rem);width:auto;height:auto;object-fit:contain;border-radius:.75rem}.close{position:absolute;right:.7rem;top:.7rem;z-index:2;display:grid;place-items:center;width:2.35rem;height:2.35rem;padding:0;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(7,21,38,.76);color:#fff;box-shadow:0 10px 28px rgba(0,0,0,.32);backdrop-filter:blur(10px);font-size:1.35rem;line-height:1;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}.close span{display:block;line-height:1;transform:translateY(-1px)}.close:hover{background:#ff6b1a;border-color:#ff8a49;color:#07111f;transform:scale(1.04)}.close:focus-visible{outline:2px solid #ff8a49;outline-offset:3px}@media(max-width:700px){.gallery-grid{display:grid;grid-template-columns:1fr;grid-auto-rows:230px}.gallery-grid button,.gallery-grid button:nth-child(3n+1){grid-column:auto}dialog{width:calc(100vw - 1rem);max-height:calc(100dvh - 1rem);padding:.7rem}dialog img{max-height:calc(100dvh - 2.4rem)}.close{right:.55rem;top:.55rem}}</style>
+
+<style>
+  .gallery-grid{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:260px;gap:1rem}
+  .gallery-grid button{position:relative;grid-column:span 5;overflow:hidden;border:1px solid rgba(84,119,151,.25);border-radius:1rem;background:#071526;padding:0;cursor:zoom-in}
+  .gallery-grid button:nth-child(3n+1){grid-column:span 7}
+  .gallery-grid img{width:100%;height:100%;object-fit:cover;transition:transform .35s}
+  .gallery-grid button:hover img{transform:scale(1.03)}
+  .gallery-grid span{position:absolute;left:.8rem;bottom:.8rem;border-radius:999px;background:rgba(5,11,20,.8);padding:.3rem .7rem;font-size:.72rem;font-weight:800}
+  dialog{position:fixed;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(1120px,calc(100vw - 3rem));height:auto;max-width:none;max-height:calc(100dvh - 3rem);margin:0;overflow:hidden;border:1px solid rgba(128,174,213,.38);border-radius:1.25rem;background:rgba(3,7,13,.96);padding:clamp(.8rem,2vw,1.2rem);box-shadow:0 28px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.03)}
+  dialog[open]{display:grid;place-items:center}
+  dialog::backdrop{background:rgba(0,0,0,.82);backdrop-filter:blur(7px)}
+  dialog img{display:block;max-width:100%;max-height:calc(100dvh - 5.4rem);width:auto;height:auto;object-fit:contain;border-radius:.75rem}
+  .close{position:absolute;right:.7rem;top:.7rem;z-index:2;display:grid;place-items:center;width:2.35rem;height:2.35rem;padding:0;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(7,21,38,.76);color:#fff;box-shadow:0 10px 28px rgba(0,0,0,.32);backdrop-filter:blur(10px);font-size:1.35rem;line-height:1;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+  .close span{display:block;line-height:1;transform:translateY(-1px)}
+  .close:hover{background:#ff6b1a;border-color:#ff8a49;color:#07111f;transform:scale(1.04)}
+  .close:focus-visible{outline:2px solid #ff8a49;outline-offset:3px}
+  @media(max-width:700px){.gallery-grid{display:grid;grid-template-columns:1fr;grid-auto-rows:230px}.gallery-grid button,.gallery-grid button:nth-child(3n+1){grid-column:auto}dialog{width:calc(100vw - 1rem);max-height:calc(100dvh - 1rem);padding:.7rem}dialog img{max-height:calc(100dvh - 2.4rem)}.close{right:.55rem;top:.55rem}}
+</style>

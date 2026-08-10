@@ -2,14 +2,99 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../ui/PageHero.astro';
 import EventCard from '../cards/EventCard.astro';
-import { events } from '../../data/events';
-import type { Locale } from '../../types/content';
+import { events as staticEvents } from '../../data/events';
+import type { Locale, EventItem } from '../../types/content';
+
 interface Props { locale: Locale; }
 const { locale } = Astro.props;
-const title=locale==='tr'?'Etkinlikler':'Events';
-const desc=locale==='tr'?'Teknik bilgi, sektör deneyimi ve güçlü bir topluluk için tasarlanan SASTEK etkinlikleri.':'SASTEK events designed for technical knowledge, industry experience and a strong community.';
+
+let rawEvents: EventItem[] = staticEvents;
+
+try {
+  const response = await fetch('https://admin.sastek.org/api/events', {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (response.ok) {
+    const apiEvents = await response.json();
+    if (Array.isArray(apiEvents) && apiEvents.length > 0) {
+      rawEvents = apiEvents.map((e: any) => ({
+        id: String(e.id),
+        slug: e.slug,
+        title: { tr: e.title_tr, en: e.title_en || e.title_tr },
+        summary: { tr: e.summary_tr || '', en: e.summary_en || '' },
+        description: { tr: e.description_tr || '', en: e.description_en || '' },
+        category: { tr: e.category_tr || 'Etkinlik', en: e.category_en || 'Event' },
+        location: { tr: e.location_tr || 'Konum güncellenecek', en: e.location_en || 'To be announced' },
+        image: e.image_url || '/images/events/coffeetalk.png',
+        status: e.status || 'planned',
+        isFeatured: Boolean(e.is_featured),
+        showDetails: Boolean(e.show_details),
+      }));
+    }
+  }
+} catch (e) {
+  // Use static fallback
+}
+
+const title = locale === 'tr' ? 'Etkinlikler' : 'Events';
+const desc  = locale === 'tr' ? 'Teknik bilgi, sektör deneyimi ve güçlü bir topluluk için tasarlanan SASTEK etkinlikleri.' : 'SASTEK events designed for technical knowledge, industry experience and a strong community.';
 ---
+
 <BaseLayout title={title} description={desc} locale={locale}>
   <PageHero eyebrow="SASTEK / EVENTS" title={title} text={desc} />
-  <section class="section"><div class="container"><div class="grid-auto">{events.map((event)=><EventCard event={event} locale={locale} />)}</div></div></section>
+  <section class="section">
+    <div class="container" data-events-root data-locale={locale} data-api="https://admin.sastek.org/api">
+      <div class="grid-auto" id="events-grid-container">
+        {rawEvents.map((event) => <EventCard event={event} locale={locale} />)}
+      </div>
+    </div>
+  </section>
 </BaseLayout>
+
+<script>
+  (async () => {
+    const root = document.querySelector<HTMLElement>('[data-events-root]');
+    if (!root) return;
+    const pageLocale = (root.dataset.locale || 'tr') as 'tr' | 'en';
+    const apiBase = root.dataset.api || 'https://admin.sastek.org/api';
+    const gridContainer = document.getElementById('events-grid-container');
+    if (!gridContainer) return;
+
+    function escapeHtml(value: string) {
+      return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char] || char));
+    }
+
+    try {
+      const res = await fetch(`${apiBase}/events`);
+      if (!res.ok) return;
+      const apiEvents = await res.json();
+      if (!Array.isArray(apiEvents)) return;
+
+      if (apiEvents.length === 0) {
+        gridContainer.innerHTML = `<p style="text-align:center;color:#a9bbce;margin:2rem auto">${pageLocale === 'tr' ? 'Etkinlik bulunamadı.' : 'No events found.'}</p>`;
+        return;
+      }
+
+      gridContainer.innerHTML = apiEvents.map((e: any) => {
+        const titleText = pageLocale === 'tr' ? e.title_tr : (e.title_en || e.title_tr);
+        const summaryText = pageLocale === 'tr' ? (e.summary_tr || '') : (e.summary_en || '');
+        const categoryText = pageLocale === 'tr' ? (e.category_tr || 'Etkinlik') : (e.category_en || 'Event');
+        const locationText = pageLocale === 'tr' ? (e.location_tr || 'Konum güncellenecek') : (e.location_en || 'Location to be announced');
+        let image = e.image_url || '/images/events/coffeetalk.png';
+        if (image.startsWith('/images/')) image = 'https://sastek.org' + image;
+
+        const href = pageLocale === 'tr' ? `/etkinlikler/${e.slug}` : `/en/events/${e.slug}`;
+
+        return `<article class="event-card glass">
+          <div class="media"><img src="${escapeHtml(image)}" alt="${escapeHtml(titleText)} görseli" loading="lazy" /></div>
+          <div class="body">
+            <span class="chip">${escapeHtml(categoryText)}</span>
+            <h3>${escapeHtml(titleText)}</h3>
+            <p class="summary">${escapeHtml(summaryText)}</p>
+            <div class="footer"><span class="loc">📍 ${escapeHtml(locationText)}</span></div>
+          </div>
+        </article>`;
+      }).join('');
+    } catch {}
+  })();
+</script>
