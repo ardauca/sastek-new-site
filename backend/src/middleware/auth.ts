@@ -1,14 +1,11 @@
-import { Hono } from 'hono';
+import type { MiddlewareHandler } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { verifyJwt } from '../lib/crypto';
-import type { Env, JwtPayload } from '../lib/types';
+import type { Env } from '../lib/types';
 
-// Middleware that protects routes requiring authentication
-export function requireAuth() {
-  return async (
-    c: Parameters<Parameters<Hono<{ Bindings: Env }>['use']>[0]>[0],
-    next: () => Promise<void>
-  ) => {
+// Auth middleware for protecting routes
+export const requireAuth = (): MiddlewareHandler<{ Bindings: Env }> => {
+  return async (c, next) => {
     const token = getCookie(c, 'auth_token');
     if (!token) {
       return c.json({ error: 'Unauthorized' }, 401);
@@ -19,7 +16,6 @@ export function requireAuth() {
       return c.json({ error: 'Invalid or expired session' }, 401);
     }
 
-    c.set('jwtPayload' as never, payload as never);
     await next();
   };
-}
+};

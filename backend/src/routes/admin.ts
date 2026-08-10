@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { html } from 'hono/html';
 import type { Env } from '../lib/types';
 import { loginPage } from '../admin/login';
 import { dashboardPage } from '../admin/dashboard';

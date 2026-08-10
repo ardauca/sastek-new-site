@@ -9,7 +9,6 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_FOLDERS = ['logos', 'gallery', 'sponsors'];
 
 // POST /api/upload
-// Body: multipart/form-data with fields: file (Blob), folder ('logos' | 'gallery' | 'sponsors')
 uploadRoutes.post('/', requireAuth(), async (c) => {
   const form = await c.req.formData();
   const file = form.get('file') as File | null;
@@ -37,16 +36,14 @@ uploadRoutes.post('/', requireAuth(), async (c) => {
     httpMetadata: { contentType: file.type },
   });
 
-  // Public URL — replace with custom domain after R2 domain is set up
-  // For now uses the R2 public dev URL pattern (configured in Cloudflare dashboard)
   const publicUrl = `https://pub-REPLACE_WITH_R2_PUBLIC_ID.r2.dev/${key}`;
 
   return c.json({ ok: true, url: publicUrl, key });
 });
 
-// DELETE /api/upload/:key — delete a specific R2 object by key
+// DELETE /api/upload/:key
 uploadRoutes.delete('/:key{.+}', requireAuth(), async (c) => {
-  const key = c.req.param('key');
+  const key = c.req.param('key') || '';
   await c.env.MEDIA.delete(key);
   return c.json({ ok: true });
 });
