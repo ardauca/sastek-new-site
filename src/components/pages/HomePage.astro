@@ -118,27 +118,27 @@ const pageTitle = locale === 'tr'
 
   <!-- Featured Events -->
   <section class="section">
-    <div class="container" data-home-events-root data-locale={locale} data-api="https://admin.sastek.org/api">
+    <div class="container">
       <SectionHeading eyebrow="SASTEK / EVENTS" title={copy.eventTitle} text={copy.eventText} />
-      <div class="grid-auto" id="home-events-grid">{featuredEvents.map((event) => <EventCard event={event} locale={locale} />)}</div>
+      <div class="grid-auto">{featuredEvents.map((event) => <EventCard event={event} locale={locale} />)}</div>
       <div class="section-link"><a class="btn btn-secondary" href={path('/etkinlikler','/events')}>{copy.all} →</a></div>
     </div>
   </section>
 
   <!-- Featured Partners -->
   <section class="section band">
-    <div class="container" data-home-partners-root data-locale={locale} data-api="https://admin.sastek.org/api">
+    <div class="container">
       <SectionHeading eyebrow="SASTEK / PARTNERS" title={copy.partnerTitle} text={copy.partnerText} />
-      <div class="grid-auto" id="home-partners-grid">{featuredPartners.map((partner) => <PartnerCard partner={partner} locale={locale} />)}</div>
+      <div class="grid-auto">{featuredPartners.map((partner) => <PartnerCard partner={partner} locale={locale} />)}</div>
       <div class="section-link"><a class="btn btn-secondary" href={path('/anlasmali-noktalar','/partners')}>{copy.all} →</a></div>
     </div>
   </section>
 
   <!-- Featured Sponsors -->
   <section class="section">
-    <div class="container sponsor-row" data-home-sponsors-root data-api="https://admin.sastek.org/api">
+    <div class="container sponsor-row">
       <SectionHeading eyebrow="SASTEK / SUPPORT" title={copy.sponsorTitle} text={copy.sponsorText} />
-      <div class="sponsor-list" id="home-sponsors-grid">
+      <div class="sponsor-list">
         {featuredSponsors.map((sponsor: any) => (
           <div class="sponsor glass">
             <img src={sponsor.logo_url?.startsWith('/images/') ? 'https://sastek.org' + sponsor.logo_url : (sponsor.logo_url || sponsor.logo || '/images/sponsors/sample-sponsor.png')} alt={`${sponsor.name} logo`} loading="lazy" />
@@ -150,9 +150,9 @@ const pageTitle = locale === 'tr'
 
   <!-- Featured Gallery -->
   <section class="section">
-    <div class="container" data-home-gallery-root data-api="https://admin.sastek.org/api">
+    <div class="container">
       <SectionHeading eyebrow="SASTEK / GALLERY" title={copy.galleryTitle} text={copy.galleryText} />
-      <div class="gallery-preview" id="home-gallery-grid">
+      <div class="gallery-preview">
         {featuredGallery.map((item: any, index: number) => (
           <img class={`g${index+1}`} src={(item.url || item.src)?.startsWith('/images/') ? 'https://sastek.org' + (item.url || item.src) : (item.url || item.src)} alt={item.caption_tr || 'SASTEK Fotoğraf'} width="720" height="520" loading="lazy" />
         ))}
@@ -172,83 +172,6 @@ const pageTitle = locale === 'tr'
     </div>
   </section>
 </BaseLayout>
-
-<script>
-  (async () => {
-    const apiBase = 'https://admin.sastek.org/api';
-    function escapeHtml(val: string) {
-      return String(val).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c] || c));
-    }
-
-    // Re-hydrate Home Events
-    const homeEventsGrid = document.getElementById('home-events-grid');
-    if (homeEventsGrid) {
-      try {
-        const res = await fetch(`${apiBase}/events`);
-        if (res.ok) {
-          const events = await res.json();
-          if (Array.isArray(events) && events.length > 0) {
-            homeEventsGrid.innerHTML = events.slice(0, 3).map((e: any) => {
-              let img = e.image_url || '/images/events/coffeetalk.png';
-              if (img.startsWith('/images/')) img = 'https://sastek.org' + img;
-              return `<article class="event-card glass">
-                <a href="/etkinlikler/${e.slug}" class="visual"><img src="${escapeHtml(img)}" alt="${escapeHtml(e.title_tr)}" /></a>
-                <div class="body">
-                  <span class="chip">${escapeHtml(e.category_tr || 'Etkinlik')}</span>
-                  <h3><a href="/etkinlikler/${e.slug}">${escapeHtml(e.title_tr)}</a></h3>
-                  <p class="muted">${escapeHtml(e.summary_tr || '')}</p>
-                </div>
-              </article>`;
-            }).join('');
-          }
-        }
-      } catch {}
-    }
-
-    // Re-hydrate Home Partners
-    const homePartnersGrid = document.getElementById('home-partners-grid');
-    if (homePartnersGrid) {
-      try {
-        const res = await fetch(`${apiBase}/shops`);
-        if (res.ok) {
-          const shops = await res.json();
-          if (Array.isArray(shops) && shops.length > 0) {
-            homePartnersGrid.innerHTML = shops.slice(0, 3).map((s: any) => {
-              let logo = s.logo_url || '/images/partners/arc-logo.png';
-              if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
-              return `<article class="partner glass">
-                <div class="logo"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" /></div>
-                <div class="body">
-                  <span class="chip">${escapeHtml(s.category_tr || 'Diğer')}</span>
-                  <h3>${escapeHtml(s.name)}</h3>
-                  <p class="offer">${escapeHtml(s.discount || '')}</p>
-                </div>
-              </article>`;
-            }).join('');
-          }
-        }
-      } catch {}
-    }
-
-    // Re-hydrate Home Sponsors
-    const homeSponsorsGrid = document.getElementById('home-sponsors-grid');
-    if (homeSponsorsGrid) {
-      try {
-        const res = await fetch(`${apiBase}/sponsors`);
-        if (res.ok) {
-          const sponsors = await res.json();
-          if (Array.isArray(sponsors) && sponsors.length > 0) {
-            homeSponsorsGrid.innerHTML = sponsors.map((s: any) => {
-              let logo = s.logo_url || '/images/sponsors/sample-sponsor.png';
-              if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
-              return `<div class="sponsor glass"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" loading="lazy" /></div>`;
-            }).join('');
-          }
-        }
-      } catch {}
-    }
-  })();
-</script>
 
 <style>
   .hero{position:relative;min-height:calc(100svh - 4.75rem);display:grid;align-items:center;overflow:hidden;padding:clamp(4rem,7vw,6.2rem) 0 clamp(3rem,6vw,5.2rem)}
@@ -274,15 +197,16 @@ const pageTitle = locale === 'tr'
   .section-link{display:flex;justify-content:center;margin-top:2rem}
   .band{background:rgba(6,17,30,.56);border-block:1px solid rgba(84,119,151,.16)}
   .sponsor-row{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
-  :global(.sponsor-list){display:grid;gap:1rem}
-  :global(.sponsor){min-height:170px;border-radius:1.2rem;display:grid;place-items:center;padding:1rem}
-  :global(.sponsor img){max-width:260px;max-height:100px;object-fit:contain;filter:grayscale(1) brightness(1.5)}
-  :global(.sponsor span){font-size:.72rem;color:#ff9a62}
+  .sponsor-list{display:grid;gap:1rem}
+  .sponsor{min-height:170px;border-radius:1.2rem;display:grid;place-items:center;padding:1rem}
+  .sponsor img{max-width:260px;max-height:100px;object-fit:contain;filter:grayscale(1) brightness(1.5)}
+  .sponsor span{font-size:.72rem;color:#ff9a62}
   .gallery-preview{display:grid;grid-template-columns:1.2fr .8fr;grid-template-rows:230px 230px;gap:1rem}
   .gallery-preview img{width:100%;height:100%;object-fit:cover;border-radius:1rem;border:1px solid rgba(84,119,151,.24)}
   .gallery-preview .g1{grid-row:1/3}
   .cta{display:flex;align-items:center;justify-content:space-between;gap:2rem;border-radius:1.5rem;padding:clamp(1.5rem,5vw,3.5rem)}
   .cta p{max-width:650px}.cta .muted{margin-bottom:0}
+
   @media(max-width:900px){.hero{padding-top:3.4rem}.hero-grid,.about-grid,.sponsor-row{grid-template-columns:1fr}.hero-copy{max-width:720px}.hero-visual{min-height:360px;order:2}.about-grid{gap:2.5rem}}
   @media(max-width:650px){.hero{min-height:auto;padding:3.2rem 0 3.6rem}.display{font-size:clamp(3rem,16vw,4.7rem);line-height:.92;letter-spacing:-.065em}.lead{font-size:1rem;line-height:1.7}.actions{display:grid;grid-template-columns:1fr;gap:.7rem;margin-top:1.7rem}.actions .btn{justify-content:center;width:100%}.hero-visual{display:grid;min-height:300px;margin-top:.4rem}.pillars{grid-template-columns:1fr 1fr}.pillars div{min-height:110px}.pillars b{margin-top:1.5rem}.gallery-preview{grid-template-columns:1fr;grid-template-rows:240px 180px 180px}.gallery-preview .g1{grid-row:auto}.cta{align-items:flex-start;flex-direction:column}}
   @media(min-width:1600px){.hero-grid{gap:5.5rem}.display{font-size:9rem}.lead{font-size:1.28rem}}
