@@ -1,18 +1,40 @@
 ---
 import { navigation } from '../../data/navigation';
 import { site } from '../../data/site';
-import { socials } from '../../data/socials';
+import { socials as staticSocials } from '../../data/socials';
 import { t } from '../../lib/content';
 import type { Locale } from '../../types/content';
 import SocialIcon from '../ui/SocialIcon.astro';
+
 interface Props { locale: Locale; }
 const { locale } = Astro.props;
-const activeSocials = socials
-  .filter((item) => item.isActive && item.url && item.url !== '#')
-  .sort((a, b) => a.order - b.order);
+
+let rawSocials: any[] = [];
+try {
+  const res = await fetch('https://admin.sastek.org/api/socials', { headers: { 'Accept': 'application/json' } });
+  if (res.ok) {
+    const apiSocials = await res.json();
+    if (Array.isArray(apiSocials) && apiSocials.length > 0) rawSocials = apiSocials;
+  }
+} catch (e) {}
+
+if (!rawSocials.length) {
+  rawSocials = staticSocials.map(s => ({
+    id: s.id,
+    platform: s.platform,
+    label: s.label,
+    url: s.url,
+    icon: s.icon,
+    order_num: s.order,
+    is_active: s.isActive ? 1 : 0
+  }));
+}
+
+const activeSocials = rawSocials.filter((item) => (item.is_active === 1 || item.is_active === true) && item.url && item.url !== '#');
 ---
+
 <footer>
-  <div class="container footer-grid">
+  <div class="container footer-grid" data-footer-root data-api="https://admin.sastek.org/api">
     <div>
       <div class="footer-brand">SASTEK<span>.</span></div>
       <p class="muted">{t(site.fullName, locale)}<br />{t(site.institution, locale)}</p>
@@ -22,7 +44,14 @@ const activeSocials = socials
     </nav>
     <div>
       <p class="eyebrow">{locale === 'tr' ? 'Bağlantıda kal' : 'Stay connected'}</p>
-      {activeSocials.length > 0 ? <div class="socials">{activeSocials.map((item) => <a href={item.url} rel="noreferrer" target="_blank" aria-label={`${item.label} ${locale === 'tr' ? 'sayfasını yeni sekmede aç' : 'opens in a new tab'}`}><SocialIcon icon={item.icon} /><span>{item.label}</span></a>)}</div> : <p class="muted small">{locale === 'tr' ? 'Sosyal medya bağlantıları güncellenecek.' : 'Social links will be updated.'}</p>}
+      <div class="socials" id="footer-socials-container">
+        {activeSocials.length > 0 ? activeSocials.map((item) => (
+          <a href={item.url} rel="noreferrer" target="_blank" aria-label={`${item.label} ${locale === 'tr' ? 'sayfasını yeni sekmede aç' : 'opens in a new tab'}`}>
+            <SocialIcon icon={item.icon || item.platform.toLowerCase()} />
+            <span>{item.label}</span>
+          </a>
+        )) : <p class="muted small">{locale === 'tr' ? 'Sosyal medya bağlantıları güncellenecek.' : 'Social links will be updated.'}</p>}
+      </div>
     </div>
   </div>
   <div class="container copyright">
@@ -31,15 +60,43 @@ const activeSocials = socials
     </p>
   </div>
 </footer>
+
+<script>
+  (async () => {
+    const root = document.querySelector<HTMLElement>('[data-footer-root]');
+    if (!root) return;
+    const apiBase = root.dataset.api || 'https://admin.sastek.org/api';
+    const container = document.getElementById('footer-socials-container');
+    if (!container) return;
+
+    function escapeHtml(val: string) {
+      return String(val).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c] || c));
+    }
+
+    try {
+      const res = await fetch(`${apiBase}/socials`);
+      if (!res.ok) return;
+      const socials = await res.json();
+      if (!Array.isArray(socials) || socials.length === 0) return;
+
+      container.innerHTML = socials.map((s: any) => `
+        <a href="${escapeHtml(s.url)}" rel="noreferrer" target="_blank" aria-label="${escapeHtml(s.label)}">
+          <span>${escapeHtml(s.label)}</span>
+        </a>
+      `).join('');
+    } catch {}
+  })();
+</script>
+
 <style>
   footer { border-top: 1px solid rgba(84,119,151,.22); padding: 4rem 0 1.5rem; background: rgba(3,8,15,.7); }
   .footer-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 3rem; }
   .footer-brand { font-size: 1.6rem; font-weight: 950; letter-spacing: -.04em; }.footer-brand span { color: #ff6b1a; }
   nav { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 1rem; } nav a { color: #a9bbce; font-size: .9rem; } nav a:hover { color: #fff; }
-  .socials { display: flex; gap: .7rem; flex-wrap: wrap; }
-  .socials a { display: inline-flex; align-items: center; gap: .48rem; min-height: 2.9rem; padding: .78rem 1.05rem; border: 1px solid rgba(84,119,151,.75); border-radius: 999px; color: #fff; font-weight: 850; line-height: 1; background: rgba(7,22,38,.35); }
-  .socials a:hover { border-color: rgba(255,107,26,.75); color: #fff; background: rgba(255,107,26,.08); transform: translateY(-1px); }
-  .socials :global(.social-icon) { width: 1rem; height: 1rem; fill: currentColor; flex: 0 0 auto; }
+  :global(.socials) { display: flex; gap: .7rem; flex-wrap: wrap; }
+  :global(.socials a) { display: inline-flex; align-items: center; gap: .48rem; min-height: 2.9rem; padding: .78rem 1.05rem; border: 1px solid rgba(84,119,151,.75); border-radius: 999px; color: #fff; font-weight: 850; line-height: 1; background: rgba(7,22,38,.35); text-decoration: none; }
+  :global(.socials a:hover) { border-color: rgba(255,107,26,.75); color: #fff; background: rgba(255,107,26,.08); transform: translateY(-1px); }
+  :global(.socials .social-icon) { width: 1rem; height: 1rem; fill: currentColor; flex: 0 0 auto; }
   .small{font-size:.9rem}.copyright { margin-top: 3rem; padding-top: 1.2rem; border-top: 1px solid rgba(84,119,151,.18); color: #72889d; font-size: .78rem; }
   @media(max-width:760px){.footer-grid{grid-template-columns:1fr}.footer-grid nav{grid-template-columns:1fr 1fr}}
 </style>
