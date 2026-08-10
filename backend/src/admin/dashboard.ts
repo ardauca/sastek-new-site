@@ -441,9 +441,9 @@ export const dashboardPage = `<!DOCTYPE html>
     <div class="form-field"><label>İNDİRİM METNİ</label><input id="shopDiscount" placeholder="Örn: SASTEK üyelerine %15 indirim" /></div>
     <div class="form-field"><label>AÇIKLAMA (TR)</label><textarea id="shopDescTr"></textarea></div>
     <div class="form-field"><label>AÇIKLAMA (EN)</label><textarea id="shopDescEn"></textarea></div>
-    <div class="grid-2">
-      <div class="form-field"><label>ENLEM (Lat)</label><input id="shopLat" placeholder="39.7775" type="number" step="any" /></div>
-      <div class="form-field"><label>BOYLAM (Lng)</label><input id="shopLng" placeholder="30.5140" type="number" step="any" /></div>
+    <div class="form-field">
+      <label>KOORDİNATLAR (Enlem, Boylam)</label>
+      <input id="shopCoords" placeholder="39.7756, 30.5151 (Google Maps'ten yapıştırabilirsiniz)" />
     </div>
     <div class="form-field"><label>HARİTA URL (Google Maps)</label><input id="shopMapUrl" placeholder="https://maps.app.goo.gl/..." /></div>
     <div class="form-field"><label>LOGO YÜKLE</label>
@@ -826,8 +826,7 @@ function openShopModal(shop = null) {
   document.getElementById('shopDiscount').value = shop?.discount || '';
   document.getElementById('shopDescTr').value = shop?.description_tr || '';
   document.getElementById('shopDescEn').value = shop?.description_en || '';
-  document.getElementById('shopLat').value = shop?.lat || '';
-  document.getElementById('shopLng').value = shop?.lng || '';
+  document.getElementById('shopCoords').value = (shop?.lat != null && shop?.lng != null) ? \`\${shop.lat}, \${shop.lng}\` : '';
   document.getElementById('shopMapUrl').value = shop?.map_url || '';
   document.getElementById('shopLogoUrl').value = shop?.logo_url || '';
   document.getElementById('shopWebsite').value = shop?.website || '';
@@ -860,14 +859,27 @@ async function saveShop() {
     }
   }
 
+  const rawCoords = document.getElementById('shopCoords').value || '';
+  let lat = null;
+  let lng = null;
+  if (rawCoords.trim()) {
+    const parts = rawCoords.split(',').map(p => p.trim());
+    if (parts.length >= 2) {
+      const parsedLat = parseFloat(parts[0]);
+      const parsedLng = parseFloat(parts[1]);
+      if (!isNaN(parsedLat)) lat = parsedLat;
+      if (!isNaN(parsedLng)) lng = parsedLng;
+    }
+  }
+
   const body = {
     name: document.getElementById('shopName').value,
     category_id: document.getElementById('shopCategory').value || null,
     discount: document.getElementById('shopDiscount').value,
     description_tr: document.getElementById('shopDescTr').value,
     description_en: document.getElementById('shopDescEn').value,
-    lat: document.getElementById('shopLat').value ? parseFloat(document.getElementById('shopLat').value) : null,
-    lng: document.getElementById('shopLng').value ? parseFloat(document.getElementById('shopLng').value) : null,
+    lat: lat,
+    lng: lng,
     map_url: document.getElementById('shopMapUrl').value,
     logo_url: logoUrl,
     website: document.getElementById('shopWebsite').value,
