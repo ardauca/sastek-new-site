@@ -29,7 +29,7 @@ try {
           en: s.category_en || 'Other',
         },
         discountLabel: {
-          tr: s.discount || 'Kampanya bilgisi güncellenecek',
+          tr: s.discount || (locale === 'tr' ? 'Kampanya bilgisi güncellenecek' : 'Offer details to be updated'),
           en: s.discount || 'Offer details to be updated',
         },
         description: {
@@ -83,6 +83,8 @@ const labels = locale === 'tr' ? {
   tokenMissing: 'Harita görünümü için PUBLIC_MAPBOX_TOKEN gerekli.',
   emptyMap: 'Haritada gösterilecek koordinatlı anlaşmalı nokta yok.',
   mapLoading: 'Harita yükleniyor…',
+  noOffer: 'Kampanya bilgisi güncellenecek',
+  unverified: 'Doğrulama bekliyor',
 } : {
   grid: 'Grid View',
   map: 'Map View',
@@ -91,13 +93,15 @@ const labels = locale === 'tr' ? {
   tokenMissing: 'PUBLIC_MAPBOX_TOKEN is required for the map view.',
   emptyMap: 'No partners with coordinates to show on the map.',
   mapLoading: 'Loading map…',
+  noOffer: 'Offer details to be updated',
+  unverified: 'Awaiting verification',
 };
 ---
 
 <BaseLayout title={title} description={desc} locale={locale}>
   <PageHero eyebrow="SASTEK / PARTNERS" title={title} text={desc} />
   <section class="section">
-    <div class="container partners-page" data-filter-root data-partners-view data-map-token={mapboxToken} data-locale={locale}>
+    <div class="container partners-page" data-filter-root data-partners-view data-map-token={mapboxToken} data-locale={locale} data-api="https://admin.sastek.org/api">
       <div class="notice">{locale === 'tr' ? 'Anlaşmalı noktalar doğrulanmış güncel liste ile değiştirilmek üzere örnek olarak gösterilmektedir.' : 'The partner locations are shown for illustrative purposes only and will be replaced with the verified, up-to-date list.'}</div>
 
       <div class="view-toggle" role="group" aria-label={locale === 'tr' ? 'Anlaşmalı noktalar görünümü' : 'Student partners view'}>
@@ -113,7 +117,7 @@ const labels = locale === 'tr' ? {
 
       <div class="view-panel is-active" data-view-panel="grid">
         <div class="filter-space"><FilterControls locale={locale} categories={categories} /></div>
-        <div class="grid-auto">{active.map((partner) => <PartnerCard partner={partner} locale={locale} />)}</div>
+        <div class="grid-auto" id="partners-grid-container">{active.map((partner) => <PartnerCard partner={partner} locale={locale} />)}</div>
       </div>
 
       <div class="view-panel" data-view-panel="map" hidden>
@@ -125,9 +129,9 @@ const labels = locale === 'tr' ? {
           <aside class="map-list" aria-label={labels.partners}>
             <div class="map-list-head">
               <strong>{labels.partners}</strong>
-              <span>{mapPartners.length} {locale === 'tr' ? 'konum' : 'locations'}</span>
+              <span id="map-partners-count">{mapPartners.length} {locale === 'tr' ? 'konum' : 'locations'}</span>
             </div>
-            <div class="map-list-items">
+            <div class="map-list-items" id="map-list-items">
               {mapPartners.length ? mapPartners.map((partner) => (
                 <button type="button" class="map-list-item" data-map-partner={partner.id}>
                   <img src={partner.logo} alt={`${partner.name} logo`} width="44" height="44" loading="lazy" />
@@ -161,11 +165,13 @@ const labels = locale === 'tr' ? {
   const mapMessage = root?.querySelector<HTMLElement>('[data-map-message]');
   const dataElement = root?.querySelector<HTMLScriptElement>('#partners-map-data');
   const parsed = JSON.parse(dataElement?.textContent || '{"partners":[],"labels":{}}');
-  const mapPartners = parsed.partners || [];
+  let mapPartners = parsed.partners || [];
   const labels = parsed.labels || {};
   let map: any;
   let mapStarted = false;
   const markers = new Map<string, any>();
+  const pageLocale = root?.dataset.locale ?? 'tr';
+  const apiBase = root?.dataset.api || 'https://admin.sastek.org/api';
 
   function setView(view: string) {
     buttons?.forEach((button) => {
@@ -284,26 +290,65 @@ const labels = locale === 'tr' ? {
           markerNode.innerHTML = `<img src="${escapeHtml(partner.logo)}" alt="${escapeHtml(partner.name)} logo" />`;
           const popup = new mapboxgl.Popup({ offset: 28, closeButton: true }).setHTML(popupHtml(partner));
           const marker = new mapboxgl.Marker({ element: markerNode, anchor: 'center' }).setLngLat([partner.lng, partner.lat]).setPopup(popup).addTo(map);
-          markers.set(partner.id, marker);
+          markers.set(String(partner.id), marker);
           bounds.extend([partner.lng, partner.lat]);
         });
         if (mapPartners.length > 1) map.fitBounds(bounds, { padding: 70, maxZoom: 14 });
       });
     } catch (error) {
       mapStarted = false;
-      const pageLocale = root?.dataset.locale ?? 'tr';
       mapMessage.textContent = pageLocale === 'tr' ? 'Harita yüklenemedi. Lütfen Mapbox token ve bağlantıyı kontrol edin.' : 'Map failed to load. Please check the Mapbox token and your connection.';
     }
   }
 
   buttons?.forEach((button) => button.addEventListener('click', () => setView(button.dataset.viewButton || 'grid')));
   root?.querySelectorAll<HTMLButtonElement>('[data-map-partner]').forEach((button) => button.addEventListener('click', () => {
-    const partner = mapPartners.find((item: any) => item.id === button.dataset.mapPartner);
-    const marker = markers.get(button.dataset.mapPartner || '');
+    const partner = mapPartners.find((item: any) => String(item.id) === String(button.dataset.mapPartner));
+    const marker = markers.get(String(button.dataset.mapPartner || ''));
     if (!partner || !map) return;
     map.flyTo({ center: [partner.lng, partner.lat], zoom: 15, essential: true });
     marker?.togglePopup();
   }));
+
+  // ── Live Client-Side Hydration ────────────────────────────────────────────────
+  // Re-fetches latest shops from D1 API on page load so Admin Panel changes reflect live without rebuild
+  (async () => {
+    try {
+      const res = await fetch(`${apiBase}/shops`);
+      if (!res.ok) return;
+      const apiShops = await res.json();
+      if (!Array.isArray(apiShops)) return;
+
+      const gridContainer = document.getElementById('partners-grid-container');
+      if (!gridContainer) return;
+
+      const newCardsHtml = apiShops.map((s: any) => {
+        const cat = pageLocale === 'tr' ? (s.category_tr || 'Diğer') : (s.category_en || 'Other');
+        const offer = s.discount || (pageLocale === 'tr' ? 'Kampanya bilgisi güncellenecek' : 'Offer details to be updated');
+        const logo = s.logo_url || '/images/partners/arc-logo.png';
+        const searchStr = `${s.name} ${cat}`.toLowerCase();
+
+        return `<article class="partner glass" data-filter-card data-category="${escapeHtml(cat.toLowerCase())}" data-search="${escapeHtml(searchStr)}">
+          <div class="logo"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" width="240" height="160" loading="lazy" /></div>
+          <div class="body">
+            <span class="chip">${escapeHtml(cat)}</span>
+            <h3>${escapeHtml(s.name)}</h3>
+            <p class="offer">${escapeHtml(offer)}</p>
+          </div>
+        </article>`;
+      }).join('');
+
+      gridContainer.innerHTML = newCardsHtml;
+
+      // Re-trigger filter listener if user typed in search or category filter
+      const searchInput = root?.querySelector<HTMLInputElement>('[data-filter-search]');
+      const categorySelect = root?.querySelector<HTMLSelectElement>('[data-filter-category]');
+      if (searchInput || categorySelect) {
+        const event = new Event('input', { bubbles: true });
+        searchInput?.dispatchEvent(event);
+      }
+    } catch {}
+  })();
 </script>
 
 <style>
@@ -337,6 +382,15 @@ const labels = locale === 'tr' ? {
   .map-list-item b{display:block;font-size:.9rem}
   .map-list-item small{display:block;overflow:hidden;color:#a9bbce;font-size:.72rem;line-height:1.35;text-overflow:ellipsis;white-space:normal}
   .empty-map{margin:0;padding:1rem;color:#a9bbce}
+
+  /* ── Partner Card Global Component Styling Guarantee ──────────────────────── */
+  :global(.partner){display:grid;grid-template-columns:110px 1fr;align-items:center;gap:1.1rem;border-radius:1rem;padding:1rem}
+  :global(.partner .logo){display:grid;place-items:center;aspect-ratio:1;border-radius:.75rem;background:#f2f3f4;overflow:hidden}
+  :global(.partner .logo img){width:85%;height:85%;object-fit:contain}
+  :global(.partner .body h3){margin:.55rem 0 .1rem;font-size:1.15rem}
+  :global(.partner .offer){margin:0;color:#d9e6f2;font-size:.88rem}
+  :global(.partner .verify){margin:.55rem 0 0;color:#ff9a62;font-size:.7rem;font-weight:750}
+
   :global(.mapboxgl-popup){max-width:min(245px,calc(100vw - 2rem))!important}
   :global(.mapboxgl-popup-content){overflow:hidden;border:1px solid rgba(128,174,213,.24);border-radius:.82rem;background:rgba(6,18,32,.96);padding:0;box-shadow:0 18px 46px rgba(0,0,0,.44),0 0 0 1px rgba(255,255,255,.025);color:#f5fbff}
   :global(.mapboxgl-popup-tip){border-top-color:rgba(6,18,32,.96)!important;border-bottom-color:rgba(6,18,32,.96)!important}
