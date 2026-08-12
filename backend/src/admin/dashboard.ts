@@ -506,6 +506,7 @@ export const dashboardPage = `<!DOCTYPE html>
     </div>
     <div class="form-field"><label>GÖRSEL URL</label><input id="eventImgUrl" /></div>
     <div class="form-field"><label>DURUM</label><select id="eventActive"><option value="1">Aktif</option><option value="0">Pasif</option></select></div>
+    <div class="form-field"><label>ÖNE ÇIKAR (Ana Sayfa)</label><select id="eventFeatured"><option value="0">Normal</option><option value="1">⭐ Öne Çıkarılan</option></select></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('eventModal')">İptal</button>
       <button class="btn btn-primary" onclick="saveEvent()">Kaydet</button>
@@ -980,6 +981,7 @@ function openEventModal(ev = null) {
   document.getElementById('eventCatEn').value = ev?.category_en || '';
   document.getElementById('eventImgUrl').value = ev?.image_url || '';
   document.getElementById('eventActive').value = String(ev?.is_active ?? 1);
+  document.getElementById('eventFeatured').value = String(ev?.is_featured ?? 0);
   document.getElementById('eventImgFile').value = '';
 
   const preview = document.getElementById('eventImgPreview');
@@ -1017,6 +1019,7 @@ async function saveEvent() {
     category_en: document.getElementById('eventCatEn').value,
     image_url: imgUrl,
     is_active: parseInt(document.getElementById('eventActive').value),
+    is_featured: parseInt(document.getElementById('eventFeatured').value),
   };
   const url = id ? \`/api/events/\${id}\` : '/api/events';
   const method = id ? 'PUT' : 'POST';

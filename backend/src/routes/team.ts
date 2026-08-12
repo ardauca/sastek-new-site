@@ -38,7 +38,7 @@ teamRoutes.put('/:id', requireAuth(), async (c) => {
   const { id } = c.req.param();
 
   await c.env.DB.prepare(
-    'UPDATE team SET name = COALESCE(?, name), role_tr = COALESCE(?, role_tr), role_en = COALESCE(?, role_en), email = ?, avatar_url = ?, linkedin_url = ?, order_num = COALESCE(?, order_num), is_active = COALESCE(?, is_active) WHERE id = ?'
+    'UPDATE team SET name = COALESCE(?, name), role_tr = COALESCE(?, role_tr), role_en = COALESCE(?, role_en), email = ?, avatar_url = COALESCE(?, avatar_url), linkedin_url = ?, order_num = COALESCE(?, order_num), is_active = COALESCE(?, is_active) WHERE id = ?'
   ).bind(
     data.name ?? null, data.role_tr ?? null, data.role_en ?? null,
     data.email ?? null, data.avatar_url ?? null, data.linkedin_url ?? null,
