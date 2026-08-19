@@ -13,148 +13,185 @@ export const dashboardPage = `<!DOCTYPE html>
       --panel:  #111827;
       --panel2: #1a2332;
       --border: #1e2d45;
+      --border-subtle: rgba(30, 45, 69, 0.5);
       --signal: #00d4ff;
       --signal-soft: rgba(0, 212, 255, 0.10);
       --text:   #e2e8f0;
-      --muted:  #64748b;
+      --muted:  #718096;
       --success:#34d399;
       --error:  #f87171;
       --warn:   #fbbf24;
     }
-    body { font-family:'Inter',sans-serif; background:var(--navy); color:var(--text); min-height:100vh; }
+    body { font-family:'Inter',sans-serif; background:var(--navy); color:var(--text); min-height:100vh; line-height:1.5; }
 
     .layout { display:flex; min-height:100vh; }
     .sidebar {
-      width:230px; flex-shrink:0;
+      width:220px; flex-shrink:0;
       background:var(--panel);
       border-right:1px solid var(--border);
       display:flex; flex-direction:column;
-      padding:24px 0;
+      padding:20px 0;
       position:sticky; top:0; height:100vh;
     }
     .brand {
-      padding:0 20px 24px;
+      padding:0 18px 18px;
       border-bottom:1px solid var(--border);
-      margin-bottom:16px;
+      margin-bottom:12px;
     }
-    .brand-dot { width:8px;height:8px;border-radius:50%;background:var(--signal);box-shadow:0 0 6px var(--signal);display:inline-block;margin-right:8px;animation:pulse 2s infinite; }
+    .brand-dot { width:7px;height:7px;border-radius:50%;background:var(--signal);box-shadow:0 0 8px var(--signal);display:inline-block;margin-right:8px;animation:pulse 2s infinite; }
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-    .brand h2 { font-size:.85rem;font-weight:700;letter-spacing:.1em; }
+    .brand h2 { font-size:.85rem;font-weight:700;letter-spacing:.1em;color:#fff; }
     .brand p  { font-size:.65rem;color:var(--muted);margin-top:2px; }
 
     nav a {
       display:flex;align-items:center;gap:10px;
-      padding:9px 20px;
-      font-size:.8rem;font-weight:500;
+      padding:8px 14px; margin:2px 10px; border-radius:6px;
+      font-size:.78rem;font-weight:500;
       color:var(--muted);text-decoration:none;
-      border-left:2px solid transparent;
       transition:all .15s;
     }
-    nav a:hover, nav a.active {
+    nav a:hover {
+      color:var(--text); background:rgba(255,255,255,.04);
+    }
+    nav a.active {
       color:var(--signal);
-      border-left-color:var(--signal);
       background:var(--signal-soft);
+      font-weight:600;
     }
     nav .section-label {
-      font-size:.6rem;letter-spacing:.12em;color:var(--muted);
-      padding:14px 20px 4px;font-weight:600;
+      font-size:.58rem;letter-spacing:.12em;color:var(--muted);
+      padding:12px 18px 4px;font-weight:600;
     }
-    .sidebar-bottom { margin-top:auto; padding:16px 20px; }
+    .sidebar-bottom { margin-top:auto; padding:12px 14px; }
     .logout-btn {
-      width:100%;padding:8px;background:transparent;border:1px solid var(--border);
-      border-radius:6px;color:var(--muted);font-size:.75rem;font-family:inherit;
+      width:100%;padding:7px;background:transparent;border:1px solid var(--border);
+      border-radius:6px;color:var(--muted);font-size:.72rem;font-family:inherit;
       cursor:pointer;transition:all .15s;
     }
-    .logout-btn:hover { border-color:var(--error);color:var(--error); }
+    .logout-btn:hover { border-color:var(--error);color:var(--error);background:rgba(248,113,113,.06); }
 
-    .main { flex:1; padding:32px; max-width:1200px; }
+    .main { flex:1; padding:24px 32px; max-width:1320px; }
     .page { display:none; }
     .page.active { display:block; }
-    h1 { font-size:1.25rem;font-weight:700;margin-bottom:4px; }
-    .page-sub { font-size:.8rem;color:var(--muted);margin-bottom:28px; }
 
-    .stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:32px; }
-    .stat-card {
-      background:var(--panel);border:1px solid var(--border);border-radius:10px;
-      padding:18px 20px;
+    .page-header {
+      display:flex; justify-content:space-between; align-items:flex-start;
+      margin-bottom:18px; gap:16px;
     }
-    .stat-card .label { font-size:.7rem;color:var(--muted);letter-spacing:.08em;margin-bottom:6px; }
-    .stat-card .value { font-size:1.6rem;font-weight:700;color:var(--signal); }
+    .page-header h1 { font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:2px; }
+    .page-header .page-sub { font-size:.78rem;color:var(--muted);margin-bottom:0; }
 
-    .toolbar { display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px; }
-    .bulk-actions { display:flex;gap:6px;align-items:center;flex-wrap:wrap; }
+    .stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px; }
+    .stat-card {
+      background:var(--panel);border:1px solid var(--border);border-radius:8px;
+      padding:16px 18px;
+    }
+    .stat-card .label { font-size:.68rem;color:var(--muted);letter-spacing:.08em;margin-bottom:4px;font-weight:500; }
+    .stat-card .value { font-size:1.5rem;font-weight:700;color:var(--signal); }
+
+    /* Bulk Action Toolbar */
+    .bulk-toolbar {
+      display:flex; align-items:center; gap:8px;
+      background:var(--panel); border:1px solid var(--border);
+      padding:7px 12px; border-radius:8px; margin-bottom:14px;
+      flex-wrap:wrap; font-size:.75rem;
+    }
+    .bulk-group { display:flex; align-items:center; gap:5px; }
+    .bulk-group .group-title { font-size:.65rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-right:2px; }
+    .bulk-divider { width:1px; height:16px; background:var(--border); margin:0 3px; }
+    .select-all-label { display:flex; align-items:center; gap:6px; font-size:.74rem; font-weight:500; color:var(--text); cursor:pointer; user-select:none; }
+
+    /* Table Card */
+    .table-card {
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:10px; overflow:hidden;
+    }
+    .table-card-header {
+      padding:10px 16px; border-bottom:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
+      background:rgba(255,255,255,.01);
+    }
+    .table-card-header .card-title {
+      font-size:.78rem; font-weight:600; color:var(--text); letter-spacing:.02em;
+    }
+    .table-responsive { width:100%; overflow-x:auto; }
 
     .btn {
-      padding:8px 16px;border-radius:7px;font-size:.8rem;font-weight:600;
-      font-family:inherit;cursor:pointer;border:none;transition:all .15s;
-      display:inline-flex;align-items:center;gap:6px;
+      padding:7px 14px;border-radius:6px;font-size:.76rem;font-weight:600;
+      font-family:inherit;cursor:pointer;border:1px solid transparent;transition:all .15s;
+      display:inline-flex;align-items:center;gap:5px;line-height:1.2;
     }
-    .btn-primary { background:var(--signal);color:var(--navy); }
-    .btn-primary:hover { opacity:.85; }
-    .btn-secondary { background:var(--panel2);border:1px solid var(--border);color:var(--text); }
+    .btn-primary { background:var(--signal);color:var(--navy);border-color:var(--signal); }
+    .btn-primary:hover { opacity:.9;transform:translateY(-1px); }
+    .btn-secondary { background:var(--panel2);border-color:var(--border);color:var(--text); }
     .btn-secondary:hover { border-color:var(--signal);color:var(--signal); }
-    .btn-danger  { background:transparent;border:1px solid var(--error);color:var(--error); }
-    .btn-danger:hover  { background:var(--error);color:var(--navy); }
-    .btn-sm { padding:5px 9px;font-size:.72rem; }
+    .btn-danger  { background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.3);color:var(--error); }
+    .btn-danger:hover  { background:var(--error);color:var(--navy);border-color:var(--error); }
+    .btn-sm { padding:4px 8px;font-size:.7rem; }
 
-    table { width:100%;border-collapse:collapse;font-size:.8rem; }
-    th { text-align:left;padding:10px 12px;font-size:.65rem;font-weight:600;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border); }
-    td { padding:10px 12px;border-bottom:1px solid rgba(30,45,69,.5);vertical-align:middle; }
-    tr:hover td { background:rgba(255,255,255,.02); }
-    input[type="checkbox"] { accent-color:var(--signal);cursor:pointer;width:15px;height:15px; }
+    table { width:100%;border-collapse:collapse;font-size:.78rem; }
+    th {
+      text-align:left;padding:9px 12px;font-size:.65rem;font-weight:600;
+      letter-spacing:.08em;color:var(--muted);background:rgba(255,255,255,.02);
+      border-bottom:1px solid var(--border); white-space:nowrap;
+    }
+    td { padding:9px 12px;border-bottom:1px solid var(--border-subtle);vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:rgba(255,255,255,.025); }
+    input[type="checkbox"] { accent-color:var(--signal);cursor:pointer;width:14px;height:14px; }
 
     .badge {
-      display:inline-flex;align-items:center;gap:4px;
-      font-size:.65rem;font-weight:600;letter-spacing:.05em;
-      padding:2px 8px;border-radius:20px;
+      display:inline-flex;align-items:center;gap:3px;
+      font-size:.63rem;font-weight:600;letter-spacing:.04em;
+      padding:2px 7px;border-radius:4px;
     }
-    .badge-active  { background:rgba(52,211,153,.12);color:var(--success); }
-    .badge-inactive{ background:rgba(248,113,113,.12);color:var(--error); }
-    .badge-gold    { background:rgba(251,191,36,.12);color:var(--warn); }
-    .badge-silver  { background:rgba(148,163,184,.12);color:#94a3b8; }
-    .badge-platinum{ background:rgba(0,212,255,.12);color:var(--signal); }
-    .badge-standard{ background:rgba(100,116,139,.12);color:#94a3b8; }
+    .badge-active  { background:rgba(52,211,153,.12);color:var(--success);border:1px solid rgba(52,211,153,.2); }
+    .badge-inactive{ background:rgba(248,113,113,.12);color:var(--error);border:1px solid rgba(248,113,113,.2); }
+    .badge-gold    { background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.2); }
+    .badge-silver  { background:rgba(148,163,184,.12);color:#94a3b8;border:1px solid rgba(148,163,184,.2); }
+    .badge-platinum{ background:rgba(0,212,255,.12);color:var(--signal);border:1px solid rgba(0,212,255,.2); }
+    .badge-standard{ background:rgba(100,116,139,.12);color:#94a3b8;border:1px solid rgba(100,116,139,.2); }
 
-    .logo-thumb { width:44px;height:36px;border-radius:6px;object-fit:contain;background:rgba(255,255,255,.08);padding:2px; }
+    .logo-thumb { width:38px;height:30px;border-radius:5px;object-fit:contain;background:rgba(255,255,255,.06);padding:2px; }
 
     .modal-backdrop {
-      display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;
+      display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;
       align-items:center;justify-content:center;
     }
     .modal-backdrop.open { display:flex; }
     .modal {
-      background:var(--panel);border:1px solid var(--border);border-radius:14px;
-      padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;
+      background:var(--panel);border:1px solid var(--border);border-radius:12px;
+      padding:24px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;
     }
-    .modal h3 { font-size:1rem;font-weight:600;margin-bottom:20px; }
+    .modal h3 { font-size:.95rem;font-weight:600;margin-bottom:18px;color:#fff; }
     .grid-2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
-    .form-field { margin-bottom:16px; }
-    .form-field label { display:block;font-size:.72rem;color:var(--muted);margin-bottom:5px;letter-spacing:.05em; }
+    .form-field { margin-bottom:14px; }
+    .form-field label { display:block;font-size:.7rem;color:var(--muted);margin-bottom:4px;letter-spacing:.05em;font-weight:500; }
     .form-field input, .form-field select, .form-field textarea {
-      width:100%;padding:9px 12px;
+      width:100%;padding:8px 11px;
       background:rgba(255,255,255,.04);border:1px solid var(--border);
-      border-radius:7px;color:var(--text);font-size:.83rem;font-family:inherit;
+      border-radius:6px;color:var(--text);font-size:.8rem;font-family:inherit;
       outline:none;transition:border-color .15s;
     }
     .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color:var(--signal); }
-    .form-field textarea { resize:vertical;min-height:80px; }
+    .form-field textarea { resize:vertical;min-height:75px; }
     select option { background:var(--panel2); }
-    .modal-actions { display:flex;gap:10px;justify-content:flex-end;margin-top:20px; }
-    .btn-ghost { background:transparent;border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:7px;font-size:.8rem;font-family:inherit;cursor:pointer; }
+    .modal-actions { display:flex;gap:10px;justify-content:flex-end;margin-top:18px; }
+    .btn-ghost { background:transparent;border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:6px;font-size:.76rem;font-family:inherit;cursor:pointer; }
     .btn-ghost:hover { border-color:var(--text);color:var(--text); }
 
     .upload-area {
-      border:2px dashed var(--border);border-radius:8px;padding:16px;
-      text-align:center;cursor:pointer;transition:border-color .15s;font-size:.8rem;color:var(--muted);
+      border:2px dashed var(--border);border-radius:7px;padding:14px;
+      text-align:center;cursor:pointer;transition:border-color .15s;font-size:.78rem;color:var(--muted);
     }
     .upload-area:hover { border-color:var(--signal); }
-    .upload-preview { margin-top:10px; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
-    .upload-preview img { max-width:100%;max-height:100px;border-radius:6px;object-fit:contain;border:1px solid var(--border); }
+    .upload-preview { margin-top:8px; display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
+    .upload-preview img { max-width:100%;max-height:90px;border-radius:5px;object-fit:contain;border:1px solid var(--border); }
 
     #toast {
       position:fixed;bottom:24px;right:24px;
       background:var(--panel2);border:1px solid var(--border);
-      padding:12px 18px;border-radius:8px;font-size:.8rem;
+      padding:10px 16px;border-radius:7px;font-size:.78rem;
       transform:translateY(80px);opacity:0;transition:all .3s;z-index:200;
     }
     #toast.show { transform:translateY(0);opacity:1; }
@@ -197,8 +234,12 @@ export const dashboardPage = `<!DOCTYPE html>
 
     <!-- Dashboard -->
     <div class="page active" id="page-dashboard">
-      <h1>Dashboard</h1>
-      <p class="page-sub">SASTEK modüler içerik yönetim paneline hoş geldiniz.</p>
+      <div class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="page-sub">SASTEK modüler içerik yönetim paneline hoş geldiniz.</p>
+        </div>
+      </div>
       <div class="stats" id="statsGrid">
         <div class="stat-card"><div class="label">ANLAŞMALI NOKTA</div><div class="value" id="stat-shops">—</div></div>
         <div class="stat-card"><div class="label">ETKİNLİK</div><div class="value" id="stat-events">—</div></div>
@@ -210,137 +251,259 @@ export const dashboardPage = `<!DOCTYPE html>
 
     <!-- Shops -->
     <div class="page" id="page-shops">
-      <h1>Anlaşmalı Noktalar</h1>
-      <p class="page-sub">Partner işletmeleri, harita konumlarını, öne çıkarma ve onay durumlarını yönetin.</p>
-      <div class="toolbar">
-        <div class="bulk-actions">
-          <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
-            <input type="checkbox" id="selectAllShops" /> Tümünü Seç
-          </label>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'is_featured', 1, loadShops)">⭐ Öne Çıkar</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'is_featured', 0, loadShops)">❌ Öne Çıkarma</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'show_on_map', 1, loadShops)">📍 Haritada Göster</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'show_on_map', 0, loadShops)">🙈 Harita Gizle</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'is_verified', 1, loadShops)">✅ Doğrula</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('shops', 1, loadShops)">👁️ Aktif Yap</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('shops', 0, loadShops)">🙈 Pasif Yap</button>
-          <button class="btn btn-danger btn-sm" onclick="bulkDelete('shops', loadShops)">🗑️ Sil</button>
+      <div class="page-header">
+        <div>
+          <h1>Anlaşmalı Noktalar</h1>
+          <p class="page-sub">Partner işletmeleri, indirim oranlarını, harita konumlarını ve onay durumlarını yönetin.</p>
         </div>
         <button class="btn btn-primary" onclick="openShopModal()">+ Yeni Ekle</button>
       </div>
-      <table>
-        <thead><tr><th><input type="checkbox" id="selectAllShopsHeader" /></th><th>LOGO</th><th>İSİM</th><th>KATEGORİ</th><th>İNDİRİM</th><th>DURUM & ÖZELLİKLER</th><th>SIRA</th><th>İŞLEM</th></tr></thead>
-        <tbody id="shopTable"></tbody>
-      </table>
+
+      <div class="bulk-toolbar">
+        <div class="bulk-group">
+          <label class="select-all-label">
+            <input type="checkbox" id="selectAllShops" /> Tümünü Seç
+          </label>
+        </div>
+        <div class="bulk-divider"></div>
+        <div class="bulk-group">
+          <span class="group-title">Özellik:</span>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'is_featured', 1, loadShops)">⭐ Öne Çıkar</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'is_featured', 0, loadShops)">Öne Çıkarma</button>
+        </div>
+        <div class="bulk-divider"></div>
+        <div class="bulk-group">
+          <span class="group-title">Harita:</span>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'show_on_map', 1, loadShops)">📍 Göster</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'show_on_map', 0, loadShops)">Gizle</button>
+        </div>
+        <div class="bulk-divider"></div>
+        <div class="bulk-group">
+          <span class="group-title">Durum:</span>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('shops', 'is_verified', 1, loadShops)">✅ Doğrula</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('shops', 1, loadShops)">Aktif</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('shops', 0, loadShops)">Pasif</button>
+        </div>
+        <div class="bulk-group" style="margin-left:auto;">
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('shops', loadShops)">🗑️ Sil</button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="card-title">Anlaşmalı Noktalar Listesi</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th><input type="checkbox" id="selectAllShopsHeader" /></th><th>LOGO</th><th>İSİM</th><th>KATEGORİ</th><th>İNDİRİM</th><th>DURUM & ÖZELLİKLER</th><th>SIRA</th><th>İŞLEM</th></tr></thead>
+            <tbody id="shopTable"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- Events -->
     <div class="page" id="page-events">
-      <h1>Etkinlikler</h1>
-      <p class="page-sub">Kulüp etkinliklerini düzenleyin.</p>
-      <div class="toolbar">
-        <div class="bulk-actions">
-          <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
-            <input type="checkbox" id="selectAllEvents" /> Tümünü Seç
-          </label>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('events', 1, loadEvents)">👁️ Görünür Yap</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('events', 0, loadEvents)">🙈 Görünmez Yap</button>
-          <button class="btn btn-danger btn-sm" onclick="bulkDelete('events', loadEvents)">🗑️ Seçilenleri Sil</button>
+      <div class="page-header">
+        <div>
+          <h1>Etkinlikler</h1>
+          <p class="page-sub">Kulüp etkinliklerini, duyuruları, konum ve durum bilgilerini yönetin.</p>
         </div>
         <button class="btn btn-primary" onclick="openEventModal()">+ Yeni Etkinlik</button>
       </div>
-      <table>
-        <thead><tr><th><input type="checkbox" id="selectAllEventsHeader" /></th><th>GÖRSEL</th><th>BAŞLIK</th><th>KATEGORİ</th><th>SLUG</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
-        <tbody id="eventTable"></tbody>
-      </table>
+
+      <div class="bulk-toolbar">
+        <div class="bulk-group">
+          <label class="select-all-label">
+            <input type="checkbox" id="selectAllEvents" /> Tümünü Seç
+          </label>
+        </div>
+        <div class="bulk-divider"></div>
+        <div class="bulk-group">
+          <span class="group-title">Görünürlük:</span>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('events', 1, loadEvents)">👁️ Görünür Yap</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('events', 0, loadEvents)">🙈 Görünmez Yap</button>
+        </div>
+        <div class="bulk-group" style="margin-left:auto;">
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('events', loadEvents)">🗑️ Seçilenleri Sil</button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="card-title">Etkinlik Listesi</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th><input type="checkbox" id="selectAllEventsHeader" /></th><th>GÖRSEL</th><th>BAŞLIK</th><th>KATEGORİ</th><th>SLUG</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
+            <tbody id="eventTable"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- Team -->
     <div class="page" id="page-team">
-      <h1>Ekip & Yönetim</h1>
-      <p class="page-sub">Kulüp yönetim kurulu üyelerini yönetin.</p>
-      <div class="toolbar">
-        <div class="bulk-actions">
-          <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
-            <input type="checkbox" id="selectAllTeam" /> Tümünü Seç
-          </label>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('team', 1, loadTeam)">👁️ Görünür Yap</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('team', 0, loadTeam)">🙈 Görünmez Yap</button>
-          <button class="btn btn-danger btn-sm" onclick="bulkDelete('team', loadTeam)">🗑️ Seçilenleri Sil</button>
+      <div class="page-header">
+        <div>
+          <h1>Ekip & Yönetim</h1>
+          <p class="page-sub">Kulüp yönetim kurulu ve ekip üyelerini yönetin.</p>
         </div>
         <button class="btn btn-primary" onclick="openTeamModal()">+ Üye Ekle</button>
       </div>
-      <table>
-        <thead><tr><th><input type="checkbox" id="selectAllTeamHeader" /></th><th>İSİM</th><th>ROL (TR)</th><th>E-POSTA</th><th>SIRA</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
-        <tbody id="teamTable"></tbody>
-      </table>
+
+      <div class="bulk-toolbar">
+        <div class="bulk-group">
+          <label class="select-all-label">
+            <input type="checkbox" id="selectAllTeam" /> Tümünü Seç
+          </label>
+        </div>
+        <div class="bulk-divider"></div>
+        <div class="bulk-group">
+          <span class="group-title">Görünürlük:</span>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('team', 1, loadTeam)">👁️ Görünür Yap</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('team', 0, loadTeam)">🙈 Görünmez Yap</button>
+        </div>
+        <div class="bulk-group" style="margin-left:auto;">
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('team', loadTeam)">🗑️ Seçilenleri Sil</button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="card-title">Yönetim Kurulu & Ekip Listesi</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th><input type="checkbox" id="selectAllTeamHeader" /></th><th>İSİM</th><th>ROL (TR)</th><th>E-POSTA</th><th>SIRA</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
+            <tbody id="teamTable"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- Sponsors -->
     <div class="page" id="page-sponsors">
-      <h1>Sponsorlar</h1>
-      <p class="page-sub">Sponsor kurumları yönetin.</p>
-      <div class="toolbar">
-        <div class="bulk-actions">
-          <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
-            <input type="checkbox" id="selectAllSponsors" /> Tümünü Seç
-          </label>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('sponsors', 1, loadSponsors)">👁️ Görünür Yap</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('sponsors', 0, loadSponsors)">🙈 Görünmez Yap</button>
-          <button class="btn btn-danger btn-sm" onclick="bulkDelete('sponsors', loadSponsors)">🗑️ Seçilenleri Sil</button>
+      <div class="page-header">
+        <div>
+          <h1>Sponsorlar</h1>
+          <p class="page-sub">Sponsor kurumları, destek seviyelerini ve bağlantılarını yönetin.</p>
         </div>
         <button class="btn btn-primary" onclick="openSponsorModal()">+ Yeni Ekle</button>
       </div>
-      <table>
-        <thead><tr><th><input type="checkbox" id="selectAllSponsorsHeader" /></th><th>LOGO</th><th>İSİM</th><th>WEBSİTE</th><th>SEVİYE</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
-        <tbody id="sponsorTable"></tbody>
-      </table>
+
+      <div class="bulk-toolbar">
+        <div class="bulk-group">
+          <label class="select-all-label">
+            <input type="checkbox" id="selectAllSponsors" /> Tümünü Seç
+          </label>
+        </div>
+        <div class="bulk-divider"></div>
+        <div class="bulk-group">
+          <span class="group-title">Görünürlük:</span>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('sponsors', 1, loadSponsors)">👁️ Görünür Yap</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('sponsors', 0, loadSponsors)">🙈 Görünmez Yap</button>
+        </div>
+        <div class="bulk-group" style="margin-left:auto;">
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('sponsors', loadSponsors)">🗑️ Seçilenleri Sil</button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="card-title">Sponsor Listesi</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th><input type="checkbox" id="selectAllSponsorsHeader" /></th><th>LOGO</th><th>İSİM</th><th>WEBSİTE</th><th>SEVİYE</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
+            <tbody id="sponsorTable"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- Socials -->
     <div class="page" id="page-socials">
-      <h1>Sosyal Medya</h1>
-      <p class="page-sub">Sosyal medya hesap linklerini yönetin.</p>
-      <div class="toolbar">
-        <div class="bulk-actions">
-          <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
-            <input type="checkbox" id="selectAllSocials" /> Tümünü Seç
-          </label>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('socials', 1, loadSocials)">👁️ Görünür Yap</button>
-          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('socials', 0, loadSocials)">🙈 Görünmez Yap</button>
-          <button class="btn btn-danger btn-sm" onclick="bulkDelete('socials', loadSocials)">🗑️ Seçilenleri Sil</button>
+      <div class="page-header">
+        <div>
+          <h1>Sosyal Medya</h1>
+          <p class="page-sub">Resmi sosyal medya bağlantılarını ve sıralamasını yönetin.</p>
         </div>
         <button class="btn btn-primary" onclick="openSocialModal()">+ Yeni Link</button>
       </div>
-      <table>
-        <thead><tr><th><input type="checkbox" id="selectAllSocialsHeader" /></th><th>PLATFORM</th><th>LABEL</th><th>URL</th><th>SIRA</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
-        <tbody id="socialTable"></tbody>
-      </table>
+
+      <div class="bulk-toolbar">
+        <div class="bulk-group">
+          <label class="select-all-label">
+            <input type="checkbox" id="selectAllSocials" /> Tümünü Seç
+          </label>
+        </div>
+        <div class="bulk-divider"></div>
+        <div class="bulk-group">
+          <span class="group-title">Görünürlük:</span>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('socials', 1, loadSocials)">👁️ Görünür Yap</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('socials', 0, loadSocials)">🙈 Görünmez Yap</button>
+        </div>
+        <div class="bulk-group" style="margin-left:auto;">
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('socials', loadSocials)">🗑️ Seçilenleri Sil</button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="card-title">Sosyal Medya Bağlantıları</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th><input type="checkbox" id="selectAllSocialsHeader" /></th><th>PLATFORM</th><th>LABEL</th><th>URL</th><th>SIRA</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
+            <tbody id="socialTable"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- Gallery -->
     <div class="page" id="page-gallery">
-      <h1>Galeri</h1>
-      <p class="page-sub">Fotoğraf ve medya içeriklerini yönetin.</p>
-      <div class="toolbar">
-        <div class="bulk-actions">
-          <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer">
-            <input type="checkbox" id="selectAllGallery" /> Tümünü Seç
-          </label>
-          <button class="btn btn-danger btn-sm" onclick="bulkDelete('gallery', loadGallery)">🗑️ Seçilenleri Sil</button>
+      <div class="page-header">
+        <div>
+          <h1>Galeri</h1>
+          <p class="page-sub">Etkinlik fotoğraflarını ve medya içeriklerini yönetin.</p>
         </div>
         <button class="btn btn-primary" onclick="openGalleryModal()">+ Fotoğraf Yükle</button>
       </div>
-      <table>
-        <thead><tr><th><input type="checkbox" id="selectAllGalleryHeader" /></th><th>GÖRSEL</th><th>ETİKET</th><th>BOYUT</th><th>YÜKLENDİ</th><th>İŞLEM</th></tr></thead>
-        <tbody id="galleryTable"></tbody>
-      </table>
+
+      <div class="bulk-toolbar">
+        <div class="bulk-group">
+          <label class="select-all-label">
+            <input type="checkbox" id="selectAllGallery" /> Tümünü Seç
+          </label>
+        </div>
+        <div class="bulk-group" style="margin-left:auto;">
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete('gallery', loadGallery)">🗑️ Seçilenleri Sil</button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="card-title">Fotoğraf ve Medya Galerisi</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th><input type="checkbox" id="selectAllGalleryHeader" /></th><th>GÖRSEL</th><th>ETİKET</th><th>BOYUT</th><th>YÜKLENDİ</th><th>İŞLEM</th></tr></thead>
+            <tbody id="galleryTable"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- Developer Settings -->
     <div class="page" id="page-developer">
-      <h1>⚙️ Geliştirici Ayarları & Mimari Bilgilendirme</h1>
-      <p class="page-sub">Sistem altyapısı, canlı veri akışı, performans ve duyuru bandı ayarları.</p>
+      <div class="page-header">
+        <div>
+          <h1>Geliştirici Ayarları & Mimari</h1>
+          <p class="page-sub">Sistem altyapısı, canlı veri akışı, performans ve duyuru bandı ayarları.</p>
+        </div>
+      </div>
 
       <div style="display:grid;gap:20px;">
 
