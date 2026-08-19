@@ -31,9 +31,34 @@ galleryRoutes.post('/', requireAuth(), async (c) => {
   return c.json({ ok: true, id: result.meta.last_row_id }, 201);
 });
 
+function getR2KeyFromUrl(url: string): string | null {
+  if (!url || typeof url !== 'string') return null;
+  const match = url.match(/\/api\/upload\/file\/(.+)$/);
+  return match ? match[1] : null;
+}
+
 // DELETE /api/gallery/:id
 galleryRoutes.delete('/:id', requireAuth(), async (c) => {
-  await c.env.DB.prepare('DELETE FROM gallery WHERE id = ?').bind(c.req.param('id')).run();
+  const id = c.req.param('id');
+
+  // 1. Önce D1'den kaydın URL'sini al
+  const item = await c.env.DB.prepare('SELECT url FROM gallery WHERE id = ?').bind(id).first<{ url: string }>();
+
+  // 2. D1'den kaydı sil
+  await c.env.DB.prepare('DELETE FROM gallery WHERE id = ?').bind(id).run();
+
+  // 3. D1 silme başarılı olduktan sonra R2 key çıkarılabiliyorsa best-effort sil
+  if (item?.url) {
+    const r2Key = getR2KeyFromUrl(item.url);
+    if (r2Key) {
+      try {
+        await c.env.MEDIA.delete(r2Key);
+      } catch (err) {
+        console.error(`Failed to delete R2 object for gallery id ${id} (key: ${r2Key}):`, err);
+      }
+    }
+  }
+
   return c.json({ ok: true });
 });
 
@@ -43,9 +68,35 @@ galleryRoutes.post('/bulk-delete', requireAuth(), async (c) => {
   if (!Array.isArray(ids) || !ids.length) return c.json({ error: 'IDs required' }, 400);
 
   const placeholders = ids.map(() => '?').join(',');
+
+  // 1. Silinecek kayıtların URL'lerini D1 DELETE'ten önce al
+  const items = await c.env.DB.prepare(`SELECT url FROM gallery WHERE id IN (${placeholders})`)
+    .bind(...ids)
+    .all<{ url: string }>();
+
+  // 2. D1 kayıtlarını sil
   await c.env.DB.prepare(`DELETE FROM gallery WHERE id IN (${placeholders})`)
     .bind(...ids)
     .run();
+
+  // 3. Başarılı D1 silme sonrasında ilgili R2 key'lerini best-effort olarak sil
+  if (items.results && items.results.length > 0) {
+    const r2Keys = items.results
+      .map(row => getR2KeyFromUrl(row.url))
+      .filter((k): k is string => Boolean(k));
+
+    if (r2Keys.length > 0) {
+      await Promise.allSettled(
+        r2Keys.map(async (key) => {
+          try {
+            await c.env.MEDIA.delete(key);
+          } catch (err) {
+            console.error(`Failed to delete R2 object in bulk-delete (key: ${key}):`, err);
+          }
+        })
+      );
+    }
+  }
 
   return c.json({ ok: true, count: ids.length });
 });

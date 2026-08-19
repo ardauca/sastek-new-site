@@ -389,16 +389,12 @@ export const dashboardPage = `<!DOCTYPE html>
           </ul>
         </div>
 
-        <!-- Card 2: Manual Deploy / Build Explanation -->
+        <!-- Card 2: Automatic Deployment Info -->
         <div class="stat-card" style="padding:22px;">
-          <h3 style="font-size:1rem;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;">🚀 Manuel Cloudflare Site Derlemesi (Deploy / Rebuild)</h3>
-          <p style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:14px;">
-            Veri değişiklikleri sitede 0.1 saniye içerisinde canlı görünse de, Google arama motoru botları için statik HTML sayfalarını da Cloudflare sunucularında sıfırdan derlemek isterseniz aşağıdaki buton ile tetikleyebilirsiniz.
+          <h3 style="font-size:1rem;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;">⚡ Dağıtım ve Yayınlama Mimarisi (Deployment)</h3>
+          <p style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:0;">
+            Site dağıtımı <b>GitHub → Cloudflare Pages</b> entegrasyonu üzerinden otomatik yapılır. Kod değişiklikleri <code>main</code> branch'e push edildiğinde yeni deployment otomatik başlar. Admin panelindeki D1 veritabanı değişiklikleri ise API üzerinden anında canlıya yansır.
           </p>
-          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-            <button class="btn btn-primary" onclick="triggerManualBuild()">🚀 Statik Site Derlemesini Başlat</button>
-            <span id="buildStatusMsg" style="font-size:.78rem;color:var(--success);display:none;"></span>
-          </div>
         </div>
 
         <!-- Card 3: Storage & System Details -->
@@ -745,13 +741,6 @@ async function saveSiteSettings() {
   });
   if (r.ok) toast('Uyarı yazısı ayarları güncellendi ✓');
   else toast('Ayarlar kaydedilemedi', 'error');
-}
-
-function triggerManualBuild() {
-  const msg = document.getElementById('buildStatusMsg');
-  msg.style.display = 'inline';
-  msg.textContent = '🚀 Derleme isteği gönderildi! Siteniz ~30s içinde yeniden inşa edilecek.';
-  toast('Site derleme isteği başlatıldı ✓');
 }
 
 function clearAdminCache() {
