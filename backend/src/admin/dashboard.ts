@@ -113,6 +113,7 @@ export const dashboardPage = `<!DOCTYPE html>
     .badge-gold    { background:rgba(251,191,36,.12);color:var(--warn); }
     .badge-silver  { background:rgba(148,163,184,.12);color:#94a3b8; }
     .badge-platinum{ background:rgba(0,212,255,.12);color:var(--signal); }
+    .badge-standard{ background:rgba(100,116,139,.12);color:#94a3b8; }
 
     .logo-thumb { width:44px;height:36px;border-radius:6px;object-fit:contain;background:rgba(255,255,255,.08);padding:2px; }
 
@@ -159,6 +160,7 @@ export const dashboardPage = `<!DOCTYPE html>
     #toast.show { transform:translateY(0);opacity:1; }
     #toast.success { border-color:var(--success);color:var(--success); }
     #toast.error   { border-color:var(--error);  color:var(--error); }
+    #toast.info    { border-color:var(--signal); color:var(--signal); }
   </style>
 </head>
 <body>
@@ -745,12 +747,29 @@ function setupBulkSelect(moduleName) {
 
   function updateCheckboxes(checked) {
     document.querySelectorAll('.' + moduleName + '-select-cb').forEach(cb => cb.checked = checked);
-    if (selectAll) selectAll.checked = checked;
-    if (selectAllHeader) selectAllHeader.checked = checked;
+    if (selectAll) { selectAll.checked = checked; selectAll.indeterminate = false; }
+    if (selectAllHeader) { selectAllHeader.checked = checked; selectAllHeader.indeterminate = false; }
+  }
+
+  function syncHeaderState() {
+    const all = document.querySelectorAll('.' + moduleName + '-select-cb');
+    const checked = document.querySelectorAll('.' + moduleName + '-select-cb:checked');
+    const isAll = all.length > 0 && checked.length === all.length;
+    const isPartial = checked.length > 0 && checked.length < all.length;
+    [selectAll, selectAllHeader].forEach(cb => {
+      if (!cb) return;
+      cb.checked = isAll;
+      cb.indeterminate = isPartial;
+    });
   }
 
   selectAll?.addEventListener('change', e => updateCheckboxes(e.target.checked));
   selectAllHeader?.addEventListener('change', e => updateCheckboxes(e.target.checked));
+
+  // Satır checkbox'ları dinamik oluşturuluyor; event delegation ile senkronize et
+  document.getElementById('page-' + moduleName)?.addEventListener('change', e => {
+    if (e.target?.classList?.contains(moduleName + '-select-cb')) syncHeaderState();
+  });
 }
 ['shops', 'events', 'team', 'sponsors', 'socials', 'gallery'].forEach(setupBulkSelect);
 
@@ -837,6 +856,10 @@ async function loadShops() {
   sel.innerHTML = '<option value="">Seçiniz...</option>';
   categories.forEach(c => sel.innerHTML += \`<option value="\${c.id}">\${c.icon || ''} \${c.name_tr}</option>\`);
 
+  if (!allShopsData.length) {
+    document.getElementById('shopTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz anlaşmalı nokta yok. "+ Yeni Ekle" ile başlayın.</td></tr>';
+    return;
+  }
   document.getElementById('shopTable').innerHTML = allShopsData.map(s => \`
     <tr>
       <td><input type="checkbox" class="shops-select-cb" value="\${s.id}" /></td>
@@ -891,6 +914,7 @@ function editShop(id) { const s = allShopsData.find(x => x.id === id); if (s) op
 
 async function saveShop() {
   const id = document.getElementById('shopId').value;
+  if (!document.getElementById('shopName').value.trim()) { toast('İşletme adı zorunludur', 'error'); return; }
   const logoFile = document.getElementById('shopLogoFile').files[0];
   let logoUrl = document.getElementById('shopLogoUrl').value;
 
@@ -944,14 +968,19 @@ async function saveShop() {
 
 async function deleteShop(id) {
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
-  await fetch(\`/api/shops/\${id}\`, { method: 'DELETE', credentials: 'include' });
-  toast('Silindi'); loadShops();
+  const r = await fetch(\`/api/shops/\${id}\`, { method: 'DELETE', credentials: 'include' });
+  if (r.ok) { toast('Silindi ✓'); loadShops(); }
+  else toast('Silme başarısız', 'error');
 }
 
 // ── Events ────────────────────────────────────────────────────────────────────
 let allEventsData = [];
 async function loadEvents() {
   allEventsData = await fetch('/api/events/admin/all', { credentials: 'include' }).then(r => r.json());
+  if (!allEventsData.length) {
+    document.getElementById('eventTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz etkinlik yok. "+ Yeni Etkinlik" ile başlayın.</td></tr>';
+    return;
+  }
   document.getElementById('eventTable').innerHTML = allEventsData.map(e => \`
     <tr>
       <td><input type="checkbox" class="events-select-cb" value="\${e.id}" /></td>
@@ -959,7 +988,7 @@ async function loadEvents() {
       <td><b>\${e.title_tr}</b></td>
       <td>\${e.category_tr || '—'}</td>
       <td><code>\${e.slug}</code></td>
-      <td><span class="badge \${e.is_active ? 'badge-active' : 'badge-inactive'}">\${e.is_active ? 'Aktif' : 'Pasif'}</span></td>
+      <td><span class="badge \${e.is_active ? 'badge-active' : 'badge-inactive'}">\${e.is_active ? 'Aktif' : 'Pasif'}</span>\${e.is_featured ? ' <span class="badge badge-gold">⭐ Öne Çıkan</span>' : ''}</td>
       <td style="display:flex;gap:6px">
         <button class="btn btn-sm btn-primary" onclick="editEvent(\${e.id})">Düzenle</button>
         <button class="btn btn-sm btn-danger" onclick="deleteEvent(\${e.id})">Sil</button>
@@ -996,6 +1025,7 @@ function editEvent(id) { const ev = allEventsData.find(x => x.id === id); if (ev
 
 async function saveEvent() {
   const id = document.getElementById('eventId').value;
+  if (!document.getElementById('eventSlug').value.trim() || !document.getElementById('eventTitleTr').value.trim()) { toast('Etkinlik slug ve başlık (TR) zorunludur', 'error'); return; }
   const imgFile = document.getElementById('eventImgFile').files[0];
   let imgUrl = document.getElementById('eventImgUrl').value;
   if (imgFile) {
@@ -1029,14 +1059,19 @@ async function saveEvent() {
 }
 async function deleteEvent(id) {
   if (!confirm('Silmek istediğinize emin misiniz?')) return;
-  await fetch(\`/api/events/\${id}\`, { method: 'DELETE', credentials: 'include' });
-  toast('Silindi'); loadEvents();
+  const r = await fetch(\`/api/events/\${id}\`, { method: 'DELETE', credentials: 'include' });
+  if (r.ok) { toast('Silindi ✓'); loadEvents(); }
+  else toast('Silme başarısız', 'error');
 }
 
 // ── Team ──────────────────────────────────────────────────────────────────────
 let allTeamData = [];
 async function loadTeam() {
   allTeamData = await fetch('/api/team/admin/all', { credentials: 'include' }).then(r => r.json());
+  if (!allTeamData.length) {
+    document.getElementById('teamTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz ekip üyesi yok. "+ Üye Ekle" ile başlayın.</td></tr>';
+    return;
+  }
   document.getElementById('teamTable').innerHTML = allTeamData.map(t => \`
     <tr>
       <td><input type="checkbox" class="team-select-cb" value="\${t.id}" /></td>
@@ -1068,6 +1103,7 @@ function editTeam(id) { const m = allTeamData.find(x => x.id === id); if (m) ope
 
 async function saveTeam() {
   const id = document.getElementById('teamId').value;
+  if (!document.getElementById('teamName').value.trim() || !document.getElementById('teamRoleTr').value.trim()) { toast('Ad soyad ve rol (TR) zorunludur', 'error'); return; }
   const body = {
     name: document.getElementById('teamName').value,
     role_tr: document.getElementById('teamRoleTr').value,
@@ -1085,14 +1121,19 @@ async function saveTeam() {
 }
 async function deleteTeam(id) {
   if (!confirm('Silmek istediğinize emin misiniz?')) return;
-  await fetch(\`/api/team/\${id}\`, { method: 'DELETE', credentials: 'include' });
-  toast('Silindi'); loadTeam();
+  const r = await fetch(\`/api/team/\${id}\`, { method: 'DELETE', credentials: 'include' });
+  if (r.ok) { toast('Silindi ✓'); loadTeam(); }
+  else toast('Silme başarısız', 'error');
 }
 
 // ── Sponsors ──────────────────────────────────────────────────────────────────
 let allSponsorsData = [];
 async function loadSponsors() {
   allSponsorsData = await fetch('/api/sponsors/admin/all', { credentials: 'include' }).then(r => r.json());
+  if (!allSponsorsData.length) {
+    document.getElementById('sponsorTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz sponsor yok. "+ Yeni Ekle" ile başlayın.</td></tr>';
+    return;
+  }
   document.getElementById('sponsorTable').innerHTML = allSponsorsData.map(s => \`
     <tr>
       <td><input type="checkbox" class="sponsors-select-cb" value="\${s.id}" /></td>
@@ -1130,6 +1171,7 @@ function editSponsor(id) { const s = allSponsorsData.find(x => x.id === id); if 
 
 async function saveSponsor() {
   const id = document.getElementById('sponsorId').value;
+  if (!document.getElementById('sponsorName').value.trim()) { toast('Sponsor adı zorunludur', 'error'); return; }
   const logoFile = document.getElementById('sponsorLogoFile').files[0];
   let logoUrl = document.getElementById('sponsorLogoUrl').value;
   if (logoFile) {
@@ -1156,14 +1198,19 @@ async function saveSponsor() {
 }
 async function deleteSponsor(id) {
   if (!confirm('Silmek istediğinize emin misiniz?')) return;
-  await fetch(\`/api/sponsors/\${id}\`, { method: 'DELETE', credentials: 'include' });
-  toast('Silindi'); loadSponsors();
+  const r = await fetch(\`/api/sponsors/\${id}\`, { method: 'DELETE', credentials: 'include' });
+  if (r.ok) { toast('Silindi ✓'); loadSponsors(); }
+  else toast('Silme başarısız', 'error');
 }
 
 // ── Socials ───────────────────────────────────────────────────────────────────
 let allSocialsData = [];
 async function loadSocials() {
   allSocialsData = await fetch('/api/socials/admin/all', { credentials: 'include' }).then(r => r.json());
+  if (!allSocialsData.length) {
+    document.getElementById('socialTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz sosyal medya linki yok. "+ Yeni Link" ile başlayın.</td></tr>';
+    return;
+  }
   document.getElementById('socialTable').innerHTML = allSocialsData.map(s => \`
     <tr>
       <td><input type="checkbox" class="socials-select-cb" value="\${s.id}" /></td>
@@ -1193,6 +1240,7 @@ function editSocial(id) { const s = allSocialsData.find(x => x.id === id); if (s
 
 async function saveSocial() {
   const id = document.getElementById('socialId').value;
+  if (!document.getElementById('socialPlatform').value.trim() || !document.getElementById('socialUrl').value.trim()) { toast('Platform ve URL zorunludur', 'error'); return; }
   const body = {
     platform: document.getElementById('socialPlatform').value,
     label: document.getElementById('socialLabel').value,
@@ -1208,13 +1256,18 @@ async function saveSocial() {
 }
 async function deleteSocial(id) {
   if (!confirm('Silmek istediğinize emin misiniz?')) return;
-  await fetch(\`/api/socials/\${id}\`, { method: 'DELETE', credentials: 'include' });
-  toast('Silindi'); loadSocials();
+  const r = await fetch(\`/api/socials/\${id}\`, { method: 'DELETE', credentials: 'include' });
+  if (r.ok) { toast('Silindi ✓'); loadSocials(); }
+  else toast('Silme başarısız', 'error');
 }
 
 // ── Gallery ───────────────────────────────────────────────────────────────────
 async function loadGallery() {
   const items = await fetch('/api/gallery', { credentials: 'include' }).then(r => r.json());
+  if (!items.length) {
+    document.getElementById('galleryTable').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz fotoğraf yok. "+ Fotoğraf Yükle" ile başlayın.</td></tr>';
+    return;
+  }
   document.getElementById('galleryTable').innerHTML = items.map(g => \`
     <tr>
       <td><input type="checkbox" class="gallery-select-cb" value="\${g.id}" /></td>
@@ -1256,8 +1309,9 @@ async function uploadGallery() {
 }
 async function deleteGallery(id) {
   if (!confirm('Silmek istediğinize emin misiniz?')) return;
-  await fetch(\`/api/gallery/\${id}\`, { method: 'DELETE', credentials: 'include' });
-  toast('Silindi'); loadGallery();
+  const r = await fetch(\`/api/gallery/\${id}\`, { method: 'DELETE', credentials: 'include' });
+  if (r.ok) { toast('Silindi ✓'); loadGallery(); }
+  else toast('Silme başarısız', 'error');
 }
 
 // Init
