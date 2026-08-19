@@ -474,7 +474,7 @@ export const dashboardPage = `<!DOCTYPE html>
     <div class="form-field"><label>DURUM</label><select id="shopActive"><option value="1">Aktif (Görünür)</option><option value="0">Pasif (Görünmez)</option></select></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('shopModal')">İptal</button>
-      <button class="btn btn-primary" onclick="saveShop()">Kaydet</button>
+      <button class="btn btn-primary" id="btnSaveShop" onclick="saveShop()">Kaydet</button>
     </div>
   </div>
 </div>
@@ -499,6 +499,26 @@ export const dashboardPage = `<!DOCTYPE html>
       <div class="form-field"><label>KATEGORİ (TR)</label><input id="eventCatTr" placeholder="Sektör Buluşması" /></div>
       <div class="form-field"><label>KATEGORİ (EN)</label><input id="eventCatEn" placeholder="Industry Meetup" /></div>
     </div>
+    <div class="grid-2">
+      <div class="form-field"><label>KONUM (TR)</label><input id="eventLocTr" placeholder="Mühendislik Fakültesi Konferans Salonu" /></div>
+      <div class="form-field"><label>KONUM (EN)</label><input id="eventLocEn" placeholder="Faculty of Engineering Conference Hall" /></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-field"><label>ETKİNLİK DURUMU</label>
+        <select id="eventStatus">
+          <option value="planned">📅 Planlandı (planned)</option>
+          <option value="ongoing">⚡ Devam Ediyor (ongoing)</option>
+          <option value="completed">✅ Tamamlandı (completed)</option>
+          <option value="inactive">⛔ İptal / Pasif (inactive)</option>
+        </select>
+      </div>
+      <div class="form-field"><label>DETAYLARI GÖSTER (Sidebar)</label>
+        <select id="eventShowDetails">
+          <option value="0">Hayır (Gizlensin)</option>
+          <option value="1">Evet (Görünsün)</option>
+        </select>
+      </div>
+    </div>
     <div class="form-field"><label>GÖRSEL YÜKLE</label>
       <div class="upload-area" onclick="document.getElementById('eventImgFile').click()">
         📎 Tıkla veya sürükle
@@ -507,11 +527,13 @@ export const dashboardPage = `<!DOCTYPE html>
       <input type="file" id="eventImgFile" accept="image/*" style="display:none" />
     </div>
     <div class="form-field"><label>GÖRSEL URL</label><input id="eventImgUrl" /></div>
-    <div class="form-field"><label>DURUM</label><select id="eventActive"><option value="1">Aktif</option><option value="0">Pasif</option></select></div>
-    <div class="form-field"><label>ÖNE ÇIKAR (Ana Sayfa)</label><select id="eventFeatured"><option value="0">Normal</option><option value="1">⭐ Öne Çıkarılan</option></select></div>
+    <div class="grid-2">
+      <div class="form-field"><label>DURUM (Görünürlük)</label><select id="eventActive"><option value="1">Aktif</option><option value="0">Pasif</option></select></div>
+      <div class="form-field"><label>ÖNE ÇIKAR (Ana Sayfa)</label><select id="eventFeatured"><option value="0">Normal</option><option value="1">⭐ Öne Çıkarılan</option></select></div>
+    </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('eventModal')">İptal</button>
-      <button class="btn btn-primary" onclick="saveEvent()">Kaydet</button>
+      <button class="btn btn-primary" id="btnSaveEvent" onclick="saveEvent()">Kaydet</button>
     </div>
   </div>
 </div>
@@ -534,7 +556,7 @@ export const dashboardPage = `<!DOCTYPE html>
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('teamModal')">İptal</button>
-      <button class="btn btn-primary" onclick="saveTeam()">Kaydet</button>
+      <button class="btn btn-primary" id="btnSaveTeam" onclick="saveTeam()">Kaydet</button>
     </div>
   </div>
 </div>
@@ -565,7 +587,7 @@ export const dashboardPage = `<!DOCTYPE html>
     <div class="form-field"><label>DURUM</label><select id="sponsorActive"><option value="1">Aktif</option><option value="0">Pasif</option></select></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('sponsorModal')">İptal</button>
-      <button class="btn btn-primary" onclick="saveSponsor()">Kaydet</button>
+      <button class="btn btn-primary" id="btnSaveSponsor" onclick="saveSponsor()">Kaydet</button>
     </div>
   </div>
 </div>
@@ -586,7 +608,7 @@ export const dashboardPage = `<!DOCTYPE html>
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('socialModal')">İptal</button>
-      <button class="btn btn-primary" onclick="saveSocial()">Kaydet</button>
+      <button class="btn btn-primary" id="btnSaveSocial" onclick="saveSocial()">Kaydet</button>
     </div>
   </div>
 </div>
@@ -605,7 +627,7 @@ export const dashboardPage = `<!DOCTYPE html>
     <div class="form-field"><label>ETİKET (etkinlik adı)</label><input id="galleryTag" placeholder="teknik-gezi-2024" /></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('galleryModal')">İptal</button>
-      <button class="btn btn-primary" onclick="uploadGallery()">Yükle</button>
+      <button class="btn btn-primary" id="btnUploadGallery" onclick="uploadGallery()">Yükle</button>
     </div>
   </div>
 </div>
@@ -849,37 +871,51 @@ let categories = [];
 let allShopsData = [];
 
 async function loadShops() {
-  categories = await fetch('/api/shops/categories').then(r => r.json());
-  allShopsData = await fetch('/api/shops/admin/all', { credentials: 'include' }).then(r => r.json());
+  try {
+    const [catsRes, shopsRes] = await Promise.all([
+      fetch('/api/shops/categories'),
+      fetch('/api/shops/admin/all', { credentials: 'include' })
+    ]);
+    if (!shopsRes.ok) {
+      if (shopsRes.status === 401) window.location.href = '/admin/';
+      throw new Error('HTTP ' + shopsRes.status);
+    }
+    categories = await catsRes.json().catch(() => []);
+    allShopsData = await shopsRes.json();
+    if (!Array.isArray(allShopsData)) allShopsData = [];
 
-  const sel = document.getElementById('shopCategory');
-  sel.innerHTML = '<option value="">Seçiniz...</option>';
-  categories.forEach(c => sel.innerHTML += \`<option value="\${c.id}">\${c.icon || ''} \${c.name_tr}</option>\`);
+    const sel = document.getElementById('shopCategory');
+    sel.innerHTML = '<option value="">Seçiniz...</option>';
+    categories.forEach(c => sel.innerHTML += \`<option value="\${c.id}">\${c.icon || ''} \${c.name_tr}</option>\`);
 
-  if (!allShopsData.length) {
-    document.getElementById('shopTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz anlaşmalı nokta yok. "+ Yeni Ekle" ile başlayın.</td></tr>';
-    return;
+    if (!allShopsData.length) {
+      document.getElementById('shopTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz anlaşmalı nokta yok. "+ Yeni Ekle" ile başlayın.</td></tr>';
+      return;
+    }
+    document.getElementById('shopTable').innerHTML = allShopsData.map(s => \`
+      <tr>
+        <td><input type="checkbox" class="shops-select-cb" value="\${s.id}" /></td>
+        <td>\${s.logo_url ? \`<img class="logo-thumb" src="\${resolveImageUrl(s.logo_url)}" alt="" />\` : '—'}</td>
+        <td><b>\${s.name}</b></td>
+        <td>\${s.category_tr || '—'}</td>
+        <td>\${s.discount || '—'}</td>
+        <td>
+          <span class="badge \${s.is_active ? 'badge-active' : 'badge-inactive'}">\${s.is_active ? 'Aktif' : 'Pasif'}</span>
+          \${s.is_featured ? '<span class="badge badge-gold">⭐ Öne Çıkan</span>' : ''}
+          \${s.show_on_map ? '<span class="badge badge-platinum">📍 Harita</span>' : ''}
+          \${s.is_verified ? '<span class="badge badge-active">✅ Onaylı</span>' : ''}
+        </td>
+        <td>\${s.order_num || 1}</td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-primary" onclick="editShop(\${s.id})">Düzenle</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteShop(\${s.id})">Sil</button>
+        </td>
+      </tr>
+    \`).join('');
+  } catch (e) {
+    toast('Anlaşmalı noktalar yüklenemedi', 'error');
+    document.getElementById('shopTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--error);padding:30px 0;font-size:.85rem">⚠️ Veriler yüklenirken bir hata oluştu.</td></tr>';
   }
-  document.getElementById('shopTable').innerHTML = allShopsData.map(s => \`
-    <tr>
-      <td><input type="checkbox" class="shops-select-cb" value="\${s.id}" /></td>
-      <td>\${s.logo_url ? \`<img class="logo-thumb" src="\${resolveImageUrl(s.logo_url)}" alt="" />\` : '—'}</td>
-      <td><b>\${s.name}</b></td>
-      <td>\${s.category_tr || '—'}</td>
-      <td>\${s.discount || '—'}</td>
-      <td>
-        <span class="badge \${s.is_active ? 'badge-active' : 'badge-inactive'}">\${s.is_active ? 'Aktif' : 'Pasif'}</span>
-        \${s.is_featured ? '<span class="badge badge-gold">⭐ Öne Çıkan</span>' : ''}
-        \${s.show_on_map ? '<span class="badge badge-platinum">📍 Harita</span>' : ''}
-        \${s.is_verified ? '<span class="badge badge-active">✅ Onaylı</span>' : ''}
-      </td>
-      <td>\${s.order_num || 1}</td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-sm btn-primary" onclick="editShop(\${s.id})">Düzenle</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteShop(\${s.id})">Sil</button>
-      </td>
-    </tr>
-  \`).join('');
 }
 
 function openShopModal(shop = null) {
@@ -913,61 +949,69 @@ function openShopModal(shop = null) {
 function editShop(id) { const s = allShopsData.find(x => x.id === id); if (s) openShopModal(s); }
 
 async function saveShop() {
-  const id = document.getElementById('shopId').value;
-  if (!document.getElementById('shopName').value.trim()) { toast('İşletme adı zorunludur', 'error'); return; }
-  const logoFile = document.getElementById('shopLogoFile').files[0];
-  let logoUrl = document.getElementById('shopLogoUrl').value;
+  const btn = document.getElementById('btnSaveShop');
+  if (btn) { btn.disabled = true; btn.textContent = 'Kaydediliyor...'; }
+  try {
+    const id = document.getElementById('shopId').value;
+    if (!document.getElementById('shopName').value.trim()) { toast('İşletme adı zorunludur', 'error'); return; }
+    const logoFile = document.getElementById('shopLogoFile').files[0];
+    let logoUrl = document.getElementById('shopLogoUrl').value;
 
-  if (logoFile) {
-    try {
-      toast('Logo yükleniyor...', 'info');
-      logoUrl = await uploadFile(logoFile, 'logos');
-    } catch (e) {
-      toast('Logo yüklenemedi: ' + (e.message || ''), 'error');
-      return;
+    if (logoFile) {
+      try {
+        toast('Logo yükleniyor...', 'info');
+        logoUrl = await uploadFile(logoFile, 'logos');
+      } catch (e) {
+        toast('Logo yüklenemedi: ' + (e.message || ''), 'error');
+        return;
+      }
     }
-  }
 
-  const rawCoords = document.getElementById('shopCoords').value || '';
-  let lat = null;
-  let lng = null;
-  if (rawCoords.trim()) {
-    const parts = rawCoords.split(',').map(p => p.trim());
-    if (parts.length >= 2) {
-      const parsedLat = parseFloat(parts[0]);
-      const parsedLng = parseFloat(parts[1]);
-      if (!isNaN(parsedLat)) lat = parsedLat;
-      if (!isNaN(parsedLng)) lng = parsedLng;
+    const rawCoords = document.getElementById('shopCoords').value || '';
+    let lat = null;
+    let lng = null;
+    if (rawCoords.trim()) {
+      const parts = rawCoords.split(',').map(p => p.trim());
+      if (parts.length >= 2) {
+        const parsedLat = parseFloat(parts[0]);
+        const parsedLng = parseFloat(parts[1]);
+        if (!isNaN(parsedLat)) lat = parsedLat;
+        if (!isNaN(parsedLng)) lng = parsedLng;
+      }
     }
-  }
 
-  const body = {
-    name: document.getElementById('shopName').value,
-    category_id: document.getElementById('shopCategory').value || null,
-    discount: document.getElementById('shopDiscount').value,
-    description_tr: document.getElementById('shopDescTr').value,
-    description_en: document.getElementById('shopDescEn').value,
-    lat,
-    lng,
-    is_featured: parseInt(document.getElementById('shopFeatured').value),
-    show_on_map: parseInt(document.getElementById('shopShowOnMap').value),
-    is_verified: parseInt(document.getElementById('shopVerified').value),
-    order_num: parseInt(document.getElementById('shopOrderNum').value) || 1,
-    map_url: document.getElementById('shopMapUrl').value,
-    logo_url: logoUrl,
-    website: document.getElementById('shopWebsite').value,
-    address: document.getElementById('shopAddress').value,
-    is_active: parseInt(document.getElementById('shopActive').value),
-  };
-  const url = id ? \`/api/shops/\${id}\` : '/api/shops';
-  const method = id ? 'PUT' : 'POST';
-  const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (r.ok) { closeModal('shopModal'); toast('Kaydedildi ✓'); loadShops(); }
-  else toast('Hata oluştu', 'error');
+    const body = {
+      name: document.getElementById('shopName').value,
+      category_id: document.getElementById('shopCategory').value || null,
+      discount: document.getElementById('shopDiscount').value,
+      description_tr: document.getElementById('shopDescTr').value,
+      description_en: document.getElementById('shopDescEn').value,
+      lat,
+      lng,
+      is_featured: parseInt(document.getElementById('shopFeatured').value),
+      show_on_map: parseInt(document.getElementById('shopShowOnMap').value),
+      is_verified: parseInt(document.getElementById('shopVerified').value),
+      order_num: parseInt(document.getElementById('shopOrderNum').value) || 1,
+      map_url: document.getElementById('shopMapUrl').value,
+      logo_url: logoUrl,
+      website: document.getElementById('shopWebsite').value,
+      address: document.getElementById('shopAddress').value,
+      is_active: parseInt(document.getElementById('shopActive').value),
+    };
+    const url = id ? \`/api/shops/\${id}\` : '/api/shops';
+    const method = id ? 'PUT' : 'POST';
+    const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (r.ok) { closeModal('shopModal'); toast('Kaydedildi ✓'); loadShops(); }
+    else toast('Hata oluştu', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Kaydet'; }
+  }
 }
 
 async function deleteShop(id) {
-  if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
+  const shop = allShopsData.find(x => x.id === id);
+  const name = shop?.name ? \`"\${shop.name}" \` : 'Bu ';
+  if (!confirm(\`\${name}anlaşmalı noktasını silmek istediğinize emin misiniz?\`)) return;
   const r = await fetch(\`/api/shops/\${id}\`, { method: 'DELETE', credentials: 'include' });
   if (r.ok) { toast('Silindi ✓'); loadShops(); }
   else toast('Silme başarısız', 'error');
@@ -976,25 +1020,37 @@ async function deleteShop(id) {
 // ── Events ────────────────────────────────────────────────────────────────────
 let allEventsData = [];
 async function loadEvents() {
-  allEventsData = await fetch('/api/events/admin/all', { credentials: 'include' }).then(r => r.json());
-  if (!allEventsData.length) {
-    document.getElementById('eventTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz etkinlik yok. "+ Yeni Etkinlik" ile başlayın.</td></tr>';
-    return;
+  try {
+    const res = await fetch('/api/events/admin/all', { credentials: 'include' });
+    if (!res.ok) {
+      if (res.status === 401) window.location.href = '/admin/';
+      throw new Error('HTTP ' + res.status);
+    }
+    allEventsData = await res.json();
+    if (!Array.isArray(allEventsData)) allEventsData = [];
+
+    if (!allEventsData.length) {
+      document.getElementById('eventTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz etkinlik yok. "+ Yeni Etkinlik" ile başlayın.</td></tr>';
+      return;
+    }
+    document.getElementById('eventTable').innerHTML = allEventsData.map(e => \`
+      <tr>
+        <td><input type="checkbox" class="events-select-cb" value="\${e.id}" /></td>
+        <td>\${e.image_url ? \`<img class="logo-thumb" src="\${resolveImageUrl(e.image_url)}" alt="" />\` : '—'}</td>
+        <td><b>\${e.title_tr}</b></td>
+        <td>\${e.category_tr || '—'}</td>
+        <td><code>\${e.slug}</code></td>
+        <td><span class="badge \${e.is_active ? 'badge-active' : 'badge-inactive'}">\${e.is_active ? 'Aktif' : 'Pasif'}</span>\${e.is_featured ? ' <span class="badge badge-gold">⭐ Öne Çıkan</span>' : ''}</td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-primary" onclick="editEvent(\${e.id})">Düzenle</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteEvent(\${e.id})">Sil</button>
+        </td>
+      </tr>
+    \`).join('');
+  } catch (e) {
+    toast('Etkinlikler yüklenemedi', 'error');
+    document.getElementById('eventTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--error);padding:30px 0;font-size:.85rem">⚠️ Veriler yüklenirken bir hata oluştu.</td></tr>';
   }
-  document.getElementById('eventTable').innerHTML = allEventsData.map(e => \`
-    <tr>
-      <td><input type="checkbox" class="events-select-cb" value="\${e.id}" /></td>
-      <td>\${e.image_url ? \`<img class="logo-thumb" src="\${resolveImageUrl(e.image_url)}" alt="" />\` : '—'}</td>
-      <td><b>\${e.title_tr}</b></td>
-      <td>\${e.category_tr || '—'}</td>
-      <td><code>\${e.slug}</code></td>
-      <td><span class="badge \${e.is_active ? 'badge-active' : 'badge-inactive'}">\${e.is_active ? 'Aktif' : 'Pasif'}</span>\${e.is_featured ? ' <span class="badge badge-gold">⭐ Öne Çıkan</span>' : ''}</td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-sm btn-primary" onclick="editEvent(\${e.id})">Düzenle</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteEvent(\${e.id})">Sil</button>
-      </td>
-    </tr>
-  \`).join('');
 }
 function openEventModal(ev = null) {
   document.getElementById('eventId').value = ev?.id || '';
@@ -1008,6 +1064,10 @@ function openEventModal(ev = null) {
   document.getElementById('eventDescEn').value = ev?.description_en || '';
   document.getElementById('eventCatTr').value = ev?.category_tr || '';
   document.getElementById('eventCatEn').value = ev?.category_en || '';
+  document.getElementById('eventLocTr').value = ev?.location_tr || '';
+  document.getElementById('eventLocEn').value = ev?.location_en || '';
+  document.getElementById('eventStatus').value = ev?.status || 'planned';
+  document.getElementById('eventShowDetails').value = String(ev?.show_details ?? 0);
   document.getElementById('eventImgUrl').value = ev?.image_url || '';
   document.getElementById('eventActive').value = String(ev?.is_active ?? 1);
   document.getElementById('eventFeatured').value = String(ev?.is_featured ?? 0);
@@ -1024,41 +1084,53 @@ function openEventModal(ev = null) {
 function editEvent(id) { const ev = allEventsData.find(x => x.id === id); if (ev) openEventModal(ev); }
 
 async function saveEvent() {
-  const id = document.getElementById('eventId').value;
-  if (!document.getElementById('eventSlug').value.trim() || !document.getElementById('eventTitleTr').value.trim()) { toast('Etkinlik slug ve başlık (TR) zorunludur', 'error'); return; }
-  const imgFile = document.getElementById('eventImgFile').files[0];
-  let imgUrl = document.getElementById('eventImgUrl').value;
-  if (imgFile) {
-    try {
-      toast('Fotoğraf yükleniyor...', 'info');
-      imgUrl = await uploadFile(imgFile, 'gallery');
-    } catch (e) {
-      toast('Görsel yüklenemedi: ' + (e.message || ''), 'error');
-      return;
+  const btn = document.getElementById('btnSaveEvent');
+  if (btn) { btn.disabled = true; btn.textContent = 'Kaydediliyor...'; }
+  try {
+    const id = document.getElementById('eventId').value;
+    if (!document.getElementById('eventSlug').value.trim() || !document.getElementById('eventTitleTr').value.trim()) { toast('Etkinlik slug ve başlık (TR) zorunludur', 'error'); return; }
+    const imgFile = document.getElementById('eventImgFile').files[0];
+    let imgUrl = document.getElementById('eventImgUrl').value;
+    if (imgFile) {
+      try {
+        toast('Fotoğraf yükleniyor...', 'info');
+        imgUrl = await uploadFile(imgFile, 'gallery');
+      } catch (e) {
+        toast('Görsel yüklenemedi: ' + (e.message || ''), 'error');
+        return;
+      }
     }
+    const body = {
+      slug: document.getElementById('eventSlug').value,
+      title_tr: document.getElementById('eventTitleTr').value,
+      title_en: document.getElementById('eventTitleEn').value,
+      summary_tr: document.getElementById('eventSummaryTr').value,
+      summary_en: document.getElementById('eventSummaryEn').value,
+      description_tr: document.getElementById('eventDescTr').value,
+      description_en: document.getElementById('eventDescEn').value,
+      category_tr: document.getElementById('eventCatTr').value,
+      category_en: document.getElementById('eventCatEn').value,
+      location_tr: document.getElementById('eventLocTr').value || null,
+      location_en: document.getElementById('eventLocEn').value || null,
+      status: document.getElementById('eventStatus').value || 'planned',
+      show_details: parseInt(document.getElementById('eventShowDetails').value) || 0,
+      image_url: imgUrl,
+      is_active: parseInt(document.getElementById('eventActive').value),
+      is_featured: parseInt(document.getElementById('eventFeatured').value),
+    };
+    const url = id ? \`/api/events/\${id}\` : '/api/events';
+    const method = id ? 'PUT' : 'POST';
+    const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (r.ok) { closeModal('eventModal'); toast('Kaydedildi ✓'); loadEvents(); }
+    else toast('Hata oluştu', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Kaydet'; }
   }
-  const body = {
-    slug: document.getElementById('eventSlug').value,
-    title_tr: document.getElementById('eventTitleTr').value,
-    title_en: document.getElementById('eventTitleEn').value,
-    summary_tr: document.getElementById('eventSummaryTr').value,
-    summary_en: document.getElementById('eventSummaryEn').value,
-    description_tr: document.getElementById('eventDescTr').value,
-    description_en: document.getElementById('eventDescEn').value,
-    category_tr: document.getElementById('eventCatTr').value,
-    category_en: document.getElementById('eventCatEn').value,
-    image_url: imgUrl,
-    is_active: parseInt(document.getElementById('eventActive').value),
-    is_featured: parseInt(document.getElementById('eventFeatured').value),
-  };
-  const url = id ? \`/api/events/\${id}\` : '/api/events';
-  const method = id ? 'PUT' : 'POST';
-  const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (r.ok) { closeModal('eventModal'); toast('Kaydedildi ✓'); loadEvents(); }
-  else toast('Hata oluştu', 'error');
 }
 async function deleteEvent(id) {
-  if (!confirm('Silmek istediğinize emin misiniz?')) return;
+  const ev = allEventsData.find(x => x.id === id);
+  const name = ev?.title_tr ? \`"\${ev.title_tr}" \` : 'Bu ';
+  if (!confirm(\`\${name}etkinliğini silmek istediğinize emin misiniz?\`)) return;
   const r = await fetch(\`/api/events/\${id}\`, { method: 'DELETE', credentials: 'include' });
   if (r.ok) { toast('Silindi ✓'); loadEvents(); }
   else toast('Silme başarısız', 'error');
@@ -1067,25 +1139,37 @@ async function deleteEvent(id) {
 // ── Team ──────────────────────────────────────────────────────────────────────
 let allTeamData = [];
 async function loadTeam() {
-  allTeamData = await fetch('/api/team/admin/all', { credentials: 'include' }).then(r => r.json());
-  if (!allTeamData.length) {
-    document.getElementById('teamTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz ekip üyesi yok. "+ Üye Ekle" ile başlayın.</td></tr>';
-    return;
+  try {
+    const res = await fetch('/api/team/admin/all', { credentials: 'include' });
+    if (!res.ok) {
+      if (res.status === 401) window.location.href = '/admin/';
+      throw new Error('HTTP ' + res.status);
+    }
+    allTeamData = await res.json();
+    if (!Array.isArray(allTeamData)) allTeamData = [];
+
+    if (!allTeamData.length) {
+      document.getElementById('teamTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz ekip üyesi yok. "+ Üye Ekle" ile başlayın.</td></tr>';
+      return;
+    }
+    document.getElementById('teamTable').innerHTML = allTeamData.map(t => \`
+      <tr>
+        <td><input type="checkbox" class="team-select-cb" value="\${t.id}" /></td>
+        <td><b>\${t.name}</b></td>
+        <td>\${t.role_tr}</td>
+        <td>\${t.email || '—'}</td>
+        <td>\${t.order_num}</td>
+        <td><span class="badge \${t.is_active ? 'badge-active' : 'badge-inactive'}">\${t.is_active ? 'Aktif' : 'Pasif'}</span></td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-primary" onclick="editTeam(\${t.id})">Düzenle</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTeam(\${t.id})">Sil</button>
+        </td>
+      </tr>
+    \`).join('');
+  } catch (e) {
+    toast('Ekip üyeleri yüklenemedi', 'error');
+    document.getElementById('teamTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--error);padding:30px 0;font-size:.85rem">⚠️ Veriler yüklenirken bir hata oluştu.</td></tr>';
   }
-  document.getElementById('teamTable').innerHTML = allTeamData.map(t => \`
-    <tr>
-      <td><input type="checkbox" class="team-select-cb" value="\${t.id}" /></td>
-      <td><b>\${t.name}</b></td>
-      <td>\${t.role_tr}</td>
-      <td>\${t.email || '—'}</td>
-      <td>\${t.order_num}</td>
-      <td><span class="badge \${t.is_active ? 'badge-active' : 'badge-inactive'}">\${t.is_active ? 'Aktif' : 'Pasif'}</span></td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-sm btn-primary" onclick="editTeam(\${t.id})">Düzenle</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteTeam(\${t.id})">Sil</button>
-      </td>
-    </tr>
-  \`).join('');
 }
 function openTeamModal(m = null) {
   document.getElementById('teamId').value = m?.id || '';
@@ -1102,25 +1186,33 @@ function openTeamModal(m = null) {
 function editTeam(id) { const m = allTeamData.find(x => x.id === id); if (m) openTeamModal(m); }
 
 async function saveTeam() {
-  const id = document.getElementById('teamId').value;
-  if (!document.getElementById('teamName').value.trim() || !document.getElementById('teamRoleTr').value.trim()) { toast('Ad soyad ve rol (TR) zorunludur', 'error'); return; }
-  const body = {
-    name: document.getElementById('teamName').value,
-    role_tr: document.getElementById('teamRoleTr').value,
-    role_en: document.getElementById('teamRoleEn').value,
-    email: document.getElementById('teamEmail').value,
-    linkedin_url: document.getElementById('teamLinkedin').value,
-    order_num: parseInt(document.getElementById('teamOrder').value),
-    is_active: parseInt(document.getElementById('teamActive').value),
-  };
-  const url = id ? \`/api/team/\${id}\` : '/api/team';
-  const method = id ? 'PUT' : 'POST';
-  const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (r.ok) { closeModal('teamModal'); toast('Kaydedildi ✓'); loadTeam(); }
-  else toast('Hata oluştu', 'error');
+  const btn = document.getElementById('btnSaveTeam');
+  if (btn) { btn.disabled = true; btn.textContent = 'Kaydediliyor...'; }
+  try {
+    const id = document.getElementById('teamId').value;
+    if (!document.getElementById('teamName').value.trim() || !document.getElementById('teamRoleTr').value.trim()) { toast('Ad soyad ve rol (TR) zorunludur', 'error'); return; }
+    const body = {
+      name: document.getElementById('teamName').value,
+      role_tr: document.getElementById('teamRoleTr').value,
+      role_en: document.getElementById('teamRoleEn').value,
+      email: document.getElementById('teamEmail').value,
+      linkedin_url: document.getElementById('teamLinkedin').value,
+      order_num: parseInt(document.getElementById('teamOrder').value),
+      is_active: parseInt(document.getElementById('teamActive').value),
+    };
+    const url = id ? \`/api/team/\${id}\` : '/api/team';
+    const method = id ? 'PUT' : 'POST';
+    const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (r.ok) { closeModal('teamModal'); toast('Kaydedildi ✓'); loadTeam(); }
+    else toast('Hata oluştu', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Kaydet'; }
+  }
 }
 async function deleteTeam(id) {
-  if (!confirm('Silmek istediğinize emin misiniz?')) return;
+  const m = allTeamData.find(x => x.id === id);
+  const name = m?.name ? \`"\${m.name}" \` : 'Bu ';
+  if (!confirm(\`\${name}ekip üyesini silmek istediğinize emin misiniz?\`)) return;
   const r = await fetch(\`/api/team/\${id}\`, { method: 'DELETE', credentials: 'include' });
   if (r.ok) { toast('Silindi ✓'); loadTeam(); }
   else toast('Silme başarısız', 'error');
@@ -1129,25 +1221,37 @@ async function deleteTeam(id) {
 // ── Sponsors ──────────────────────────────────────────────────────────────────
 let allSponsorsData = [];
 async function loadSponsors() {
-  allSponsorsData = await fetch('/api/sponsors/admin/all', { credentials: 'include' }).then(r => r.json());
-  if (!allSponsorsData.length) {
-    document.getElementById('sponsorTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz sponsor yok. "+ Yeni Ekle" ile başlayın.</td></tr>';
-    return;
+  try {
+    const res = await fetch('/api/sponsors/admin/all', { credentials: 'include' });
+    if (!res.ok) {
+      if (res.status === 401) window.location.href = '/admin/';
+      throw new Error('HTTP ' + res.status);
+    }
+    allSponsorsData = await res.json();
+    if (!Array.isArray(allSponsorsData)) allSponsorsData = [];
+
+    if (!allSponsorsData.length) {
+      document.getElementById('sponsorTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz sponsor yok. "+ Yeni Ekle" ile başlayın.</td></tr>';
+      return;
+    }
+    document.getElementById('sponsorTable').innerHTML = allSponsorsData.map(s => \`
+      <tr>
+        <td><input type="checkbox" class="sponsors-select-cb" value="\${s.id}" /></td>
+        <td>\${s.logo_url ? \`<img class="logo-thumb" src="\${resolveImageUrl(s.logo_url)}" alt="" />\` : '—'}</td>
+        <td><b>\${s.name}</b></td>
+        <td>\${s.website ? \`<a href="\${s.website}" target="_blank" style="color:var(--signal)">\${s.website}</a>\` : '—'}</td>
+        <td><span class="badge badge-\${s.tier}">\${s.tier}</span></td>
+        <td><span class="badge \${s.is_active ? 'badge-active' : 'badge-inactive'}">\${s.is_active ? 'Aktif' : 'Pasif'}</span></td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-primary" onclick="editSponsor(\${s.id})">Düzenle</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteSponsor(\${s.id})">Sil</button>
+        </td>
+      </tr>
+    \`).join('');
+  } catch (e) {
+    toast('Sponsorlar yüklenemedi', 'error');
+    document.getElementById('sponsorTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--error);padding:30px 0;font-size:.85rem">⚠️ Veriler yüklenirken bir hata oluştu.</td></tr>';
   }
-  document.getElementById('sponsorTable').innerHTML = allSponsorsData.map(s => \`
-    <tr>
-      <td><input type="checkbox" class="sponsors-select-cb" value="\${s.id}" /></td>
-      <td>\${s.logo_url ? \`<img class="logo-thumb" src="\${resolveImageUrl(s.logo_url)}" alt="" />\` : '—'}</td>
-      <td><b>\${s.name}</b></td>
-      <td>\${s.website ? \`<a href="\${s.website}" target="_blank" style="color:var(--signal)">\${s.website}</a>\` : '—'}</td>
-      <td><span class="badge badge-\${s.tier}">\${s.tier}</span></td>
-      <td><span class="badge \${s.is_active ? 'badge-active' : 'badge-inactive'}">\${s.is_active ? 'Aktif' : 'Pasif'}</span></td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-sm btn-primary" onclick="editSponsor(\${s.id})">Düzenle</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteSponsor(\${s.id})">Sil</button>
-      </td>
-    </tr>
-  \`).join('');
 }
 function openSponsorModal(s = null) {
   document.getElementById('sponsorId').value = s?.id || '';
@@ -1170,34 +1274,42 @@ function openSponsorModal(s = null) {
 function editSponsor(id) { const s = allSponsorsData.find(x => x.id === id); if (s) openSponsorModal(s); }
 
 async function saveSponsor() {
-  const id = document.getElementById('sponsorId').value;
-  if (!document.getElementById('sponsorName').value.trim()) { toast('Sponsor adı zorunludur', 'error'); return; }
-  const logoFile = document.getElementById('sponsorLogoFile').files[0];
-  let logoUrl = document.getElementById('sponsorLogoUrl').value;
-  if (logoFile) {
-    try {
-      toast('Logo yükleniyor...', 'info');
-      logoUrl = await uploadFile(logoFile, 'sponsors');
-    } catch (e) {
-      toast('Logo yüklenemedi: ' + (e.message || ''), 'error');
-      return;
+  const btn = document.getElementById('btnSaveSponsor');
+  if (btn) { btn.disabled = true; btn.textContent = 'Kaydediliyor...'; }
+  try {
+    const id = document.getElementById('sponsorId').value;
+    if (!document.getElementById('sponsorName').value.trim()) { toast('Sponsor adı zorunludur', 'error'); return; }
+    const logoFile = document.getElementById('sponsorLogoFile').files[0];
+    let logoUrl = document.getElementById('sponsorLogoUrl').value;
+    if (logoFile) {
+      try {
+        toast('Logo yükleniyor...', 'info');
+        logoUrl = await uploadFile(logoFile, 'sponsors');
+      } catch (e) {
+        toast('Logo yüklenemedi: ' + (e.message || ''), 'error');
+        return;
+      }
     }
+    const body = {
+      name: document.getElementById('sponsorName').value,
+      tier: document.getElementById('sponsorTier').value,
+      logo_url: logoUrl,
+      website: document.getElementById('sponsorWebsite').value,
+      is_active: parseInt(document.getElementById('sponsorActive').value),
+    };
+    const url = id ? \`/api/sponsors/\${id}\` : '/api/sponsors';
+    const method = id ? 'PUT' : 'POST';
+    const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (r.ok) { closeModal('sponsorModal'); toast('Kaydedildi ✓'); loadSponsors(); }
+    else toast('Hata oluştu', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Kaydet'; }
   }
-  const body = {
-    name: document.getElementById('sponsorName').value,
-    tier: document.getElementById('sponsorTier').value,
-    logo_url: logoUrl,
-    website: document.getElementById('sponsorWebsite').value,
-    is_active: parseInt(document.getElementById('sponsorActive').value),
-  };
-  const url = id ? \`/api/sponsors/\${id}\` : '/api/sponsors';
-  const method = id ? 'PUT' : 'POST';
-  const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (r.ok) { closeModal('sponsorModal'); toast('Kaydedildi ✓'); loadSponsors(); }
-  else toast('Hata oluştu', 'error');
 }
 async function deleteSponsor(id) {
-  if (!confirm('Silmek istediğinize emin misiniz?')) return;
+  const s = allSponsorsData.find(x => x.id === id);
+  const name = s?.name ? \`"\${s.name}" \` : 'Bu ';
+  if (!confirm(\`\${name}sponsorunu silmek istediğinize emin misiniz?\`)) return;
   const r = await fetch(\`/api/sponsors/\${id}\`, { method: 'DELETE', credentials: 'include' });
   if (r.ok) { toast('Silindi ✓'); loadSponsors(); }
   else toast('Silme başarısız', 'error');
@@ -1206,25 +1318,37 @@ async function deleteSponsor(id) {
 // ── Socials ───────────────────────────────────────────────────────────────────
 let allSocialsData = [];
 async function loadSocials() {
-  allSocialsData = await fetch('/api/socials/admin/all', { credentials: 'include' }).then(r => r.json());
-  if (!allSocialsData.length) {
-    document.getElementById('socialTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz sosyal medya linki yok. "+ Yeni Link" ile başlayın.</td></tr>';
-    return;
+  try {
+    const res = await fetch('/api/socials/admin/all', { credentials: 'include' });
+    if (!res.ok) {
+      if (res.status === 401) window.location.href = '/admin/';
+      throw new Error('HTTP ' + res.status);
+    }
+    allSocialsData = await res.json();
+    if (!Array.isArray(allSocialsData)) allSocialsData = [];
+
+    if (!allSocialsData.length) {
+      document.getElementById('socialTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz sosyal medya linki yok. "+ Yeni Link" ile başlayın.</td></tr>';
+      return;
+    }
+    document.getElementById('socialTable').innerHTML = allSocialsData.map(s => \`
+      <tr>
+        <td><input type="checkbox" class="socials-select-cb" value="\${s.id}" /></td>
+        <td><b>\${s.platform}</b></td>
+        <td>\${s.label}</td>
+        <td><a href="\${s.url}" target="_blank" style="color:var(--signal)">\${s.url}</a></td>
+        <td>\${s.order_num}</td>
+        <td><span class="badge \${s.is_active ? 'badge-active' : 'badge-inactive'}">\${s.is_active ? 'Aktif' : 'Pasif'}</span></td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-primary" onclick="editSocial(\${s.id})">Düzenle</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteSocial(\${s.id})">Sil</button>
+        </td>
+      </tr>
+    \`).join('');
+  } catch (e) {
+    toast('Sosyal medya linkleri yüklenemedi', 'error');
+    document.getElementById('socialTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--error);padding:30px 0;font-size:.85rem">⚠️ Veriler yüklenirken bir hata oluştu.</td></tr>';
   }
-  document.getElementById('socialTable').innerHTML = allSocialsData.map(s => \`
-    <tr>
-      <td><input type="checkbox" class="socials-select-cb" value="\${s.id}" /></td>
-      <td><b>\${s.platform}</b></td>
-      <td>\${s.label}</td>
-      <td><a href="\${s.url}" target="_blank" style="color:var(--signal)">\${s.url}</a></td>
-      <td>\${s.order_num}</td>
-      <td><span class="badge \${s.is_active ? 'badge-active' : 'badge-inactive'}">\${s.is_active ? 'Aktif' : 'Pasif'}</span></td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-sm btn-primary" onclick="editSocial(\${s.id})">Düzenle</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteSocial(\${s.id})">Sil</button>
-      </td>
-    </tr>
-  \`).join('');
 }
 function openSocialModal(s = null) {
   document.getElementById('socialId').value = s?.id || '';
@@ -1239,45 +1363,66 @@ function openSocialModal(s = null) {
 function editSocial(id) { const s = allSocialsData.find(x => x.id === id); if (s) openSocialModal(s); }
 
 async function saveSocial() {
-  const id = document.getElementById('socialId').value;
-  if (!document.getElementById('socialPlatform').value.trim() || !document.getElementById('socialUrl').value.trim()) { toast('Platform ve URL zorunludur', 'error'); return; }
-  const body = {
-    platform: document.getElementById('socialPlatform').value,
-    label: document.getElementById('socialLabel').value,
-    url: document.getElementById('socialUrl').value,
-    order_num: parseInt(document.getElementById('socialOrder').value),
-    is_active: parseInt(document.getElementById('socialActive').value),
-  };
-  const url = id ? \`/api/socials/\${id}\` : '/api/socials';
-  const method = id ? 'PUT' : 'POST';
-  const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (r.ok) { closeModal('socialModal'); toast('Kaydedildi ✓'); loadSocials(); }
-  else toast('Hata oluştu', 'error');
+  const btn = document.getElementById('btnSaveSocial');
+  if (btn) { btn.disabled = true; btn.textContent = 'Kaydediliyor...'; }
+  try {
+    const id = document.getElementById('socialId').value;
+    if (!document.getElementById('socialPlatform').value.trim() || !document.getElementById('socialUrl').value.trim()) { toast('Platform ve URL zorunludur', 'error'); return; }
+    const body = {
+      platform: document.getElementById('socialPlatform').value,
+      label: document.getElementById('socialLabel').value,
+      url: document.getElementById('socialUrl').value,
+      order_num: parseInt(document.getElementById('socialOrder').value),
+      is_active: parseInt(document.getElementById('socialActive').value),
+    };
+    const url = id ? \`/api/socials/\${id}\` : '/api/socials';
+    const method = id ? 'PUT' : 'POST';
+    const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (r.ok) { closeModal('socialModal'); toast('Kaydedildi ✓'); loadSocials(); }
+    else toast('Hata oluştu', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Kaydet'; }
+  }
 }
 async function deleteSocial(id) {
-  if (!confirm('Silmek istediğinize emin misiniz?')) return;
+  const s = allSocialsData.find(x => x.id === id);
+  const name = s?.label || s?.platform ? \`"\${s.label || s.platform}" \` : 'Bu ';
+  if (!confirm(\`\${name}sosyal medya linkini silmek istediğinize emin misiniz?\`)) return;
   const r = await fetch(\`/api/socials/\${id}\`, { method: 'DELETE', credentials: 'include' });
   if (r.ok) { toast('Silindi ✓'); loadSocials(); }
   else toast('Silme başarısız', 'error');
 }
 
 // ── Gallery ───────────────────────────────────────────────────────────────────
+let allGalleryData = [];
 async function loadGallery() {
-  const items = await fetch('/api/gallery', { credentials: 'include' }).then(r => r.json());
-  if (!items.length) {
-    document.getElementById('galleryTable').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz fotoğraf yok. "+ Fotoğraf Yükle" ile başlayın.</td></tr>';
-    return;
+  try {
+    const res = await fetch('/api/gallery', { credentials: 'include' });
+    if (!res.ok) {
+      if (res.status === 401) window.location.href = '/admin/';
+      throw new Error('HTTP ' + res.status);
+    }
+    allGalleryData = await res.json();
+    if (!Array.isArray(allGalleryData)) allGalleryData = [];
+
+    if (!allGalleryData.length) {
+      document.getElementById('galleryTable').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz fotoğraf yok. "+ Fotoğraf Yükle" ile başlayın.</td></tr>';
+      return;
+    }
+    document.getElementById('galleryTable').innerHTML = allGalleryData.map(g => \`
+      <tr>
+        <td><input type="checkbox" class="gallery-select-cb" value="\${g.id}" /></td>
+        <td><img class="logo-thumb" src="\${resolveImageUrl(g.url)}" alt="" style="width:48px;height:36px" /></td>
+        <td>\${g.event_tag || '—'}</td>
+        <td>\${g.file_size ? Math.round(g.file_size/1024) + ' KB' : '—'}</td>
+        <td style="font-size:.75rem;color:var(--muted)">\${g.uploaded_at?.slice(0,10) || ''}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="deleteGallery(\${g.id})">Sil</button></td>
+      </tr>
+    \`).join('');
+  } catch (e) {
+    toast('Galeri fotoğrafları yüklenemedi', 'error');
+    document.getElementById('galleryTable').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--error);padding:30px 0;font-size:.85rem">⚠️ Veriler yüklenirken bir hata oluştu.</td></tr>';
   }
-  document.getElementById('galleryTable').innerHTML = items.map(g => \`
-    <tr>
-      <td><input type="checkbox" class="gallery-select-cb" value="\${g.id}" /></td>
-      <td><img class="logo-thumb" src="\${resolveImageUrl(g.url)}" alt="" style="width:48px;height:36px" /></td>
-      <td>\${g.event_tag || '—'}</td>
-      <td>\${g.file_size ? Math.round(g.file_size/1024) + ' KB' : '—'}</td>
-      <td style="font-size:.75rem;color:var(--muted)">\${g.uploaded_at?.slice(0,10) || ''}</td>
-      <td><button class="btn btn-sm btn-danger" onclick="deleteGallery(\${g.id})">Sil</button></td>
-    </tr>
-  \`).join('');
 }
 function openGalleryModal() {
   document.getElementById('galleryFile').value = '';
@@ -1287,28 +1432,36 @@ function openGalleryModal() {
 }
 
 async function uploadGallery() {
-  const files = document.getElementById('galleryFile').files;
-  if (!files.length) { toast('Lütfen en az bir dosya seçin', 'error'); return; }
-  const tag = document.getElementById('galleryTag').value;
-  let ok = 0;
-  toast('Fotoğraflar yükleniyor...', 'info');
-  for (const file of files) {
-    try {
-      const url = await uploadFile(file, 'gallery');
-      await fetch('/api/gallery', {
-        method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, event_tag: tag || null, file_size: file.size }),
-      });
-      ok++;
-    } catch (e) { toast('Yükleme hatası: ' + (e.message || ''), 'error'); }
+  const btn = document.getElementById('btnUploadGallery');
+  if (btn) { btn.disabled = true; btn.textContent = 'Yükleniyor...'; }
+  try {
+    const files = document.getElementById('galleryFile').files;
+    if (!files.length) { toast('Lütfen en az bir dosya seçin', 'error'); return; }
+    const tag = document.getElementById('galleryTag').value;
+    let ok = 0;
+    toast('Fotoğraflar yükleniyor...', 'info');
+    for (const file of files) {
+      try {
+        const url = await uploadFile(file, 'gallery');
+        await fetch('/api/gallery', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, event_tag: tag || null, file_size: file.size }),
+        });
+        ok++;
+      } catch (e) { toast('Yükleme hatası: ' + (e.message || ''), 'error'); }
+    }
+    closeModal('galleryModal');
+    toast(\`\${ok} fotoğraf yüklendi ✓\`);
+    loadGallery();
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Yükle'; }
   }
-  closeModal('galleryModal');
-  toast(\`\${ok} fotoğraf yüklendi ✓\`);
-  loadGallery();
 }
 async function deleteGallery(id) {
-  if (!confirm('Silmek istediğinize emin misiniz?')) return;
+  const g = allGalleryData.find(x => x.id === id);
+  const name = g?.event_tag ? \`"\${g.event_tag}" etiketli \` : 'Bu ';
+  if (!confirm(\`\${name}fotoğrafı silmek istediğinize emin misiniz?\`)) return;
   const r = await fetch(\`/api/gallery/\${id}\`, { method: 'DELETE', credentials: 'include' });
   if (r.ok) { toast('Silindi ✓'); loadGallery(); }
   else toast('Silme başarısız', 'error');
