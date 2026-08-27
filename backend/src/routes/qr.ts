@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import QRCode from 'qrcode';
+import { PNG } from 'pngjs';
 import { requireAuth } from '../middleware/auth';
 import type { Env, QrCodeWithStats } from '../lib/types';
 
@@ -173,6 +175,77 @@ qrRoutes.post('/bulk-delete', requireAuth(), async (c) => {
     .run();
 
   return c.json({ ok: true, count: ids.length });
+});
+
+// GET /api/qr/:id/svg — Generate standard vector SVG (Quiet Zone 4 modules, Error Level M)
+qrRoutes.get('/:id/svg', requireAuth(), async (c) => {
+  const id = c.req.param('id');
+  const qr = await c.env.DB.prepare('SELECT slug FROM qr_codes WHERE id = ?').bind(id).first<{ slug: string }>();
+  if (!qr) return c.json({ error: 'QR kod bulunamadı' }, 404);
+
+  const qrUrl = `https://admin.sastek.org/q/${qr.slug}`;
+  const svg = await QRCode.toString(qrUrl, {
+    type: 'svg',
+    margin: 4,
+    errorCorrectionLevel: 'M',
+    color: {
+      dark: '#0a0f1e',
+      light: '#ffffff'
+    }
+  });
+
+  c.header('Content-Type', 'image/svg+xml; charset=utf-8');
+  c.header('Content-Disposition', `inline; filename="sastek-qr-${qr.slug}.svg"`);
+  return c.body(svg);
+});
+
+// GET /api/qr/:id/png — Generate high-res 1024x1024 PNG DataURL & direct data (Pure JS, zero Canvas)
+qrRoutes.get('/:id/png', requireAuth(), async (c) => {
+  const id = c.req.param('id');
+  const qr = await c.env.DB.prepare('SELECT slug FROM qr_codes WHERE id = ?').bind(id).first<{ slug: string }>();
+  if (!qr) return c.json({ error: 'QR kod bulunamadı' }, 404);
+
+  const qrUrl = `https://admin.sastek.org/q/${qr.slug}`;
+  const qrData = QRCode.create(qrUrl, { errorCorrectionLevel: 'M' });
+  const modules = qrData.modules;
+  const modCount = modules.size;
+  const margin = 4;
+  const totalCells = modCount + margin * 2;
+  const cellSize = Math.max(1, Math.floor(1024 / totalCells));
+  const imgSize = totalCells * cellSize;
+
+  const png = new PNG({ width: imgSize, height: imgSize, colorType: 2 });
+  // Fill background white
+  for (let i = 0; i < png.data.length; i += 4) {
+    png.data[i] = 255;
+    png.data[i + 1] = 255;
+    png.data[i + 2] = 255;
+    png.data[i + 3] = 255;
+  }
+
+  // Draw dark modules (#0a0f1e => R:10, G:15, B:30)
+  for (let r = 0; r < modCount; r++) {
+    for (let col = 0; col < modCount; col++) {
+      if (modules.get(r, col)) {
+        const startX = (col + margin) * cellSize;
+        const startY = (r + margin) * cellSize;
+        for (let y = 0; y < cellSize; y++) {
+          for (let x = 0; x < cellSize; x++) {
+            const idx = ((startY + y) * imgSize + (startX + x)) * 4;
+            png.data[idx] = 10;     // R
+            png.data[idx + 1] = 15; // G
+            png.data[idx + 2] = 30; // B
+            png.data[idx + 3] = 255;
+          }
+        }
+      }
+    }
+  }
+
+  const pngBuffer = PNG.sync.write(png);
+  const dataUrl = `data:image/png;base64,${pngBuffer.toString('base64')}`;
+
+  return c.json({ ok: true, dataUrl, url: qrUrl, slug: qr.slug, width: imgSize, height: imgSize });
 });
 
 // ── Public Redirect Handler (/q/:slug) ───────────────────────────────────────

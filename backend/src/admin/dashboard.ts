@@ -856,7 +856,7 @@ export const dashboardPage = `<!DOCTYPE html>
     <div class="form-field">
       <label>SLUG (KISA BAĞLANTI) *</label>
       <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:.78rem;color:var(--muted);white-space:nowrap;background:rgba(255,255,255,.04);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">sastek.org/q/</span>
+        <span style="font-size:.78rem;color:var(--muted);white-space:nowrap;background:rgba(255,255,255,.04);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">admin.sastek.org/q/</span>
         <input id="qrSlug" placeholder="savunma-gunlukleri" style="flex:1" />
       </div>
       <p id="qrSlugWarning" style="display:none;font-size:.72rem;color:var(--warn);margin-top:6px;line-height:1.4">
@@ -1783,7 +1783,7 @@ async function loadQrs() {
         <td><input type="checkbox" class="qr-select-cb" value="\${q.id}" /></td>
         <td>
           <div style="font-weight:600;color:var(--text);margin-bottom:2px">\${q.title}</div>
-          <span class="badge badge-standard" style="cursor:pointer" onclick="openQrViewModal(\${q.id})">sastek.org/q/\${q.slug}</span>
+          <span class="badge badge-standard" style="cursor:pointer" onclick="openQrViewModal(\${q.id})">admin.sastek.org/q/\${q.slug}</span>
         </td>
         <td>
           <a href="\${q.target_url}" target="_blank" rel="noopener noreferrer" style="color:var(--signal);text-decoration:none;font-size:.76rem;display:inline-block;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">
@@ -1908,14 +1908,14 @@ async function deleteQr(id) {
   }
 }
 
-function openQrViewModal(id) {
+async function openQrViewModal(id) {
   const qr = allQrData.find(x => x.id === id);
   if (!qr) return;
   currentViewingQr = qr;
 
   document.getElementById('qrViewTitle').textContent = qr.title;
   document.getElementById('qrViewTarget').textContent = 'Hedef: ' + qr.target_url;
-  const fullShortUrl = 'https://sastek.org/q/' + qr.slug;
+  const fullShortUrl = 'https://admin.sastek.org/q/' + qr.slug;
   document.getElementById('qrViewFullUrl').textContent = fullShortUrl;
 
   document.getElementById('qrStatTotal').textContent = qr.total_scans || 0;
@@ -1924,22 +1924,23 @@ function openQrViewModal(id) {
   document.getElementById('qrStat30d').textContent = qr.last_30d_scans || 0;
 
   const container = document.getElementById('qrCanvasContainer');
-  container.innerHTML = '';
-  const canvas = document.createElement('canvas');
-  canvas.width = 240;
-  canvas.height = 240;
-  canvas.id = 'qrActiveCanvas';
-  canvas.style.maxWidth = '100%';
-  canvas.style.height = 'auto';
-  container.appendChild(canvas);
-
-  renderMicroQr(fullShortUrl, canvas, 240);
+  container.innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:40px 0;">QR yükleniyor...</div>';
   openModal('qrViewModal');
+
+  try {
+    const r = await fetch(\`/api/qr/\${qr.id}/png\`, { credentials: 'include' });
+    if (!r.ok) throw new Error('QR yüklenemedi');
+    const data = await r.json();
+    container.innerHTML = \`<img src="\${data.dataUrl}" alt="QR Kod" style="width:240px;height:240px;display:block;margin:0 auto;border-radius:4px;" />\`;
+    currentViewingQr._pngDataUrl = data.dataUrl;
+  } catch (err) {
+    container.innerHTML = '<div style="color:var(--error);font-size:.8rem;padding:30px 0;">⚠️ QR görseli yüklenemedi</div>';
+  }
 }
 
 function copyQrLink() {
   if (!currentViewingQr) return;
-  const url = 'https://sastek.org/q/' + currentViewingQr.slug;
+  const url = 'https://admin.sastek.org/q/' + currentViewingQr.slug;
   navigator.clipboard.writeText(url).then(() => {
     toast('QR Bağlantısı kopyalandı ✓');
   }).catch(() => {
@@ -1947,245 +1948,43 @@ function copyQrLink() {
   });
 }
 
-function downloadQrPng() {
+async function downloadQrPng() {
   if (!currentViewingQr) return;
-  const fullShortUrl = 'https://sastek.org/q/' + currentViewingQr.slug;
-  const exportCanvas = document.createElement('canvas');
-  exportCanvas.width = 1024;
-  exportCanvas.height = 1024;
-  renderMicroQr(fullShortUrl, exportCanvas, 1024);
-
-  const link = document.createElement('a');
-  link.download = \`sastek-qr-\${currentViewingQr.slug}.png\`;
-  link.href = exportCanvas.toDataURL('image/png');
-  link.click();
-  toast('PNG indirildi ✓');
+  try {
+    let dataUrl = currentViewingQr._pngDataUrl;
+    if (!dataUrl) {
+      const r = await fetch(\`/api/qr/\${currentViewingQr.id}/png\`, { credentials: 'include' });
+      if (!r.ok) throw new Error('İndirme başarısız');
+      const data = await r.json();
+      dataUrl = data.dataUrl;
+    }
+    const link = document.createElement('a');
+    link.download = \`sastek-qr-\${currentViewingQr.slug}.png\`;
+    link.href = dataUrl;
+    link.click();
+    toast('Yüksek kaliteli PNG indirildi ✓');
+  } catch (e) {
+    toast('PNG indirilemedi', 'error');
+  }
 }
 
-function downloadQrSvg() {
+async function downloadQrSvg() {
   if (!currentViewingQr) return;
-  const fullShortUrl = 'https://sastek.org/q/' + currentViewingQr.slug;
-  const svgContent = generateMicroQrSvg(fullShortUrl, 512);
-  const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.download = \`sastek-qr-\${currentViewingQr.slug}.svg\`;
-  link.href = url;
-  link.click();
-  URL.revokeObjectURL(url);
-  toast('Vektörel SVG indirildi ✓');
-}
-
-// ── Lightweight Zero-Dependency Micro QR Engine (ISO 18004 Standard) ─────────
-const GF_EXP = new Uint8Array(512);
-const GF_LOG = new Uint8Array(256);
-(function initGF() {
-  let x = 1;
-  for (let i = 0; i < 255; i++) {
-    GF_EXP[i] = x;
-    GF_EXP[i + 255] = x;
-    GF_LOG[x] = i;
-    x <<= 1;
-    if (x & 256) x ^= 0x11d;
+  try {
+    const r = await fetch(\`/api/qr/\${currentViewingQr.id}/svg\`, { credentials: 'include' });
+    if (!r.ok) throw new Error('İndirme başarısız');
+    const svgText = await r.text();
+    const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = \`sastek-qr-\${currentViewingQr.slug}.svg\`;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast('Vektörel SVG indirildi ✓');
+  } catch (e) {
+    toast('SVG indirilemedi', 'error');
   }
-})();
-
-function gfMul(x, y) {
-  if (x === 0 || y === 0) return 0;
-  return GF_EXP[GF_LOG[x] + GF_LOG[y]];
-}
-
-function calcReedSolomon(data, ecCount) {
-  let gen = [1];
-  for (let i = 0; i < ecCount; i++) {
-    const next = new Array(gen.length + 1).fill(0);
-    for (let j = 0; j < gen.length; j++) {
-      next[j] ^= gfMul(gen[j], GF_EXP[i]);
-      next[j + 1] ^= gen[j];
-    }
-    gen = next;
-  }
-
-  const res = new Array(ecCount).fill(0);
-  for (let i = 0; i < data.length; i++) {
-    const factor = data[i] ^ res[0];
-    for (let j = 0; j < ecCount - 1; j++) {
-      res[j] = res[j + 1] ^ gfMul(gen[ecCount - j - 1], factor);
-    }
-    res[ecCount - 1] = gfMul(gen[0], factor);
-  }
-  return res;
-}
-
-function generateQrMatrixData(text) {
-  const len = text.length;
-  // Version selection based on data capacity (Level M Error Correction)
-  // Ver 2: 16 data bytes / 10 EC | Ver 3: 26 data bytes / 15 EC | Ver 4: 36 data bytes / 20 EC | Ver 5: 48 data bytes / 26 EC
-  let ver = 2, totalDataBytes = 16, ecBytes = 10;
-  if (len > 14) { ver = 3; totalDataBytes = 26; ecBytes = 15; }
-  if (len > 24) { ver = 4; totalDataBytes = 36; ecBytes = 20; }
-  if (len > 34) { ver = 5; totalDataBytes = 48; ecBytes = 26; }
-  if (len > 46) { ver = 6; totalDataBytes = 64; ecBytes = 36; }
-
-  const size = 17 + 4 * ver;
-  const matrix = Array.from({ length: size }, () => Array(size).fill(null));
-
-  function setFinder(row, col) {
-    for (let r = 0; r < 7; r++) {
-      for (let c = 0; c < 7; c++) {
-        const isBorder = (r === 0 || r === 6 || c === 0 || c === 6);
-        const isCenter = (r >= 2 && r <= 4 && c >= 2 && c <= 4);
-        matrix[row + r][col + c] = isBorder || isCenter;
-      }
-    }
-    for (let r = -1; r <= 7; r++) {
-      for (let c = -1; c <= 7; c++) {
-        if (r === -1 || r === 7 || c === -1 || c === 7) {
-          const nr = row + r, nc = col + c;
-          if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-            if (matrix[nr][nc] === null) matrix[nr][nc] = false;
-          }
-        }
-      }
-    }
-  }
-  setFinder(0, 0);
-  setFinder(0, size - 7);
-  setFinder(size - 7, 0);
-
-  if (ver >= 2) {
-    const alignPos = ver === 2 ? [6, 18] : (ver === 3 ? [6, 22] : (ver === 4 ? [6, 26] : (ver === 5 ? [6, 30] : [6, 34])));
-    const ar = alignPos[1], ac = alignPos[1];
-    for (let r = -2; r <= 2; r++) {
-      for (let c = -2; c <= 2; c++) {
-        const isOuter = (Math.abs(r) === 2 || Math.abs(c) === 2);
-        const isDot = (r === 0 && c === 0);
-        matrix[ar + r][ac + c] = isOuter || isDot;
-      }
-    }
-  }
-
-  for (let i = 8; i < size - 8; i++) {
-    if (matrix[6][i] === null) matrix[6][i] = (i % 2 === 0);
-    if (matrix[i][6] === null) matrix[i][6] = (i % 2 === 0);
-  }
-  matrix[size - 8][8] = true;
-
-  // Data Bitstream Assembly (Byte Mode: 0100 + 8-bit length + data + terminator + padding)
-  const bits = [0, 1, 0, 0];
-  for (let i = 7; i >= 0; i--) bits.push((len >> i) & 1);
-  for (let i = 0; i < len; i++) {
-    const code = text.charCodeAt(i);
-    for (let b = 7; b >= 0; b--) bits.push((code >> b) & 1);
-  }
-  for (let i = 0; i < 4 && bits.length < totalDataBytes * 8; i++) bits.push(0);
-  while (bits.length % 8 !== 0) bits.push(0);
-
-  const dataBytes = [];
-  for (let i = 0; i < bits.length; i += 8) {
-    let byteVal = 0;
-    for (let b = 0; b < 8; b++) byteVal = (byteVal << 1) | bits[i + b];
-    dataBytes.push(byteVal);
-  }
-
-  const padBytes = [0xEC, 0x11];
-  let pIdx = 0;
-  while (dataBytes.length < totalDataBytes) {
-    dataBytes.push(padBytes[pIdx++ % 2]);
-  }
-
-  // Calculate RS Error Correction Codewords
-  const ecCodewords = calcReedSolomon(dataBytes, ecBytes);
-  const finalCodewords = [...dataBytes, ...ecCodewords];
-
-  // Convert final codewords to full bit array
-  const allBits = [];
-  for (const b of finalCodewords) {
-    for (let i = 7; i >= 0; i--) allBits.push((b >> i) & 1);
-  }
-
-  // Place Bits in Matrix
-  let bitIdx = 0;
-  let upwards = true;
-  for (let right = size - 1; right > 0; right -= 2) {
-    if (right === 6) right--;
-    for (let vert = 0; vert < size; vert++) {
-      const r = upwards ? (size - 1 - vert) : vert;
-      for (let c = right; c >= right - 1; c--) {
-        if (matrix[r][c] === null) {
-          const bitVal = bitIdx < allBits.length ? allBits[bitIdx++] : 0;
-          const mask = ((r + c) % 2 === 0);
-          matrix[r][c] = (bitVal === 1) ? !mask : mask;
-        }
-      }
-    }
-    upwards = !upwards;
-  }
-
-  // Format Information (Mask 0, Error Level M => 101010000010010)
-  const formatBits = [1,0,1,0,1,0,0,0,0,0,1,0,0,1,0];
-  for (let i = 0; i < 6; i++) matrix[8][i] = Boolean(formatBits[i]);
-  matrix[8][7] = Boolean(formatBits[6]);
-  matrix[8][8] = Boolean(formatBits[7]);
-  matrix[7][8] = Boolean(formatBits[8]);
-  for (let i = 9; i < 15; i++) matrix[14 - i][8] = Boolean(formatBits[i]);
-
-  for (let i = 0; i < 8; i++) matrix[size - 1 - i][8] = Boolean(formatBits[i]);
-  for (let i = 8; i < 15; i++) matrix[8][size - 15 + i] = Boolean(formatBits[i]);
-
-  return matrix;
-}
-
-function renderMicroQr(text, canvas, size = 256) {
-  const matrix = generateQrMatrixData(text);
-  const ctx = canvas.getContext('2d');
-  const modCount = matrix.length;
-  const margin = 3;
-  const totalCells = modCount + margin * 2;
-  const cellSize = size / totalCells;
-
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, size, size);
-
-  ctx.fillStyle = '#0a0f1e';
-  for (let r = 0; r < modCount; r++) {
-    for (let c = 0; c < modCount; c++) {
-      if (matrix[r][c]) {
-        ctx.fillRect(
-          Math.round((c + margin) * cellSize),
-          Math.round((r + margin) * cellSize),
-          Math.ceil(cellSize),
-          Math.ceil(cellSize)
-        );
-      }
-    }
-  }
-}
-
-function generateMicroQrSvg(text, size = 512) {
-  const matrix = generateQrMatrixData(text);
-  const modCount = matrix.length;
-  const margin = 3;
-  const totalCells = modCount + margin * 2;
-  const cellSize = size / totalCells;
-
-  let rects = '';
-  for (let r = 0; r < modCount; r++) {
-    for (let c = 0; c < modCount; c++) {
-      if (matrix[r][c]) {
-        const x = ((c + margin) * cellSize).toFixed(2);
-        const y = ((r + margin) * cellSize).toFixed(2);
-        const w = (cellSize + 0.1).toFixed(2);
-        rects += \`<rect x="\${x}" y="\${y}" width="\${w}" height="\${w}" fill="#0a0f1e" />\`;
-      }
-    }
-  }
-
-  return \`<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 \${size} \${size}" width="\${size}" height="\${size}">
-  <rect width="100%" height="100%" fill="#ffffff"/>
-  \${rects}
-</svg>\`;
 }
 
 // Init
