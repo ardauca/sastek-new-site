@@ -8,15 +8,16 @@ export const qrRoutes = new Hono<{ Bindings: Env }>();
 export const qrPublicRoutes = new Hono<{ Bindings: Env }>();
 
 const RESERVED_SLUGS = [
-  'api', 'admin', 'q', 'assets', 'static', 'images', 'login', 'logout',
-  'health', 'dashboard', 'settings', 'favicon', 'robots', 'sitemap', 'en',
-  'etkinlikler', 'galeri', 'hakkimizda', 'iletisim', 'sponsorlar', 'anlasmali-noktalar'
+  'api', 'admin', 'q', 'health', 'login', 'logout', 'dashboard', 'settings', 'favicon', 'robots', 'sitemap'
 ];
 
-function isValidSlug(slug: string): boolean {
+function isValidSlugFormat(slug: string): boolean {
   if (!slug || typeof slug !== 'string' || slug.length > 64) return false;
-  if (RESERVED_SLUGS.includes(slug.toLowerCase())) return false;
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+}
+
+function isReservedSlug(slug: string): boolean {
+  return RESERVED_SLUGS.includes(slug.toLowerCase());
 }
 
 function isValidTargetUrl(rawUrl: string): boolean {
@@ -69,8 +70,11 @@ qrRoutes.post('/', requireAuth(), async (c) => {
   if (!title) {
     return c.json({ error: 'QR başlığı zorunludur' }, 400);
   }
-  if (!isValidSlug(slug)) {
+  if (!isValidSlugFormat(slug)) {
     return c.json({ error: 'Geçersiz slug. Yalnızca küçük harf, rakam ve tire (-) içerebilir (maks. 64 karakter)' }, 400);
+  }
+  if (isReservedSlug(slug)) {
+    return c.json({ error: `Bu slug ("${slug}") sistem tarafından rezerve edilmiştir, lütfen başka bir slug seçin` }, 400);
   }
   if (!isValidTargetUrl(targetUrl)) {
     return c.json({ error: 'Geçersiz hedef URL. Yalnızca geçerli http:// veya https:// bağlantıları kabul edilir' }, 400);
@@ -115,8 +119,11 @@ qrRoutes.put('/:id', requireAuth(), async (c) => {
   if (!title) {
     return c.json({ error: 'QR başlığı zorunludur' }, 400);
   }
-  if (!isValidSlug(slug)) {
-    return c.json({ error: 'Geçersiz slug. Yalnızca küçük harf, rakam ve tire (-) içerebilir' }, 400);
+  if (!isValidSlugFormat(slug)) {
+    return c.json({ error: 'Geçersiz slug. Yalnızca küçük harf, rakam ve tire (-) içerebilir (maks. 64 karakter)' }, 400);
+  }
+  if (isReservedSlug(slug)) {
+    return c.json({ error: `Bu slug ("${slug}") sistem tarafından rezerve edilmiştir, lütfen başka bir slug seçin` }, 400);
   }
   if (!isValidTargetUrl(targetUrl)) {
     return c.json({ error: 'Geçersiz hedef URL. Yalnızca geçerli http:// veya https:// bağlantıları kabul edilir' }, 400);
