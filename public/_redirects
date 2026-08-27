@@ -3,6 +3,3 @@
 https://www.sastek.org/* https://sastek.org/:splat 301!
 http://www.sastek.org/* https://sastek.org/:splat 301!
 http://sastek.org/* https://sastek.org/:splat 301!
-
-# Dynamic QR code direct proxy rewrite (Single 302 directly to target)
-/q/* https://admin.sastek.org/q/:splat 200
