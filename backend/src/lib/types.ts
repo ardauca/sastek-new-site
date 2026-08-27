@@ -105,6 +105,30 @@ export interface Admin {
   created_at: string;
 }
 
+export interface QrCode {
+  id: number;
+  slug: string;
+  target_url: string;
+  title: string;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QrScan {
+  id: number;
+  qr_id: number;
+  scanned_at: string;
+}
+
+export interface QrCodeWithStats extends QrCode {
+  total_scans: number;
+  today_scans: number;
+  last_7d_scans: number;
+  last_30d_scans: number;
+  last_scanned_at: string | null;
+}
+
 // JWT payload
 export interface JwtPayload {
   sub: number;    // admin id
