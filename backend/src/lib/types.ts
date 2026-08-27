@@ -111,6 +111,7 @@ export interface QrCode {
   target_url: string;
   title: string;
   is_active: number;
+  is_locked: number;
   created_at: string;
   updated_at: string;
 }

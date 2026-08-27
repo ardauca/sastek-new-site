@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS qr_codes (
   target_url  TEXT NOT NULL,
   title       TEXT NOT NULL,
   is_active   INTEGER NOT NULL DEFAULT 1,
+  is_locked   INTEGER NOT NULL DEFAULT 0,
   created_at  TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );

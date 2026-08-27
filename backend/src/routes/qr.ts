@@ -38,7 +38,7 @@ function isValidTargetUrl(rawUrl: string): boolean {
 qrRoutes.get('/', requireAuth(), async (c) => {
   const rows = await c.env.DB.prepare(`
     SELECT 
-      q.id, q.slug, q.target_url, q.title, q.is_active, q.created_at, q.updated_at,
+      q.id, q.slug, q.target_url, q.title, q.is_active, q.is_locked, q.created_at, q.updated_at,
       COUNT(s.id) AS total_scans,
       COUNT(CASE WHEN s.scanned_at >= date('now', 'start of day') THEN 1 END) AS today_scans,
       COUNT(CASE WHEN s.scanned_at >= datetime('now', '-7 days') THEN 1 END) AS last_7d_scans,
@@ -60,12 +60,14 @@ qrRoutes.post('/', requireAuth(), async (c) => {
     slug?: string;
     target_url?: string;
     is_active?: number;
+    is_locked?: number;
   }>();
 
   const title = (data.title || '').trim();
   const slug = (data.slug || '').trim().toLowerCase();
   const targetUrl = (data.target_url || '').trim();
   const isActive = data.is_active !== undefined ? (data.is_active ? 1 : 0) : 1;
+  const isLocked = data.is_locked !== undefined ? (data.is_locked ? 1 : 0) : 0;
 
   if (!title) {
     return c.json({ error: 'QR başlığı zorunludur' }, 400);
@@ -87,9 +89,9 @@ qrRoutes.post('/', requireAuth(), async (c) => {
   }
 
   const result = await c.env.DB.prepare(`
-    INSERT INTO qr_codes (slug, target_url, title, is_active)
-    VALUES (?, ?, ?, ?)
-  `).bind(slug, targetUrl, title, isActive).run();
+    INSERT INTO qr_codes (slug, target_url, title, is_active, is_locked)
+    VALUES (?, ?, ?, ?, ?)
+  `).bind(slug, targetUrl, title, isActive, isLocked).run();
 
   return c.json({ ok: true, id: result.meta.last_row_id }, 201);
 });
@@ -102,10 +104,11 @@ qrRoutes.put('/:id', requireAuth(), async (c) => {
     slug?: string;
     target_url?: string;
     is_active?: number;
+    is_locked?: number;
   }>();
 
   const existing = await c.env.DB.prepare('SELECT * FROM qr_codes WHERE id = ?').bind(id).first<{
-    id: number; slug: string; target_url: string; title: string; is_active: number;
+    id: number; slug: string; target_url: string; title: string; is_active: number; is_locked: number;
   }>();
   if (!existing) {
     return c.json({ error: 'QR kod bulunamadı' }, 404);
@@ -115,6 +118,7 @@ qrRoutes.put('/:id', requireAuth(), async (c) => {
   const slug = data.slug !== undefined ? data.slug.trim().toLowerCase() : existing.slug;
   const targetUrl = data.target_url !== undefined ? data.target_url.trim() : existing.target_url;
   const isActive = data.is_active !== undefined ? (data.is_active ? 1 : 0) : existing.is_active;
+  const isLocked = data.is_locked !== undefined ? (data.is_locked ? 1 : 0) : existing.is_locked;
 
   if (!title) {
     return c.json({ error: 'QR başlığı zorunludur' }, 400);
@@ -143,16 +147,44 @@ qrRoutes.put('/:id', requireAuth(), async (c) => {
       slug = ?,
       target_url = ?,
       is_active = ?,
+      is_locked = ?,
       updated_at = datetime('now')
     WHERE id = ?
-  `).bind(title, slug, targetUrl, isActive, id).run();
+  `).bind(title, slug, targetUrl, isActive, isLocked, id).run();
 
   return c.json({ ok: true });
 });
 
-// DELETE /api/qr/:id — Delete QR code (CASCADE deletes scans automatically)
+// PUT /api/qr/:id/toggle-lock — Toggle lock status
+qrRoutes.put('/:id/toggle-lock', requireAuth(), async (c) => {
+  const id = c.req.param('id');
+  const qr = await c.env.DB.prepare('SELECT id, is_locked, title FROM qr_codes WHERE id = ?').bind(id).first<{
+    id: number; is_locked: number; title: string;
+  }>();
+  if (!qr) return c.json({ error: 'QR kod bulunamadı' }, 404);
+
+  const newLocked = qr.is_locked === 1 ? 0 : 1;
+  await c.env.DB.prepare("UPDATE qr_codes SET is_locked = ?, updated_at = datetime('now') WHERE id = ?").bind(newLocked, id).run();
+
+  return c.json({
+    ok: true,
+    is_locked: newLocked,
+    message: newLocked ? 'QR kod başarıyla kilitlendi' : 'QR kod kilidi açıldı'
+  });
+});
+
+// DELETE /api/qr/:id — Delete QR code with strict lock protection
 qrRoutes.delete('/:id', requireAuth(), async (c) => {
   const id = c.req.param('id');
+  const qr = await c.env.DB.prepare('SELECT id, is_locked, title FROM qr_codes WHERE id = ?').bind(id).first<{
+    id: number; is_locked: number; title: string;
+  }>();
+  if (!qr) return c.json({ error: 'QR kod bulunamadı' }, 404);
+
+  if (qr.is_locked === 1) {
+    return c.json({ error: 'Bu QR kod kilitli olduğu için silinemez. Önce kilidini açın.' }, 409);
+  }
+
   await c.env.DB.prepare('DELETE FROM qr_codes WHERE id = ?').bind(id).run();
   return c.json({ ok: true });
 });
@@ -171,17 +203,28 @@ qrRoutes.post('/bulk-status', requireAuth(), async (c) => {
   return c.json({ ok: true, count: ids.length });
 });
 
-// POST /api/qr/bulk-delete — Bulk delete QR codes
+// POST /api/qr/bulk-delete — Bulk delete QR codes with lock safety
 qrRoutes.post('/bulk-delete', requireAuth(), async (c) => {
   const { ids } = await c.req.json<{ ids: number[] }>();
   if (!Array.isArray(ids) || !ids.length) return c.json({ error: 'IDs required' }, 400);
 
   const placeholders = ids.map(() => '?').join(',');
-  await c.env.DB.prepare(`DELETE FROM qr_codes WHERE id IN (${placeholders})`)
-    .bind(...ids)
-    .run();
+  const rows = await c.env.DB.prepare(`SELECT id, is_locked FROM qr_codes WHERE id IN (${placeholders})`).bind(...ids).all<{ id: number; is_locked: number }>();
+  const results = rows.results || [];
 
-  return c.json({ ok: true, count: ids.length });
+  const unlockedIds = results.filter(r => !r.is_locked).map(r => r.id);
+  const lockedCount = results.filter(r => Boolean(r.is_locked)).length;
+
+  if (unlockedIds.length > 0) {
+    const delPlaceholders = unlockedIds.map(() => '?').join(',');
+    await c.env.DB.prepare(`DELETE FROM qr_codes WHERE id IN (${delPlaceholders})`).bind(...unlockedIds).run();
+  }
+
+  const message = lockedCount > 0
+    ? `${unlockedIds.length} QR silindi, ${lockedCount} kilitli QR korundu.`
+    : `${unlockedIds.length} QR silindi.`;
+
+  return c.json({ ok: true, deleted: unlockedIds.length, locked_skipped: lockedCount, message });
 });
 
 // GET /api/qr/:id/svg — Generate standard vector SVG (Quiet Zone 4 modules, Error Level M)
@@ -190,7 +233,7 @@ qrRoutes.get('/:id/svg', requireAuth(), async (c) => {
   const qr = await c.env.DB.prepare('SELECT slug FROM qr_codes WHERE id = ?').bind(id).first<{ slug: string }>();
   if (!qr) return c.json({ error: 'QR kod bulunamadı' }, 404);
 
-  const qrUrl = `https://admin.sastek.org/q/${qr.slug}`;
+  const qrUrl = `https://sastek.org/q/${qr.slug}`;
   const svg = await QRCode.toString(qrUrl, {
     type: 'svg',
     margin: 4,
@@ -212,7 +255,7 @@ qrRoutes.get('/:id/png', requireAuth(), async (c) => {
   const qr = await c.env.DB.prepare('SELECT slug FROM qr_codes WHERE id = ?').bind(id).first<{ slug: string }>();
   if (!qr) return c.json({ error: 'QR kod bulunamadı' }, 404);
 
-  const qrUrl = `https://admin.sastek.org/q/${qr.slug}`;
+  const qrUrl = `https://sastek.org/q/${qr.slug}`;
   const qrData = QRCode.create(qrUrl, { errorCorrectionLevel: 'M' });
   const modules = qrData.modules;
   const modCount = modules.size;

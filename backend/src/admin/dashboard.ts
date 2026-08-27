@@ -537,6 +537,7 @@ export const dashboardPage = `<!DOCTYPE html>
                 <th>QR ADI & SLUG</th>
                 <th>HEDEF YÖNLENDİRME (TARGET)</th>
                 <th>DURUM</th>
+                <th>KİLİT</th>
                 <th>TOPLAM</th>
                 <th>BUGÜN / 7G</th>
                 <th>SON TARAMA</th>
@@ -856,7 +857,7 @@ export const dashboardPage = `<!DOCTYPE html>
     <div class="form-field">
       <label>SLUG (KISA BAĞLANTI) *</label>
       <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:.78rem;color:var(--muted);white-space:nowrap;background:rgba(255,255,255,.04);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">admin.sastek.org/q/</span>
+        <span style="font-size:.78rem;color:var(--muted);white-space:nowrap;background:rgba(255,255,255,.04);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">sastek.org/q/</span>
         <input id="qrSlug" placeholder="savunma-gunlukleri" style="flex:1" />
       </div>
       <p id="qrSlugWarning" style="display:none;font-size:.72rem;color:var(--warn);margin-top:6px;line-height:1.4">
@@ -1135,8 +1136,13 @@ async function bulkDelete(moduleName, reloadFn) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids })
   });
-  if (r.ok) { toast(\`\${ids.length} öğe silindi ✓\`); reloadFn(); }
-  else toast('Hata oluştu', 'error');
+  const resData = await r.json().catch(() => ({}));
+  if (r.ok) {
+    toast(resData.message || \`\${ids.length} öğe silindi ✓\`);
+    reloadFn();
+  } else {
+    toast(resData.error || 'Hata oluştu', 'error');
+  }
 }
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
@@ -1774,7 +1780,7 @@ async function loadQrs() {
     if (!Array.isArray(allQrData)) allQrData = [];
 
     if (!allQrData.length) {
-      document.getElementById('qrTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz QR kod bulunmuyor. "+ Yeni QR Oluştur" ile başlayın.</td></tr>';
+      document.getElementById('qrTable').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz QR kod bulunmuyor. "+ Yeni QR Oluştur" ile başlayın.</td></tr>';
       return;
     }
 
@@ -1783,7 +1789,7 @@ async function loadQrs() {
         <td><input type="checkbox" class="qr-select-cb" value="\${q.id}" /></td>
         <td>
           <div style="font-weight:600;color:var(--text);margin-bottom:2px">\${q.title}</div>
-          <span class="badge badge-standard" style="cursor:pointer" onclick="openQrViewModal(\${q.id})">admin.sastek.org/q/\${q.slug}</span>
+          <span class="badge badge-standard" style="cursor:pointer" onclick="openQrViewModal(\${q.id})">sastek.org/q/\${q.slug}</span>
         </td>
         <td>
           <a href="\${q.target_url}" target="_blank" rel="noopener noreferrer" style="color:var(--signal);text-decoration:none;font-size:.76rem;display:inline-block;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">
@@ -1795,19 +1801,46 @@ async function loadQrs() {
             \${q.is_active ? '● Aktif' : '○ Pasif'}
           </span>
         </td>
+        <td>
+          \${q.is_locked ? '<span class="badge badge-active" style="background:rgba(34,197,94,.12);color:#22c55e" title="Kilitli — Yanlışlıkla silinemez">🔒 Kilitli</span>' : '<span class="badge" style="background:rgba(255,255,255,.05);color:var(--muted)" title="Açık — Silinebilir">🔓 Açık</span>'}
+        </td>
         <td><b style="color:var(--signal);font-size:.85rem">\${q.total_scans || 0}</b></td>
         <td style="font-size:.75rem">\${q.today_scans || 0} <span style="color:var(--muted)">/ \${q.last_7d_scans || 0}</span></td>
         <td style="font-size:.72rem;color:var(--muted)">\${q.last_scanned_at ? q.last_scanned_at.slice(0,16).replace('T', ' ') : '—'}</td>
         <td style="white-space:nowrap">
           <button class="btn btn-sm btn-secondary" onclick="openQrViewModal(\${q.id})" title="QR Kodu Gör ve İndir">👁️ QR</button>
           <button class="btn btn-sm btn-secondary" onclick="editQr(\${q.id})">Düzenle</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteQr(\${q.id})">Sil</button>
+          \${q.is_locked ? \`<button class="btn btn-sm btn-secondary" onclick="toggleQrLock(\${q.id}, 0)" title="Kilidi Aç">🔓 Aç</button>\` : \`<button class="btn btn-sm btn-secondary" onclick="toggleQrLock(\${q.id}, 1)" title="Kilitle">🔒 Kilitle</button>\`}
+          \${q.is_locked ? \`<button class="btn btn-sm btn-secondary" style="opacity:0.4;cursor:not-allowed" onclick="toast('Bu QR kod kilitli. Silmek için önce kilidini açmanız gerekiyor.', 'error')" title="Kilitli QR Silinemez">Sil</button>\` : \`<button class="btn btn-sm btn-danger" onclick="deleteQr(\${q.id})">Sil</button>\`}
         </td>
       </tr>
     \`).join('');
   } catch (e) {
     toast('QR kodlar yüklenemedi', 'error');
-    document.getElementById('qrTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--error);padding:30px 0;font-size:.85rem">⚠️ Veriler yüklenirken bir hata oluştu.</td></tr>';
+    document.getElementById('qrTable').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--error);padding:30px 0;font-size:.85rem">⚠️ Veriler yüklenirken bir hata oluştu.</td></tr>';
+  }
+}
+
+async function toggleQrLock(id, willLock) {
+  const qr = allQrData.find(x => x.id === id);
+  const name = qr?.title ? \`"\${qr.title}" \` : '';
+  if (willLock) {
+    if (!confirm(\`\${name}QR kodunu kilitlemek istediğinize emin misiniz?\\n\\n🔒 Kilitli QR kodlar silme işlemlerine (tekli veya toplu) karşı korunur.\`)) return;
+  } else {
+    if (!confirm(\`\${name}QR kodun kilidini açmak istediğinize emin misiniz?\\n\\n⚠️ Kilidi açtığınızda QR tekrar silinebilir hale gelecektir.\`)) return;
+  }
+
+  try {
+    const r = await fetch(\`/api/qr/\${id}/toggle-lock\`, { method: 'PUT', credentials: 'include' });
+    const resData = await r.json().catch(() => ({}));
+    if (r.ok) {
+      toast(resData.message || (willLock ? 'QR kod kilitlendi 🔒' : 'QR kod kilidi açıldı 🔓'));
+      loadQrs();
+    } else {
+      toast(resData.error || 'İşlem başarısız', 'error');
+    }
+  } catch (err) {
+    toast('Bağlantı hatası', 'error');
   }
 }
 
@@ -1895,16 +1928,21 @@ async function saveQr() {
 
 async function deleteQr(id) {
   const qr = allQrData.find(x => x.id === id);
+  if (qr?.is_locked) {
+    toast('Bu QR kod kilitli. Silmek için önce kilidini açmanız gerekiyor.', 'error');
+    return;
+  }
   const name = qr?.title ? \`"\${qr.title}" \` : 'Bu ';
-  if (!confirm(\`\${name}QR kodunu silmek istediğinize emin misiniz?\\n\\n⚠️ DİKKAT: Bu QR kod daha önce fiziksel olarak basıldıysa artık çalışmayacaktır!\`)) return;
+  if (!confirm(\`\${name}QR kodu kalıcı olarak silinecek. Bu işlem geri alınamaz!\\n\\nEmin misiniz?\`)) return;
 
   const r = await fetch(\`/api/qr/\${id}\`, { method: 'DELETE', credentials: 'include' });
+  const resData = await r.json().catch(() => ({}));
   if (r.ok) {
     toast('QR Kod silindi ✓');
     loadQrs();
     loadStats();
   } else {
-    toast('Silme başarısız', 'error');
+    toast(resData.error || 'Silme başarısız', 'error');
   }
 }
 
@@ -1915,7 +1953,7 @@ async function openQrViewModal(id) {
 
   document.getElementById('qrViewTitle').textContent = qr.title;
   document.getElementById('qrViewTarget').textContent = 'Hedef: ' + qr.target_url;
-  const fullShortUrl = 'https://admin.sastek.org/q/' + qr.slug;
+  const fullShortUrl = 'https://sastek.org/q/' + qr.slug;
   document.getElementById('qrViewFullUrl').textContent = fullShortUrl;
 
   document.getElementById('qrStatTotal').textContent = qr.total_scans || 0;
@@ -1940,7 +1978,7 @@ async function openQrViewModal(id) {
 
 function copyQrLink() {
   if (!currentViewingQr) return;
-  const url = 'https://admin.sastek.org/q/' + currentViewingQr.slug;
+  const url = 'https://sastek.org/q/' + currentViewingQr.slug;
   navigator.clipboard.writeText(url).then(() => {
     toast('QR Bağlantısı kopyalandı ✓');
   }).catch(() => {
