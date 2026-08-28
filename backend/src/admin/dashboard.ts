@@ -1769,6 +1769,27 @@ async function deleteGallery(id) {
 let allQrData = [];
 let currentViewingQr = null;
 
+function formatTrDateTime(utcStr) {
+  if (!utcStr) return '—';
+  try {
+    const iso = utcStr.includes('T')
+      ? (utcStr.endsWith('Z') ? utcStr : utcStr + 'Z')
+      : utcStr.replace(' ', 'T') + 'Z';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return utcStr;
+    return new Intl.DateTimeFormat('tr-TR', {
+      timeZone: 'Europe/Istanbul',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(d).replace(',', '');
+  } catch (e) {
+    return utcStr;
+  }
+}
+
 async function loadQrs() {
   try {
     const res = await fetch('/api/qr', { credentials: 'include' });
@@ -1806,7 +1827,7 @@ async function loadQrs() {
         </td>
         <td><b style="color:var(--signal);font-size:.85rem">\${q.total_scans || 0}</b></td>
         <td style="font-size:.75rem">\${q.today_scans || 0} <span style="color:var(--muted)">/ \${q.last_7d_scans || 0}</span></td>
-        <td style="font-size:.72rem;color:var(--muted)">\${q.last_scanned_at ? q.last_scanned_at.slice(0,16).replace('T', ' ') : '—'}</td>
+        <td style="font-size:.72rem;color:var(--muted)">\${formatTrDateTime(q.last_scanned_at)}</td>
         <td style="white-space:nowrap">
           <button class="btn btn-sm btn-secondary" onclick="openQrViewModal(\${q.id})" title="QR Kodu Gör ve İndir">👁️ QR</button>
           <button class="btn btn-sm btn-secondary" onclick="editQr(\${q.id})">Düzenle</button>

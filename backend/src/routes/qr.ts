@@ -40,7 +40,7 @@ qrRoutes.get('/', requireAuth(), async (c) => {
     SELECT 
       q.id, q.slug, q.target_url, q.title, q.is_active, q.is_locked, q.created_at, q.updated_at,
       COUNT(s.id) AS total_scans,
-      COUNT(CASE WHEN s.scanned_at >= date('now', 'start of day') THEN 1 END) AS today_scans,
+      COUNT(CASE WHEN s.scanned_at >= datetime('now', '+3 hours', 'start of day', '-3 hours') THEN 1 END) AS today_scans,
       COUNT(CASE WHEN s.scanned_at >= datetime('now', '-7 days') THEN 1 END) AS last_7d_scans,
       COUNT(CASE WHEN s.scanned_at >= datetime('now', '-30 days') THEN 1 END) AS last_30d_scans,
       MAX(s.scanned_at) AS last_scanned_at
