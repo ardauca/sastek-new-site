@@ -15,7 +15,7 @@ const languageTarget = detailMatch
     : (navigation.find((item) => item.en === currentPath)?.tr ?? '/');
 ---
 
-<header class="site-header">
+<header class="site-header" id="site-header">
   <div class="container header-inner">
     <a class="brand" href={locale === 'tr' ? '/' : '/en'} aria-label="SASTEK">
       <img src="/images/logo/sastek-logo.png" alt="SASTEK Logo" width="132" height="46" />
@@ -40,95 +40,97 @@ const languageTarget = detailMatch
     </a>
 
     <!-- Mobil Hamburger Butonu -->
-    <button id="mobile-toggle-btn" class="mobile-toggle" aria-label={locale === 'tr' ? 'Menüyü aç' : 'Open menu'} aria-expanded="false" aria-controls="mobile-drawer">
+    <button
+      id="mobile-toggle-btn"
+      class="mobile-toggle"
+      aria-label={locale === 'tr' ? 'Menüyü aç/kapat' : 'Toggle menu'}
+      aria-expanded="false"
+      aria-controls="mobile-nav-panel"
+    >
       <span class="bar bar-1"></span>
       <span class="bar bar-2"></span>
       <span class="bar bar-3"></span>
     </button>
   </div>
 
-  <!-- Mobil Drawer ve Backdrop -->
-  <div id="mobile-backdrop" class="mobile-backdrop" aria-hidden="true"></div>
-  <aside id="mobile-drawer" class="mobile-drawer" aria-label={locale === 'tr' ? 'Mobil menü' : 'Mobile menu'}>
-    <div class="drawer-head">
-      <div class="drawer-brand">
-        <img src="/images/logo/sastek-logo.png" alt="SASTEK Logo" width="36" height="36" />
-        <span>SASTEK</span>
+  <!-- Mobil Menü Tam Ekran Paneli (iPhone Uyumlu, Saydam Olmayan Tok Zemin) -->
+  <div id="mobile-nav-panel" class="mobile-nav-panel" aria-label={locale === 'tr' ? 'Mobil menü' : 'Mobile menu'}>
+    <div class="mobile-nav-inner container">
+      <nav class="mobile-links">
+        {navigation.map((item) => {
+          const href = item[locale] as string;
+          const active = currentPath === href || (href !== '/' && href !== '/en' && currentPath.startsWith(`${href}/`));
+          return (
+            <a href={href} class={`mobile-link ${active ? 'active' : ''}`}>
+              <span class="link-text">{t(item.label, locale)}</span>
+              <span class="link-arrow" aria-hidden="true">→</span>
+            </a>
+          );
+        })}
+      </nav>
+
+      <div class="mobile-nav-footer">
+        <a class="mobile-lang-btn" href={languageTarget}>
+          <span class="globe-icon" aria-hidden="true">🌐</span>
+          <span>{locale === 'tr' ? 'English Version' : 'Türkçe Sürüm'}</span>
+        </a>
       </div>
-      <button id="drawer-close-btn" class="drawer-close" aria-label={locale === 'tr' ? 'Menüyü kapat' : 'Close menu'}>
-        <span aria-hidden="true">&times;</span>
-      </button>
     </div>
-
-    <nav class="drawer-nav">
-      {navigation.map((item) => {
-        const href = item[locale] as string;
-        const active = currentPath === href || (href !== '/' && href !== '/en' && currentPath.startsWith(`${href}/`));
-        return (
-          <a href={href} class={`drawer-link ${active ? 'active' : ''}`}>
-            <span>{t(item.label, locale)}</span>
-            <span class="drawer-arrow" aria-hidden="true">→</span>
-          </a>
-        );
-      })}
-    </nav>
-
-    <div class="drawer-foot">
-      <a class="drawer-lang-btn" href={languageTarget}>
-        <span>🌐</span> {locale === 'tr' ? 'English Version' : 'Türkçe Sürüm'}
-      </a>
-    </div>
-  </aside>
+  </div>
 </header>
 
 <script>
   (() => {
     const toggleBtn = document.getElementById('mobile-toggle-btn');
-    const closeBtn = document.getElementById('drawer-close-btn');
-    const drawer = document.getElementById('mobile-drawer');
-    const backdrop = document.getElementById('mobile-backdrop');
-    const drawerLinks = document.querySelectorAll('.drawer-link');
+    const navPanel = document.getElementById('mobile-nav-panel');
+    const siteHeader = document.getElementById('site-header');
+    const links = document.querySelectorAll('.mobile-link');
 
-    if (!toggleBtn || !drawer || !backdrop) return;
+    if (!toggleBtn || !navPanel) return;
 
-    function openMenu() {
-      drawer!.classList.add('is-open');
-      backdrop!.classList.add('is-open');
+    function openNav() {
+      navPanel!.classList.add('is-open');
       toggleBtn!.classList.add('is-active');
       toggleBtn!.setAttribute('aria-expanded', 'true');
+      siteHeader?.classList.add('menu-open');
       document.body.style.overflow = 'hidden';
     }
 
-    function closeMenu() {
-      drawer!.classList.remove('is-open');
-      backdrop!.classList.remove('is-open');
+    function closeNav() {
+      navPanel!.classList.remove('is-open');
       toggleBtn!.classList.remove('is-active');
       toggleBtn!.setAttribute('aria-expanded', 'false');
+      siteHeader?.classList.remove('menu-open');
       document.body.style.overflow = '';
     }
 
-    toggleBtn.addEventListener('click', () => {
-      if (drawer!.classList.contains('is-open')) {
-        closeMenu();
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (navPanel!.classList.contains('is-open')) {
+        closeNav();
       } else {
-        openMenu();
+        openNav();
       }
     });
 
-    closeBtn?.addEventListener('click', closeMenu);
-    backdrop.addEventListener('click', closeMenu);
-
-    // Linke tıklanınca kapat
-    drawerLinks.forEach((link) => {
-      link.addEventListener('click', closeMenu);
+    // Menüdeki linke tıklandığında menüyü kapat
+    links.forEach((link) => {
+      link.addEventListener('click', closeNav);
     });
 
     // ESC ile kapat
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && drawer!.classList.contains('is-open')) {
-        closeMenu();
+      if (e.key === 'Escape' && navPanel!.classList.contains('is-open')) {
+        closeNav();
       }
     });
+
+    // Ekran 1040px üstüne çıktığında menüyü kapat
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 1040 && navPanel!.classList.contains('is-open')) {
+        closeNav();
+      }
+    }, { passive: true });
   })();
 </script>
 
@@ -136,11 +138,10 @@ const languageTarget = detailMatch
   .site-header {
     position: sticky;
     top: 0;
-    z-index: 40;
+    z-index: 50;
     border-bottom: 1px solid rgba(84, 119, 151, .2);
-    background: rgba(3, 8, 17, .84);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: #030811;
+    transition: background .2s ease;
   }
 
   .header-inner {
@@ -157,10 +158,6 @@ const languageTarget = detailMatch
     font-weight: 900;
     letter-spacing: .08em;
     color: #fff;
-    transition: opacity .2s;
-  }
-  .brand:hover {
-    opacity: .9;
   }
   .brand img {
     width: 2.7rem;
@@ -171,7 +168,7 @@ const languageTarget = detailMatch
     font-size: 1.15rem;
   }
 
-  /* ── Desktop Navigation (2.1 İyileştirmesi) ────────────────────────── */
+  /* ── Desktop Navigation ────────────────────────────────────────────── */
   .desktop-nav {
     display: flex;
     align-items: center;
@@ -185,7 +182,6 @@ const languageTarget = detailMatch
     color: #b2c4d6;
     font-size: .88rem;
     font-weight: 750;
-    letter-spacing: .01em;
     white-space: nowrap;
     transition: color .2s ease;
   }
@@ -237,23 +233,24 @@ const languageTarget = detailMatch
     transform: translateY(-1px);
   }
 
-  /* ── Mobil Hamburger Butonu (2.3 İyileştirmesi) ────────────────────── */
+  /* ── Mobil Hamburger Butonu ────────────────────────────────────────── */
   .mobile-toggle {
     display: none;
     background: none;
     border: none;
     cursor: pointer;
-    padding: .6rem;
+    padding: .5rem;
     margin-left: auto;
     width: 44px;
     height: 44px;
     position: relative;
-    z-index: 50;
+    z-index: 60;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .mobile-toggle .bar {
     display: block;
-    width: 22px;
+    width: 24px;
     height: 2px;
     background: #ffffff;
     border-radius: 2px;
@@ -266,150 +263,120 @@ const languageTarget = detailMatch
   }
   .mobile-toggle.is-active .bar-2 {
     opacity: 0;
-    transform: scaleX(0);
   }
   .mobile-toggle.is-active .bar-3 {
     transform: translateY(-7px) rotate(-45deg);
   }
 
-  /* ── Mobil Backdrop ────────────────────────────────────────────────── */
-  .mobile-backdrop {
+  /* ── iPhone Uyumlu Tam Ekran Mobil Panel (Saydam Değil, Katı Zemin) ─ */
+  .mobile-nav-panel {
+    display: none;
     position: fixed;
-    inset: 0;
-    background: rgba(2, 6, 12, .75);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    z-index: 45;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .3s ease;
-  }
-  .mobile-backdrop.is-open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  /* ── Mobil Drawer (Modern Sağdan Kayan Menü) ────────────────────────── */
-  .mobile-drawer {
-    position: fixed;
-    top: 0;
+    top: 4.75rem;
+    left: 0;
     right: 0;
     bottom: 0;
-    width: min(340px, 86vw);
-    background: linear-gradient(165deg, rgba(10, 24, 43, .97), rgba(4, 12, 22, .98));
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
-    border-left: 1px solid rgba(84, 119, 151, .28);
-    box-shadow: -15px 0 50px rgba(0, 0, 0, .7);
-    z-index: 50;
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem;
-    transform: translateX(100%);
-    transition: transform .32s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .mobile-drawer.is-open {
-    transform: translateX(0);
-  }
-
-  .drawer-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 1.4rem;
-    border-bottom: 1px solid rgba(84, 119, 151, .2);
-  }
-  .drawer-brand {
-    display: flex;
-    align-items: center;
-    gap: .65rem;
-    font-weight: 900;
-    color: #fff;
-  }
-  .drawer-brand img {
-    width: 2.2rem;
-    height: 2.2rem;
-    object-fit: contain;
-  }
-  .drawer-close {
-    background: rgba(84, 119, 151, .15);
-    border: 1px solid rgba(84, 119, 151, .25);
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: grid;
-    place-items: center;
-    color: #fff;
-    font-size: 1.3rem;
-    cursor: pointer;
-    transition: background .2s;
-  }
-  .drawer-close:hover {
-    background: rgba(255, 107, 26, .2);
-    border-color: #ff6b1a;
-  }
-
-  .drawer-nav {
-    display: flex;
-    flex-direction: column;
-    gap: .4rem;
-    padding-block: 1.5rem;
-    flex: 1;
+    width: 100vw;
+    height: calc(100dvh - 4.75rem);
+    background: #040c18; /* Tamamen opak, arkası kesinlikle görünmez */
+    border-top: 1px solid rgba(84, 119, 151, .25);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 55;
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 1rem));
   }
-  .drawer-link {
+
+  .mobile-nav-panel.is-open {
+    display: block;
+    animation: mobile-fade-in .22s ease-out;
+  }
+
+  @keyframes mobile-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .mobile-nav-inner {
+    display: flex;
+    flex-direction: column;
+    padding-top: 1.25rem;
+    padding-bottom: 2rem;
+    min-height: 100%;
+  }
+
+  .mobile-links {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    flex: 1;
+  }
+
+  .mobile-link {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: .95rem 1rem;
-    border-radius: .75rem;
-    color: #c0cfdd;
-    font-size: 1.05rem;
-    font-weight: 750;
-    transition: background .2s, color .2s, transform .2s;
+    padding: 1.15rem 1rem;
+    border-bottom: 1px solid rgba(84, 119, 151, .15);
+    color: #e6f0fa;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    text-decoration: none;
+    transition: color .15s, background .15s;
+    -webkit-tap-highlight-color: transparent;
   }
-  .drawer-link:hover {
-    background: rgba(84, 119, 151, .15);
-    color: #fff;
+
+  .mobile-link:active,
+  .mobile-link.active {
+    color: #ff9a62;
+    background: rgba(255, 107, 26, .08);
+  }
+
+  .link-arrow {
+    font-size: 1.2rem;
+    color: #537596;
+    transition: transform .2s, color .2s;
+  }
+  .mobile-link:active .link-arrow,
+  .mobile-link.active .link-arrow {
+    color: #ff9a62;
     transform: translateX(4px);
   }
-  .drawer-link.active {
-    background: rgba(255, 107, 26, .12);
-    border: 1px solid rgba(255, 107, 26, .35);
-    color: #ff9a62;
-  }
-  .drawer-arrow {
-    font-size: .9rem;
-    opacity: .5;
-    transition: transform .2s;
-  }
-  .drawer-link:hover .drawer-arrow {
-    transform: translateX(3px);
-    opacity: 1;
-  }
 
-  .drawer-foot {
-    padding-top: 1.2rem;
+  .mobile-nav-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
     border-top: 1px solid rgba(84, 119, 151, .2);
   }
-  .drawer-lang-btn {
+
+  .mobile-lang-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: .6rem;
+    gap: .75rem;
     width: 100%;
-    min-height: 2.85rem;
+    min-height: 3.25rem;
     border: 1px solid rgba(84, 119, 151, .4);
-    border-radius: .75rem;
-    color: #fff;
-    font-size: .88rem;
+    border-radius: 999px;
+    background: rgba(7, 21, 38, .75);
+    color: #ffffff;
+    font-size: 1rem;
     font-weight: 750;
-    background: rgba(7, 21, 38, .5);
-    transition: border-color .2s, background .2s;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
   }
-  .drawer-lang-btn:hover {
+  .mobile-lang-btn:active {
     border-color: #ff6b1a;
-    background: rgba(255, 107, 26, .1);
+    background: rgba(255, 107, 26, .15);
+  }
+  .globe-icon {
+    font-size: 1.15rem;
   }
 
   @media (max-width: 1040px) {
