@@ -1,0 +1,255 @@
+---
+/**
+ * DepthStars.astro
+ * 3 Katmanlı Parallax Uzay Derinliği Bileşeni.
+ * Ultra hafif HTML5 2D Canvas (60 FPS, GPU dostu, 0 harici kütüphane).
+ *
+ * 3 Katman:
+ *  - Katman 1 (Derin): Mikro durağan yıldızlar (küçük, çok yavaş tepki)
+ *  - Katman 2 (Orta):  Orta boyutta parıldayan yıldızlar (orta süzülme)
+ *  - Katman 3 (Ön):    Taktik veri parçacıkları (hafif cyan/turuncu, belirgin süzülme)
+ *
+ * Dinamikler:
+ *  - Orta seviyede yumuşak atalet (smooth lerp damping).
+ *  - Fare ve sayfa kaydırma (scroll) duyarlı.
+ *  - prefers-reduced-motion tam destekli.
+ */
+---
+
+<canvas id="depth-stars-canvas" class="depth-stars-canvas" aria-hidden="true"></canvas>
+
+<style>
+  .depth-stars-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    display: block;
+  }
+</style>
+
+<script>
+  (() => {
+    const canvas = document.getElementById('depth-stars-canvas') as HTMLCanvasElement | null;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+
+    // Fare ve Scroll Takibi
+    let mouseTargetX = 0;
+    let mouseTargetY = 0;
+    let mouseCurrentX = 0;
+    let mouseCurrentY = 0;
+
+    let scrollTargetY = 0;
+    let scrollCurrentY = 0;
+
+    interface Star {
+      x: number;
+      y: number;
+      size: number;
+      baseAlpha: number;
+      alpha: number;
+      twinkleSpeed: number;
+      twinkleOffset: number;
+      layer: 1 | 2 | 3;
+      color: string;
+      isSuperBright?: boolean;
+    }
+
+    const stars: Star[] = [];
+    const TOTAL_STARS = 260; // Çok daha yoğun yıldız alanı
+
+    function initStars() {
+      stars.length = 0;
+
+      for (let i = 0; i < TOTAL_STARS; i++) {
+        const rand = Math.random();
+        let layer: 1 | 2 | 3 = 1;
+        let size = 0.65;
+        let baseAlpha = 0.5;
+        let color = '240, 248, 255'; // Saf kristal beyaz / buz beyazı
+        let isSuperBright = false;
+
+        // Çok nadir süper parlak yıldızlar (yaklaşık %1.2 — 260 yıldızda 3-4 adet)
+        if (Math.random() < 0.012) {
+          isSuperBright = true;
+          layer = Math.random() > 0.4 ? 3 : 2;
+          size = 1.9 + Math.random() * 0.7; // 1.9 - 2.6px
+          baseAlpha = 0.92 + Math.random() * 0.08;
+          color = '255, 255, 255';
+        } else if (rand > 0.80) {
+          // Katman 3 — Yakın plan yıldızlar (hareketli)
+          layer = 3;
+          size = 1.2 + Math.random() * 0.5; // 1.2 - 1.7px
+          baseAlpha = 0.60 + Math.random() * 0.25;
+          color = '255, 255, 255';
+        } else if (rand > 0.45) {
+          // Katman 2 — Orta mesafe yıldızlar
+          layer = 2;
+          size = 0.8 + Math.random() * 0.4; // 0.8 - 1.2px
+          baseAlpha = 0.40 + Math.random() * 0.25;
+          color = '235, 245, 255';
+        } else {
+          // Katman 1 — Derin mikro uzay yıldızları
+          layer = 1;
+          size = 0.45 + Math.random() * 0.35; // 0.45 - 0.8px
+          baseAlpha = 0.22 + Math.random() * 0.22;
+          color = '220, 238, 255';
+        }
+
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size,
+          baseAlpha,
+          alpha: baseAlpha,
+          twinkleSpeed: isSuperBright ? 0.015 + Math.random() * 0.02 : 0.008 + Math.random() * 0.015,
+          twinkleOffset: Math.random() * Math.PI * 2,
+          layer,
+          color,
+          isSuperBright
+        });
+      }
+    }
+
+    function resize() {
+      const oldWidth = width;
+      const oldHeight = height;
+
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+
+      canvas!.width = Math.floor(width * dpr);
+      canvas!.height = Math.floor(height * dpr);
+
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      if (stars.length === 0) {
+        initStars();
+      } else if (oldWidth > 0 && oldHeight > 0) {
+        // Ekran büyütüldüğünde veya küçültüldüğünde yıldızları yeni ekrana orantılı olarak yeniden dağıt
+        const scaleX = width / oldWidth;
+        const scaleY = height / oldHeight;
+        for (let i = 0; i < stars.length; i++) {
+          stars[i].x *= scaleX;
+          stars[i].y *= scaleY;
+        }
+      }
+    }
+
+    // Event Dinleyicileri (Pasif & Throttled)
+    window.addEventListener('resize', resize, { passive: true });
+
+    window.addEventListener('mousemove', (e) => {
+      // Merkeze göre normalize (-1 ile +1 arası)
+      mouseTargetX = (e.clientX / width - 0.5) * 2;
+      mouseTargetY = (e.clientY / height - 0.5) * 2;
+    }, { passive: true });
+
+    window.addEventListener('mouseleave', () => {
+      // Fare pencereden çıkınca ortaya dön
+      mouseTargetX = 0;
+      mouseTargetY = 0;
+    }, { passive: true });
+
+    window.addEventListener('scroll', () => {
+      scrollTargetY = window.scrollY;
+    }, { passive: true });
+
+    // Katman Parallax Çarpanları (Ağırbaşlı, Kurumsal ve İpeksi Hassasiyet)
+    const PARALLAX_CONFIG = {
+      layer1: { mouse: 4,  scroll: 0.009 },  // Derin: neredeyse sabit, ultra ağırbaşlı
+      layer2: { mouse: 11, scroll: 0.026 },  // Orta: sakin, asil süzülme
+      layer3: { mouse: 22, scroll: 0.055 },  // Ön: derinlik hissi veren zarif hareket
+    };
+
+    let animationFrameId: number;
+    let time = 0;
+
+    function render() {
+      // Yumuşak Atalet (Lerp Damping - %4.5 hız adımı = tam dengeli akıcı süzülme)
+      const lerpFactor = prefersReducedMotion ? 1 : 0.045;
+
+      mouseCurrentX += (mouseTargetX - mouseCurrentX) * lerpFactor;
+      mouseCurrentY += (mouseTargetY - mouseCurrentY) * lerpFactor;
+      scrollCurrentY += (scrollTargetY - scrollCurrentY) * lerpFactor;
+
+      ctx!.clearRect(0, 0, width, height);
+
+      time += 0.016;
+
+      for (let i = 0; i < stars.length; i++) {
+        const star = stars[i];
+
+        // Twinkle (Nefes Alma / Parıldama)
+        if (!prefersReducedMotion && star.layer >= 2) {
+          star.alpha = star.baseAlpha + Math.sin(time * star.twinkleSpeed * 60 + star.twinkleOffset) * 0.18;
+        }
+
+        // Katmana göre hareket ofseti
+        const config = star.layer === 1
+          ? PARALLAX_CONFIG.layer1
+          : star.layer === 2
+          ? PARALLAX_CONFIG.layer2
+          : PARALLAX_CONFIG.layer3;
+
+        const offsetX = prefersReducedMotion ? 0 : mouseCurrentX * config.mouse;
+        const offsetY = prefersReducedMotion ? 0 : (mouseCurrentY * config.mouse) + (scrollCurrentY * config.scroll);
+
+        // Ekran koordinatı (Ofset eklenmiş)
+        let renderX = (star.x + offsetX) % width;
+        let renderY = (star.y + offsetY) % height;
+
+        // Pozitif sarmalama (Negative wrap-around)
+        if (renderX < 0) renderX += width;
+        if (renderY < 0) renderY += height;
+
+        // Çizim
+        const alpha = Math.max(0.1, Math.min(1, star.alpha));
+
+        // Süper parlak yıldızlar için ışık halesi (halo)
+        if (star.isSuperBright) {
+          ctx!.beginPath();
+          ctx!.arc(renderX, renderY, star.size * 3.8, 0, Math.PI * 2);
+          ctx!.fillStyle = `rgba(255, 255, 255, ${alpha * 0.16})`;
+          ctx!.fill();
+
+          ctx!.beginPath();
+          ctx!.arc(renderX, renderY, star.size * 2.0, 0, Math.PI * 2);
+          ctx!.fillStyle = `rgba(255, 255, 255, ${alpha * 0.35})`;
+          ctx!.fill();
+        } else if (star.layer === 3) {
+          // Ön plan yıldızlarına hafif ışıltı (soft glow)
+          ctx!.beginPath();
+          ctx!.arc(renderX, renderY, star.size * 2.0, 0, Math.PI * 2);
+          ctx!.fillStyle = `rgba(${star.color}, ${alpha * 0.15})`;
+          ctx!.fill();
+        }
+
+        // Yıldız çekirdeği (Core)
+        ctx!.beginPath();
+        ctx!.arc(renderX, renderY, star.size, 0, Math.PI * 2);
+        ctx!.fillStyle = `rgba(${star.color}, ${alpha})`;
+        ctx!.fill();
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    }
+
+    // Başlat
+    resize();
+    render();
+  })();
+</script>
