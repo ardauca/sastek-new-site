@@ -1,18 +1,161 @@
 ---
 import { t } from '../../lib/content';
 import type { Locale, Partner } from '../../types/content';
+
 interface Props { partner: Partner; locale: Locale; }
 const { partner, locale } = Astro.props;
 ---
+
 <article class="partner glass" data-filter-card data-category={t(partner.category, locale).toLowerCase()} data-search={`${partner.name} ${t(partner.category, locale)}`.toLowerCase()}>
-  <div class="logo"><img src={partner.logo} alt={`${partner.name} logo`} width="240" height="160" loading="lazy" /></div>
+  <div class="logo">
+    <img src={partner.logo} alt={`${partner.name} logo`} width="240" height="160" loading="lazy" />
+  </div>
   <div class="body">
-    <span class="chip">{t(partner.category, locale)}</span>
+    <div class="meta">
+      <span class="chip">{t(partner.category, locale)}</span>
+      {partner.mapUrl && (
+        <a href={partner.mapUrl} target="_blank" rel="noopener noreferrer" class="map-action" aria-label={`${partner.name} ${locale === 'tr' ? 'harita konumu' : 'map location'}`}>
+          <span>{locale === 'tr' ? 'Harita' : 'Map'}</span> ↗
+        </a>
+      )}
+    </div>
     <h3>{partner.name}</h3>
     <p class="offer">{t(partner.discountLabel, locale)}</p>
     {!partner.isVerified && <p class="verify">● {locale === 'tr' ? 'Doğrulama bekliyor' : 'Awaiting verification'}</p>}
   </div>
 </article>
+
 <style>
-  .partner{display:grid;grid-template-columns:110px 1fr;align-items:center;gap:1.1rem;border-radius:1rem;padding:1rem}.logo{display:grid;place-items:center;aspect-ratio:1;border-radius:.75rem;background:#f2f3f4;overflow:hidden}.logo img{width:85%;height:85%;object-fit:contain}.body h3{margin:.55rem 0 .1rem;font-size:1.15rem}.offer{margin:0;color:#d9e6f2;font-size:.88rem}.verify{margin:.55rem 0 0;color:#ff9a62;font-size:.7rem;font-weight:750}@media(max-width:420px){.partner{grid-template-columns:85px 1fr}}
+  .partner {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 104px 1fr;
+    align-items: center;
+    gap: 1.25rem;
+    border-radius: 1.25rem;
+    padding: 1.15rem 1.25rem;
+    transition: border-color .25s ease, transform .25s ease, background .25s ease, box-shadow .25s ease;
+  }
+
+  /* EventCard ile aynı derin uzay ambient ışıltısı */
+  .partner::after {
+    content: "";
+    position: absolute;
+    right: -4rem;
+    bottom: -4.5rem;
+    width: 11rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 107, 26, .09), transparent 66%);
+    pointer-events: none;
+  }
+
+  .partner:hover {
+    border-color: rgba(0, 212, 255, .32);
+    background: linear-gradient(145deg, rgba(16, 43, 70, .78), rgba(7, 21, 38, .86));
+    box-shadow: 0 24px 60px -10px rgba(0, 0, 0, .5), 0 0 25px -5px rgba(0, 212, 255, .07);
+    transform: translateY(-4px);
+  }
+
+  .logo {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    border-radius: 1rem;
+    background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.98), rgba(235, 243, 250, 0.94));
+    border: 1px solid rgba(130, 164, 196, .28);
+    box-shadow: 0 10px 24px -6px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .8);
+    overflow: hidden;
+    padding: .4rem;
+  }
+
+  .logo img {
+    width: 82%;
+    height: 82%;
+    object-fit: contain;
+    transition: transform .25s ease;
+  }
+
+  .partner:hover .logo img {
+    transform: scale(1.05);
+  }
+
+  .body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+  }
+
+  .chip {
+    border: 1px solid rgba(128, 174, 213, .28);
+    background: rgba(128, 174, 213, .08);
+    color: #dce9f5;
+    font-size: .74rem;
+    font-weight: 650;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+  }
+
+  .map-action {
+    display: inline-flex;
+    align-items: center;
+    gap: .2rem;
+    font-size: .74rem;
+    font-weight: 600;
+    color: #8fa6bb;
+    transition: color .2s ease;
+  }
+  .map-action:hover {
+    color: #c5d8eb;
+  }
+
+  .body h3 {
+    margin: .45rem 0 .2rem;
+    font-size: clamp(1.1rem, 1.8vw, 1.22rem);
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: #ffffff;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .offer {
+    margin: 0;
+    color: #d9e6f2;
+    font-size: .88rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .verify {
+    margin: .35rem 0 0;
+    color: #8fa6bb;
+    font-size: .72rem;
+    font-weight: 600;
+  }
+
+  @media (max-width: 480px) {
+    .partner {
+      grid-template-columns: 88px 1fr;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    .body h3 {
+      font-size: 1.1rem;
+    }
+  }
 </style>

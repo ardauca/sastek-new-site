@@ -411,12 +411,14 @@ const labels = locale === 'tr' ? {
   .empty-map{margin:0;padding:1rem;color:#a9bbce}
 
   /* ── Partner Card Global Component Styling Guarantee ──────────────────────── */
-  :global(.partner){display:grid;grid-template-columns:110px 1fr;align-items:center;gap:1.1rem;border-radius:1rem;padding:1rem}
-  :global(.partner .logo){display:grid;place-items:center;aspect-ratio:1;border-radius:.75rem;background:#f2f3f4;overflow:hidden}
-  :global(.partner .logo img){width:85%;height:85%;object-fit:contain}
-  :global(.partner .body h3){margin:.55rem 0 .1rem;font-size:1.15rem}
-  :global(.partner .offer){margin:0;color:#d9e6f2;font-size:.88rem}
-  :global(.partner .verify){margin:.55rem 0 0;color:#ff9a62;font-size:.7rem;font-weight:750}
+  :global(.partner){position:relative;overflow:hidden;display:grid;grid-template-columns:104px 1fr;align-items:center;gap:1.25rem;border-radius:1.25rem;padding:1.15rem 1.25rem;transition:border-color .25s ease,transform .25s ease,background .25s ease,box-shadow .25s ease}
+  :global(.partner::after){content:"";position:absolute;right:-4rem;bottom:-4.5rem;width:11rem;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,107,26,.09),transparent 66%);pointer-events:none}
+  :global(.partner:hover){border-color:rgba(0,212,255,.32);background:linear-gradient(145deg,rgba(16,43,70,.78),rgba(7,21,38,.86));box-shadow:0 24px 60px -10px rgba(0,0,0,.5),0 0 25px -5px rgba(0,212,255,.07);transform:translateY(-4px)}
+  :global(.partner .logo){position:relative;display:grid;place-items:center;aspect-ratio:1;border-radius:1rem;background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.98),rgba(235,243,250,.94));border:1px solid rgba(130,164,196,.28);box-shadow:0 10px 24px -6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.8);overflow:hidden;padding:.4rem}
+  :global(.partner .logo img){width:82%;height:82%;object-fit:contain;transition:transform .25s ease}
+  :global(.partner .body h3){margin:.45rem 0 .2rem;font-size:clamp(1.1rem,1.8vw,1.22rem);font-weight:700;letter-spacing:-.02em;color:#fff;line-height:1.25}
+  :global(.partner .offer){margin:0;color:#d9e6f2;font-size:.88rem;font-weight:600;line-height:1.4}
+  :global(.partner .verify){margin:.35rem 0 0;color:#8fa6bb;font-size:.72rem;font-weight:600}
 
   :global(.mapboxgl-popup){max-width:min(245px,calc(100vw - 2rem))!important}
   :global(.mapboxgl-popup-content){overflow:hidden;border:1px solid rgba(128,174,213,.24);border-radius:.82rem;background:rgba(6,18,32,.96);padding:0;box-shadow:0 18px 46px rgba(0,0,0,.44),0 0 0 1px rgba(255,255,255,.025);color:#f5fbff}
