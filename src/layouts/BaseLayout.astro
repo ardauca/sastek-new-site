@@ -6,7 +6,7 @@ import { site } from '../data/site';
 import type { Locale } from '../types/content';
 
 interface Props { title: string; description: string; locale?: Locale; image?: string; }
-const { title, description, locale = 'tr', image = '/images/backgrounds/space.jpg' } = Astro.props;
+const { title, description, locale = 'tr', image = '/images/logo/sastek-logo.png' } = Astro.props;
 const cleanPath = Astro.url.pathname.replace(/\/$/, '') || '/';
 const canonical = new URL(cleanPath, site.url).href;
 const fullTitle = title.includes('SASTEK') ? title : `${title} | SASTEK`;

@@ -31,14 +31,13 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: .08;
+  opacity: .35;
   background-image:
-    linear-gradient(115deg, transparent 0 34%, rgba(176, 224, 255, .72) 45%, rgba(92, 178, 255, .28) 56%, transparent 70%),
-    url('/images/backgrounds/space.jpg');
-  background-size: 180px 2px, cover;
-  background-position: -24vw 24vh, center;
+    linear-gradient(115deg, transparent 0 34%, rgba(176, 224, 255, .72) 45%, rgba(92, 178, 255, .28) 56%, transparent 70%);
+  background-size: 180px 2px;
+  background-position: -24vw 24vh;
   background-repeat: no-repeat;
-  mix-blend-mode: soft-light;
+  mix-blend-mode: screen;
   z-index: -1;
   animation: shooting-star 22s ease-in-out infinite;
 }
@@ -126,13 +125,13 @@ button, a, input, select, textarea { outline-offset: 4px; }
 
 @keyframes shooting-star {
   0%, 78% {
-    background-position: -24vw 24vh, center;
+    background-position: -24vw 24vh;
   }
   86% {
-    background-position: 122vw 52vh, center;
+    background-position: 122vw 52vh;
   }
   100% {
-    background-position: 122vw 52vh, center;
+    background-position: 122vw 52vh;
   }
 }
 
