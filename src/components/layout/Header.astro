@@ -22,11 +22,16 @@ const languageTarget = detailMatch
       <span>SASTEK</span>
     </a>
 
+    <!-- Masaüstü Menü -->
     <nav class="desktop-nav" aria-label={locale === 'tr' ? 'Ana menü' : 'Main menu'}>
       {navigation.map((item) => {
         const href = item[locale] as string;
         const active = currentPath === href || (href !== '/' && href !== '/en' && currentPath.startsWith(`${href}/`));
-        return <a href={href} aria-current={active ? 'page' : undefined}>{t(item.label, locale)}</a>;
+        return (
+          <a href={href} aria-current={active ? 'page' : undefined} class={active ? 'active' : ''}>
+            {t(item.label, locale)}
+          </a>
+        );
       })}
     </nav>
 
@@ -34,31 +39,385 @@ const languageTarget = detailMatch
       {locale === 'tr' ? 'EN' : 'TR'}
     </a>
 
-    <details class="mobile-menu">
-      <summary aria-label={locale === 'tr' ? 'Menüyü aç' : 'Open menu'}><span></span><span></span><span></span></summary>
-      <nav aria-label={locale === 'tr' ? 'Mobil menü' : 'Mobile menu'}>
-        {navigation.map((item) => <a href={item[locale]}>{t(item.label, locale)}</a>)}
-        <a href={languageTarget}>{locale === 'tr' ? 'English' : 'Türkçe'}</a>
-      </nav>
-    </details>
+    <!-- Mobil Hamburger Butonu -->
+    <button id="mobile-toggle-btn" class="mobile-toggle" aria-label={locale === 'tr' ? 'Menüyü aç' : 'Open menu'} aria-expanded="false" aria-controls="mobile-drawer">
+      <span class="bar bar-1"></span>
+      <span class="bar bar-2"></span>
+      <span class="bar bar-3"></span>
+    </button>
   </div>
+
+  <!-- Mobil Drawer ve Backdrop -->
+  <div id="mobile-backdrop" class="mobile-backdrop" aria-hidden="true"></div>
+  <aside id="mobile-drawer" class="mobile-drawer" aria-label={locale === 'tr' ? 'Mobil menü' : 'Mobile menu'}>
+    <div class="drawer-head">
+      <div class="drawer-brand">
+        <img src="/images/logo/sastek-logo.png" alt="SASTEK Logo" width="36" height="36" />
+        <span>SASTEK</span>
+      </div>
+      <button id="drawer-close-btn" class="drawer-close" aria-label={locale === 'tr' ? 'Menüyü kapat' : 'Close menu'}>
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+
+    <nav class="drawer-nav">
+      {navigation.map((item) => {
+        const href = item[locale] as string;
+        const active = currentPath === href || (href !== '/' && href !== '/en' && currentPath.startsWith(`${href}/`));
+        return (
+          <a href={href} class={`drawer-link ${active ? 'active' : ''}`}>
+            <span>{t(item.label, locale)}</span>
+            <span class="drawer-arrow" aria-hidden="true">→</span>
+          </a>
+        );
+      })}
+    </nav>
+
+    <div class="drawer-foot">
+      <a class="drawer-lang-btn" href={languageTarget}>
+        <span>🌐</span> {locale === 'tr' ? 'English Version' : 'Türkçe Sürüm'}
+      </a>
+    </div>
+  </aside>
 </header>
 
+<script>
+  (() => {
+    const toggleBtn = document.getElementById('mobile-toggle-btn');
+    const closeBtn = document.getElementById('drawer-close-btn');
+    const drawer = document.getElementById('mobile-drawer');
+    const backdrop = document.getElementById('mobile-backdrop');
+    const drawerLinks = document.querySelectorAll('.drawer-link');
+
+    if (!toggleBtn || !drawer || !backdrop) return;
+
+    function openMenu() {
+      drawer!.classList.add('is-open');
+      backdrop!.classList.add('is-open');
+      toggleBtn!.classList.add('is-active');
+      toggleBtn!.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMenu() {
+      drawer!.classList.remove('is-open');
+      backdrop!.classList.remove('is-open');
+      toggleBtn!.classList.remove('is-active');
+      toggleBtn!.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      if (drawer!.classList.contains('is-open')) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    closeBtn?.addEventListener('click', closeMenu);
+    backdrop.addEventListener('click', closeMenu);
+
+    // Linke tıklanınca kapat
+    drawerLinks.forEach((link) => {
+      link.addEventListener('click', closeMenu);
+    });
+
+    // ESC ile kapat
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawer!.classList.contains('is-open')) {
+        closeMenu();
+      }
+    });
+  })();
+</script>
+
 <style>
-  .site-header { position: sticky; top: 0; z-index: 30; border-bottom: 1px solid rgba(84,119,151,.2); background: rgba(5,11,20,.82); backdrop-filter: blur(18px); }
-  .header-inner { display: flex; min-height: 4.75rem; align-items: center; gap: 1.3rem; }
-  .brand { display: inline-flex; align-items: center; gap: .6rem; font-weight: 900; letter-spacing: .09em; }
-  .brand img { width: 2.7rem; height: 2.7rem; object-fit: contain; }
-  .desktop-nav { display: flex; align-items: center; gap: 1.05rem; margin-left: auto; }
-  .desktop-nav a { position: relative; color: #aebed0; font-size: .8rem; font-weight: 720; white-space: nowrap; }
-  .desktop-nav a:hover, .desktop-nav a[aria-current="page"] { color: #fff; }
-  .desktop-nav a[aria-current="page"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.7rem; height: 2px; background: #ff6b1a; }
-  .lang { border: 1px solid #395674; border-radius: 999px; padding: .35rem .65rem; color: #ff9a62; font-size: .75rem; font-weight: 900; }
-  .mobile-menu { display: none; margin-left: auto; }
-  summary { display: grid; gap: 4px; cursor: pointer; list-style: none; padding: .6rem; }
-  summary::-webkit-details-marker { display: none; }
-  summary span { display: block; width: 23px; height: 2px; background: #fff; }
-  .mobile-menu nav { position: absolute; left: 1rem; right: 1rem; top: 4.25rem; display: grid; padding: 1rem; border: 1px solid #29445e; border-radius: 1rem; background: #081524; box-shadow: 0 25px 80px #000; }
-  .mobile-menu nav a { padding: .75rem; border-bottom: 1px solid rgba(84,119,151,.18); }
-  @media (max-width: 1040px) { .desktop-nav, .header-inner > .lang { display: none; } .mobile-menu { display: block; } }
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    border-bottom: 1px solid rgba(84, 119, 151, .2);
+    background: rgba(3, 8, 17, .84);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .header-inner {
+    display: flex;
+    min-height: 4.75rem;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .7rem;
+    font-weight: 900;
+    letter-spacing: .08em;
+    color: #fff;
+    transition: opacity .2s;
+  }
+  .brand:hover {
+    opacity: .9;
+  }
+  .brand img {
+    width: 2.7rem;
+    height: 2.7rem;
+    object-fit: contain;
+  }
+  .brand span {
+    font-size: 1.15rem;
+  }
+
+  /* ── Desktop Navigation (2.1 İyileştirmesi) ────────────────────────── */
+  .desktop-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.45rem;
+    margin-left: auto;
+  }
+
+  .desktop-nav a {
+    position: relative;
+    padding: .4rem .1rem;
+    color: #b2c4d6;
+    font-size: .88rem;
+    font-weight: 750;
+    letter-spacing: .01em;
+    white-space: nowrap;
+    transition: color .2s ease;
+  }
+
+  .desktop-nav a:hover,
+  .desktop-nav a.active {
+    color: #ffffff;
+  }
+
+  .desktop-nav a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -.4rem;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #ff6b1a, #ff9a62);
+    box-shadow: 0 0 10px rgba(255, 107, 26, .55);
+    opacity: 0;
+    transform: scaleX(0.4);
+    transition: opacity .2s ease, transform .2s ease;
+  }
+
+  .desktop-nav a:hover::after,
+  .desktop-nav a.active::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  .lang {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(84, 119, 151, .5);
+    border-radius: 999px;
+    padding: .35rem .75rem;
+    color: #ff9a62;
+    font-size: .75rem;
+    font-weight: 900;
+    letter-spacing: .08em;
+    background: rgba(7, 21, 38, .4);
+    transition: border-color .2s, background .2s, color .2s, transform .2s;
+  }
+  .lang:hover {
+    border-color: #ff6b1a;
+    background: rgba(255, 107, 26, .1);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  /* ── Mobil Hamburger Butonu (2.3 İyileştirmesi) ────────────────────── */
+  .mobile-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: .6rem;
+    margin-left: auto;
+    width: 44px;
+    height: 44px;
+    position: relative;
+    z-index: 50;
+  }
+
+  .mobile-toggle .bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: #ffffff;
+    border-radius: 2px;
+    transition: transform .25s ease, opacity .25s ease;
+    margin: 5px auto;
+  }
+
+  .mobile-toggle.is-active .bar-1 {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .mobile-toggle.is-active .bar-2 {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  .mobile-toggle.is-active .bar-3 {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  /* ── Mobil Backdrop ────────────────────────────────────────────────── */
+  .mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 12, .75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 45;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease;
+  }
+  .mobile-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ── Mobil Drawer (Modern Sağdan Kayan Menü) ────────────────────────── */
+  .mobile-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(340px, 86vw);
+    background: linear-gradient(165deg, rgba(10, 24, 43, .97), rgba(4, 12, 22, .98));
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border-left: 1px solid rgba(84, 119, 151, .28);
+    box-shadow: -15px 0 50px rgba(0, 0, 0, .7);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    transform: translateX(100%);
+    transition: transform .32s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .mobile-drawer.is-open {
+    transform: translateX(0);
+  }
+
+  .drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1.4rem;
+    border-bottom: 1px solid rgba(84, 119, 151, .2);
+  }
+  .drawer-brand {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    font-weight: 900;
+    color: #fff;
+  }
+  .drawer-brand img {
+    width: 2.2rem;
+    height: 2.2rem;
+    object-fit: contain;
+  }
+  .drawer-close {
+    background: rgba(84, 119, 151, .15);
+    border: 1px solid rgba(84, 119, 151, .25);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .drawer-close:hover {
+    background: rgba(255, 107, 26, .2);
+    border-color: #ff6b1a;
+  }
+
+  .drawer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    padding-block: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .drawer-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .95rem 1rem;
+    border-radius: .75rem;
+    color: #c0cfdd;
+    font-size: 1.05rem;
+    font-weight: 750;
+    transition: background .2s, color .2s, transform .2s;
+  }
+  .drawer-link:hover {
+    background: rgba(84, 119, 151, .15);
+    color: #fff;
+    transform: translateX(4px);
+  }
+  .drawer-link.active {
+    background: rgba(255, 107, 26, .12);
+    border: 1px solid rgba(255, 107, 26, .35);
+    color: #ff9a62;
+  }
+  .drawer-arrow {
+    font-size: .9rem;
+    opacity: .5;
+    transition: transform .2s;
+  }
+  .drawer-link:hover .drawer-arrow {
+    transform: translateX(3px);
+    opacity: 1;
+  }
+
+  .drawer-foot {
+    padding-top: 1.2rem;
+    border-top: 1px solid rgba(84, 119, 151, .2);
+  }
+  .drawer-lang-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    width: 100%;
+    min-height: 2.85rem;
+    border: 1px solid rgba(84, 119, 151, .4);
+    border-radius: .75rem;
+    color: #fff;
+    font-size: .88rem;
+    font-weight: 750;
+    background: rgba(7, 21, 38, .5);
+    transition: border-color .2s, background .2s;
+  }
+  .drawer-lang-btn:hover {
+    border-color: #ff6b1a;
+    background: rgba(255, 107, 26, .1);
+  }
+
+  @media (max-width: 1040px) {
+    .desktop-nav, .header-inner > .lang {
+      display: none;
+    }
+    .mobile-toggle {
+      display: block;
+    }
+  }
 </style>

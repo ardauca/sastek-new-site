@@ -69,32 +69,136 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
     </div>
   </section>
 
+  <!-- 4.3: Gelişmiş Navigasyonlu Lightbox -->
   <dialog id="lightbox" aria-label={locale === 'tr' ? 'Galeri görseli' : 'Gallery image'}>
-    <button class="close" aria-label={locale === 'tr' ? 'Kapat' : 'Close'}><span aria-hidden="true">×</span></button>
-    <img alt={locale === 'tr' ? 'Seçilen galeri görseli' : 'Selected gallery image'} />
+    <button class="close" aria-label={locale === 'tr' ? 'Kapat' : 'Close'}>
+      <span aria-hidden="true">&times;</span>
+    </button>
+
+    <button id="lb-prev" class="lightbox-nav prev" aria-label={locale === 'tr' ? 'Önceki fotoğraf' : 'Previous photo'}>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+
+    <div class="lightbox-stage">
+      <img id="lb-image" alt={locale === 'tr' ? 'Seçilen galeri görseli' : 'Selected gallery image'} />
+    </div>
+
+    <button id="lb-next" class="lightbox-nav next" aria-label={locale === 'tr' ? 'Sonraki fotoğraf' : 'Next photo'}>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+
+    <div class="lightbox-foot">
+      <span id="lb-caption" class="lightbox-caption"></span>
+      <span id="lb-counter" class="lightbox-counter"></span>
+    </div>
   </dialog>
 </BaseLayout>
 
 <script>
   const dialog = document.querySelector<HTMLDialogElement>('#lightbox');
-  const image = dialog?.querySelector<HTMLImageElement>('img');
+  const image = document.querySelector<HTMLImageElement>('#lb-image');
+  const caption = document.querySelector<HTMLElement>('#lb-caption');
+  const counter = document.querySelector<HTMLElement>('#lb-counter');
+  const prevBtn = document.querySelector<HTMLButtonElement>('#lb-prev');
+  const nextBtn = document.querySelector<HTMLButtonElement>('#lb-next');
+  const closeBtn = dialog?.querySelector<HTMLButtonElement>('.close');
+
+  let currentGalleryItems: { src: string; alt: string }[] = [];
+  let currentActiveIndex = 0;
+
+  function updateActiveItems() {
+    const visibleButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.gallery-grid button[data-lightbox-src]'))
+      .filter((btn) => btn.offsetParent !== null); // Sadece filtrelenip ekranda görünenler
+
+    currentGalleryItems = visibleButtons.map((btn) => ({
+      src: btn.dataset.lightboxSrc ?? '',
+      alt: btn.dataset.lightboxAlt ?? '',
+    }));
+  }
+
+  function displayImage(index: number) {
+    if (!currentGalleryItems.length || !image || !dialog) return;
+
+    // Döngüsel indeks (başa/sona sarma)
+    currentActiveIndex = (index + currentGalleryItems.length) % currentGalleryItems.length;
+    const current = currentGalleryItems[currentActiveIndex];
+
+    image.src = current.src;
+    image.alt = current.alt;
+    if (caption) caption.textContent = current.alt;
+    if (counter) counter.textContent = `${currentActiveIndex + 1} / ${currentGalleryItems.length}`;
+  }
 
   function bindLightboxButtons() {
     document.querySelectorAll<HTMLButtonElement>('[data-lightbox-src]').forEach((button) => {
       button.onclick = () => {
-        if (image && dialog) {
-          image.src = button.dataset.lightboxSrc ?? '';
-          image.alt = button.dataset.lightboxAlt ?? '';
-          dialog.showModal();
-        }
+        updateActiveItems();
+        const clickedSrc = button.dataset.lightboxSrc;
+        const foundIndex = currentGalleryItems.findIndex((item) => item.src === clickedSrc);
+
+        displayImage(foundIndex !== -1 ? foundIndex : 0);
+        dialog?.showModal();
       };
     });
   }
   bindLightboxButtons();
 
-  dialog?.querySelector('.close')?.addEventListener('click', () => dialog.close());
-  dialog?.addEventListener('close', () => { if (image) { image.removeAttribute('src'); image.alt = ''; } });
-  dialog?.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+  // Önceki / Sonraki Tıklama
+  prevBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    displayImage(currentActiveIndex - 1);
+  });
+
+  nextBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    displayImage(currentActiveIndex + 1);
+  });
+
+  // Kapatma
+  closeBtn?.addEventListener('click', () => dialog?.close());
+  dialog?.addEventListener('close', () => {
+    if (image) {
+      image.removeAttribute('src');
+      image.alt = '';
+    }
+  });
+
+  // Dışarı tıklanınca kapat (stage dışı)
+  dialog?.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+
+  // Klavye Navigasyonu (Ok tuşları)
+  window.addEventListener('keydown', (e) => {
+    if (!dialog?.open) return;
+    if (e.key === 'ArrowLeft') {
+      displayImage(currentActiveIndex - 1);
+    } else if (e.key === 'ArrowRight') {
+      displayImage(currentActiveIndex + 1);
+    }
+  });
+
+  // Dokunmatik Swipe Desteği (Mobil)
+  let touchStartX = 0;
+  dialog?.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].clientX;
+  }, { passive: true });
+
+  dialog?.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchEndX - touchStartX;
+    if (Math.abs(diff) > 45) {
+      if (diff > 0) {
+        displayImage(currentActiveIndex - 1); // Sağa kaydır = önceki
+      } else {
+        displayImage(currentActiveIndex + 1); // Sola kaydır = sonraki
+      }
+    }
+  }, { passive: true });
 
   // ── Live Client-Side Hydration ────────────────────────────────────────────────
   (async () => {
@@ -142,7 +246,6 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
 
       bindLightboxButtons();
 
-      // Dynamically update gallery category dropdown options and re-trigger filter
       const categorySelect = root.querySelector<HTMLSelectElement>('[data-filter-category]');
       if (categorySelect) {
         const existingVal = categorySelect.value;
@@ -157,19 +260,213 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
 </script>
 
 <style>
-  :global(.gallery-grid){display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:260px;gap:1rem}
-  :global(.gallery-grid button){position:relative;grid-column:span 5;overflow:hidden;border:1px solid rgba(84,119,151,.25);border-radius:1rem;background:#071526;padding:0;cursor:zoom-in}
-  :global(.gallery-grid button:nth-child(3n+1)){grid-column:span 7}
-  :global(.gallery-grid img){width:100%;height:100%;object-fit:cover;transition:transform .35s}
-  :global(.gallery-grid button:hover img){transform:scale(1.03)}
-  :global(.gallery-grid span){position:absolute;left:.8rem;bottom:.8rem;border-radius:999px;background:rgba(5,11,20,.8);padding:.3rem .7rem;font-size:.72rem;font-weight:800}
-  dialog{position:fixed;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(1120px,calc(100vw - 3rem));height:auto;max-width:none;max-height:calc(100dvh - 3rem);margin:0;overflow:hidden;border:1px solid rgba(128,174,213,.38);border-radius:1.25rem;background:rgba(3,7,13,.96);padding:clamp(.8rem,2vw,1.2rem);box-shadow:0 28px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.03)}
-  dialog[open]{display:grid;place-items:center}
-  dialog::backdrop{background:rgba(0,0,0,.82);backdrop-filter:blur(7px)}
-  dialog img{display:block;max-width:100%;max-height:calc(100dvh - 5.4rem);width:auto;height:auto;object-fit:contain;border-radius:.75rem}
-  .close{position:absolute;right:.7rem;top:.7rem;z-index:2;display:grid;place-items:center;width:2.35rem;height:2.35rem;padding:0;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(7,21,38,.76);color:#fff;box-shadow:0 10px 28px rgba(0,0,0,.32);backdrop-filter:blur(10px);font-size:1.35rem;line-height:1;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
-  .close span{display:block;line-height:1;transform:translateY(-1px)}
-  .close:hover{background:#ff6b1a;border-color:#ff8a49;color:#07111f;transform:scale(1.04)}
-  .close:focus-visible{outline:2px solid #ff8a49;outline-offset:3px}
-  @media(max-width:700px){:global(.gallery-grid){display:grid;grid-template-columns:1fr;grid-auto-rows:230px}:global(.gallery-grid button),:global(.gallery-grid button:nth-child(3n+1)){grid-column:auto}dialog{width:calc(100vw - 1rem);max-height:calc(100dvh - 1rem);padding:.7rem}dialog img{max-height:calc(100dvh - 2.4rem)}.close{right:.55rem;top:.55rem}}
+  :global(.gallery-grid) {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: 260px;
+    gap: 1rem;
+  }
+  :global(.gallery-grid button) {
+    position: relative;
+    grid-column: span 5;
+    overflow: hidden;
+    border: 1px solid rgba(84, 119, 151, .25);
+    border-radius: 1rem;
+    background: #071526;
+    padding: 0;
+    cursor: zoom-in;
+  }
+  :global(.gallery-grid button:nth-child(3n+1)) {
+    grid-column: span 7;
+  }
+  :global(.gallery-grid img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .35s;
+  }
+  :global(.gallery-grid button:hover img) {
+    transform: scale(1.03);
+  }
+  :global(.gallery-grid span) {
+    position: absolute;
+    left: .8rem;
+    bottom: .8rem;
+    border-radius: 999px;
+    background: rgba(5, 11, 20, .8);
+    backdrop-filter: blur(8px);
+    padding: .3rem .75rem;
+    font-size: .72rem;
+    font-weight: 800;
+    color: #e3edf7;
+  }
+
+  /* ── 4.3 Lightbox Dialog & Navigation ──────────────────────────────── */
+  dialog {
+    position: fixed;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+    width: min(1120px, calc(100vw - 2.5rem));
+    max-height: calc(100dvh - 3rem);
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(128, 174, 213, .3);
+    border-radius: 1.25rem;
+    background: rgba(4, 11, 20, .96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: clamp(.8rem, 2vw, 1.2rem);
+    box-shadow: 0 28px 90px rgba(0, 0, 0, .75), 0 0 0 1px rgba(255, 255, 255, .04);
+    display: none;
+    grid-template-rows: 1fr auto;
+    gap: .75rem;
+  }
+  dialog[open] {
+    display: grid;
+  }
+  dialog::backdrop {
+    background: rgba(1, 4, 9, .88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .lightbox-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    max-height: calc(100dvh - 9rem);
+    overflow: hidden;
+  }
+  .lightbox-stage img {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100dvh - 9rem);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: .75rem;
+    user-select: none;
+  }
+
+  /* Kapat Butonu */
+  .close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 50%;
+    background: rgba(7, 21, 38, .85);
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: background .2s, border-color .2s, transform .2s;
+  }
+  .close:hover {
+    background: #ff6b1a;
+    border-color: #ff8a49;
+    color: #07111f;
+    transform: scale(1.05);
+  }
+
+  /* Ok Butonları (Prev / Next) */
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid rgba(128, 174, 213, .3);
+    border-radius: 50%;
+    background: rgba(6, 17, 30, .85);
+    backdrop-filter: blur(12px);
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .4);
+    transition: border-color .2s, background .2s, transform .2s, color .2s;
+  }
+  .lightbox-nav:hover {
+    border-color: #ff6b1a;
+    background: rgba(255, 107, 26, .18);
+    color: #ff9a62;
+    transform: translateY(-50%) scale(1.08);
+  }
+  .lightbox-nav.prev {
+    left: 1.2rem;
+  }
+  .lightbox-nav.next {
+    right: 1.2rem;
+  }
+
+  /* Alt Bilgi & Sayaç */
+  .lightbox-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .5rem .6rem 0;
+    border-top: 1px solid rgba(84, 119, 151, .2);
+    font-size: .85rem;
+    color: #bad0e4;
+  }
+  .lightbox-caption {
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lightbox-counter {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .78rem;
+    font-weight: 700;
+    color: #ff9a62;
+    letter-spacing: .08em;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 700px) {
+    :global(.gallery-grid) {
+      grid-template-columns: 1fr;
+      grid-auto-rows: 230px;
+    }
+    :global(.gallery-grid button),
+    :global(.gallery-grid button:nth-child(3n+1)) {
+      grid-column: auto;
+    }
+    dialog {
+      width: calc(100vw - 1rem);
+      max-height: calc(100dvh - 1rem);
+      padding: .6rem;
+    }
+    .lightbox-stage {
+      max-height: calc(100dvh - 7rem);
+    }
+    .lightbox-stage img {
+      max-height: calc(100dvh - 7rem);
+    }
+    .lightbox-nav {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+    .lightbox-nav.prev {
+      left: .4rem;
+    }
+    .lightbox-nav.next {
+      right: .4rem;
+    }
+    .close {
+      right: .5rem;
+      top: .5rem;
+      width: 2.2rem;
+      height: 2.2rem;
+    }
+  }
 </style>
