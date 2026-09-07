@@ -262,10 +262,10 @@
     .rh-hud { width: min(100%, 480px); }
   }
 
-  /* ── Reduced motion ─────────────────────────────────────────────────── */
-  @media (prefers-reduced-motion: reduce) {
-    .rh-sweep-fan,
-    .rh-sweep-line,
-    .rh-pulse { animation: none; }
+  /* ── Smooth GPU Hardware Acceleration ────────────────────────────────── */
+  .rh-sweep-fan,
+  .rh-sweep-line {
+    will-change: transform;
+    transform: translateZ(0);
   }
 </style>

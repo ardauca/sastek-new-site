@@ -115,10 +115,6 @@ button, a, input, select, textarea { outline-offset: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  *, *::before, *::after {
-    animation: none !important;
-    transition: none !important;
-  }
 }
 
 /* ── Large Desktop Scale (1600px+) ─────────────────────────────────────────

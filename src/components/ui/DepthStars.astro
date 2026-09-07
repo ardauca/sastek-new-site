@@ -180,7 +180,7 @@
 
     function render() {
       // Yumuşak Atalet (Lerp Damping - %4.5 hız adımı = tam dengeli akıcı süzülme)
-      const lerpFactor = prefersReducedMotion ? 1 : 0.045;
+      const lerpFactor = 0.045;
 
       mouseCurrentX += (mouseTargetX - mouseCurrentX) * lerpFactor;
       mouseCurrentY += (mouseTargetY - mouseCurrentY) * lerpFactor;
@@ -193,8 +193,8 @@
       for (let i = 0; i < stars.length; i++) {
         const star = stars[i];
 
-        // Twinkle (Nefes Alma / Parıldama)
-        if (!prefersReducedMotion && star.layer >= 2) {
+        // Twinkle (Nefes Alma / Parıldama — her zaman canlı)
+        if (star.layer >= 2) {
           star.alpha = star.baseAlpha + Math.sin(time * star.twinkleSpeed * 60 + star.twinkleOffset) * 0.18;
         }
 
@@ -205,8 +205,8 @@
           ? PARALLAX_CONFIG.layer2
           : PARALLAX_CONFIG.layer3;
 
-        const offsetX = prefersReducedMotion ? 0 : mouseCurrentX * config.mouse;
-        const offsetY = prefersReducedMotion ? 0 : (mouseCurrentY * config.mouse) + (scrollCurrentY * config.scroll);
+        const offsetX = mouseCurrentX * config.mouse;
+        const offsetY = (mouseCurrentY * config.mouse) + (scrollCurrentY * config.scroll);
 
         // Ekran koordinatı (Ofset eklenmiş)
         let renderX = (star.x + offsetX) % width;
