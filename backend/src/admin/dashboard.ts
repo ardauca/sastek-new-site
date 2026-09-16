@@ -406,6 +406,12 @@ export const dashboardPage = `<!DOCTYPE html>
           <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('sponsors', 1, loadSponsors)">👁️ Görünür Yap</button>
           <button class="btn btn-secondary btn-sm" onclick="bulkSetStatus('sponsors', 0, loadSponsors)">🙈 Görünmez Yap</button>
         </div>
+        <div class="bulk-divider"></div>
+        <div class="bulk-group">
+          <span class="group-title">Öne Çıkarma:</span>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('sponsors', 'is_featured', 1, loadSponsors)">⭐ Öne Çıkar</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkSetField('sponsors', 'is_featured', 0, loadSponsors)">Öne Çıkarma</button>
+        </div>
         <div class="bulk-group" style="margin-left:auto;">
           <button class="btn btn-danger btn-sm" onclick="bulkDelete('sponsors', loadSponsors)">🗑️ Seçilenleri Sil</button>
         </div>
@@ -417,7 +423,7 @@ export const dashboardPage = `<!DOCTYPE html>
         </div>
         <div class="table-responsive">
           <table>
-            <thead><tr><th><input type="checkbox" id="selectAllSponsorsHeader" /></th><th>LOGO</th><th>İSİM</th><th>WEBSİTE</th><th>SEVİYE</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
+            <thead><tr><th><input type="checkbox" id="selectAllSponsorsHeader" /></th><th>SIRA</th><th>LOGO</th><th>İSİM</th><th>WEBSİTE</th><th>SEVİYE</th><th>DURUM</th><th>İŞLEM</th></tr></thead>
             <tbody id="sponsorTable"></tbody>
           </table>
         </div>
@@ -797,6 +803,15 @@ export const dashboardPage = `<!DOCTYPE html>
     </div>
     <div class="form-field"><label>LOGO URL</label><input id="sponsorLogoUrl" /></div>
     <div class="form-field"><label>WEBSİTE</label><input id="sponsorWebsite" /></div>
+    <div class="grid-2">
+      <div class="form-field"><label>ÖNE ÇIKAN (ANASAYFA)</label>
+        <select id="sponsorFeatured">
+          <option value="0">Normal (Sponsorlar Sayfası)</option>
+          <option value="1">⭐ Öne Çıkar (Anasayfada Göster)</option>
+        </select>
+      </div>
+      <div class="form-field"><label>SIRA NO</label><input type="number" id="sponsorSortOrder" value="0" min="0" /></div>
+    </div>
     <div class="form-field"><label>DURUM</label><select id="sponsorActive"><option value="1">Aktif</option><option value="0">Pasif</option></select></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('sponsorModal')">İptal</button>
@@ -1529,17 +1544,21 @@ async function loadSponsors() {
     if (!Array.isArray(allSponsorsData)) allSponsorsData = [];
 
     if (!allSponsorsData.length) {
-      document.getElementById('sponsorTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz sponsor yok. "+ Yeni Ekle" ile başlayın.</td></tr>';
+      document.getElementById('sponsorTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">Henüz sponsor yok. "+ Yeni Ekle" ile başlayın.</td></tr>';
       return;
     }
     document.getElementById('sponsorTable').innerHTML = allSponsorsData.map(s => \`
       <tr>
         <td><input type="checkbox" class="sponsors-select-cb" value="\${s.id}" /></td>
+        <td style="color:var(--muted);font-size:.8rem;font-weight:600">#\${s.sort_order ?? 0}</td>
         <td>\${s.logo_url ? \`<img class="logo-thumb" src="\${resolveImageUrl(s.logo_url)}" alt="" />\` : '—'}</td>
         <td><b>\${s.name}</b></td>
         <td>\${s.website ? \`<a href="\${s.website}" target="_blank" style="color:var(--signal)">\${s.website}</a>\` : '—'}</td>
         <td><span class="badge badge-\${s.tier}">\${s.tier}</span></td>
-        <td><span class="badge \${s.is_active ? 'badge-active' : 'badge-inactive'}">\${s.is_active ? 'Aktif' : 'Pasif'}</span></td>
+        <td>
+          <span class="badge \${s.is_active ? 'badge-active' : 'badge-inactive'}">\${s.is_active ? 'Aktif' : 'Pasif'}</span>
+          \${s.is_featured ? ' <span class="badge badge-gold">⭐ Öne Çıkan</span>' : ''}
+        </td>
         <td style="display:flex;gap:6px">
           <button class="btn btn-sm btn-primary" onclick="editSponsor(\${s.id})">Düzenle</button>
           <button class="btn btn-sm btn-danger" onclick="deleteSponsor(\${s.id})">Sil</button>
@@ -1548,7 +1567,7 @@ async function loadSponsors() {
     \`).join('');
   } catch (e) {
     toast('Sponsorlar yüklenemedi', 'error');
-    document.getElementById('sponsorTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--error);padding:30px 0;font-size:.85rem">⚠️ Veriler yüklenirken bir hata oluştu.</td></tr>';
+    document.getElementById('sponsorTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--error);padding:30px 0;font-size:.85rem">⚠️ Veriler yüklenirken bir hata oluştu.</td></tr>';
   }
 }
 function openSponsorModal(s = null) {
@@ -1558,6 +1577,8 @@ function openSponsorModal(s = null) {
   document.getElementById('sponsorTier').value = s?.tier || 'standard';
   document.getElementById('sponsorLogoUrl').value = s?.logo_url || '';
   document.getElementById('sponsorWebsite').value = s?.website || '';
+  document.getElementById('sponsorSortOrder').value = String(s?.sort_order ?? 0);
+  document.getElementById('sponsorFeatured').value = String(s?.is_featured ?? 0);
   document.getElementById('sponsorActive').value = String(s?.is_active ?? 1);
   document.getElementById('sponsorLogoFile').value = '';
 
@@ -1593,6 +1614,8 @@ async function saveSponsor() {
       tier: document.getElementById('sponsorTier').value,
       logo_url: logoUrl,
       website: document.getElementById('sponsorWebsite').value,
+      sort_order: parseInt(document.getElementById('sponsorSortOrder').value) || 0,
+      is_featured: parseInt(document.getElementById('sponsorFeatured').value) || 0,
       is_active: parseInt(document.getElementById('sponsorActive').value),
     };
     const url = id ? \`/api/sponsors/\${id}\` : '/api/sponsors';

@@ -31,13 +31,15 @@ CREATE TABLE IF NOT EXISTS shops (
 
 -- Sponsors
 CREATE TABLE IF NOT EXISTS sponsors (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  name       TEXT NOT NULL,
-  logo_url   TEXT,
-  website    TEXT,
-  tier       TEXT NOT NULL DEFAULT 'standard' CHECK(tier IN ('platinum', 'gold', 'silver', 'standard')),
-  is_active  INTEGER NOT NULL DEFAULT 1,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  name        TEXT NOT NULL,
+  logo_url    TEXT,
+  website     TEXT,
+  tier        TEXT NOT NULL DEFAULT 'standard' CHECK(tier IN ('platinum', 'gold', 'silver', 'standard')),
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  is_featured INTEGER NOT NULL DEFAULT 0,
+  is_active   INTEGER NOT NULL DEFAULT 1,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 -- Gallery

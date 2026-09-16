@@ -38,6 +38,8 @@ export interface Sponsor {
   logo_url: string | null;
   website: string | null;
   tier: 'platinum' | 'gold' | 'silver' | 'standard';
+  sort_order: number;
+  is_featured: number;
   is_active: number;
   created_at: string;
 }
