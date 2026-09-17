@@ -503,13 +503,13 @@ const labels = locale === 'tr' ? {
   .map-list-head strong{display:block;color:#fff}
   .map-list-head span{color:#a9bbce;font-size:.78rem}
   .map-list-items{display:grid;gap:.5rem;max-height:458px;overflow-x:hidden;overflow-y:auto;padding:.75rem}
-  .map-list-item{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;gap:.7rem;width:100%;min-width:0;border:1px solid transparent;border-radius:.85rem;background:rgba(255,255,255,.04);color:#fff;padding:.55rem;text-align:left;cursor:pointer}
-  .map-list-item:hover,.map-list-item:focus-visible{border-color:rgba(128,174,213,.35);background:rgba(255,255,255,.08);outline:0}
-  .map-list-item img{width:44px;height:44px;object-fit:cover;border-radius:.6rem;background:#fff;padding:0}
-  .map-list-item span{min-width:0}
-  .map-list-item b{display:block;font-size:.9rem}
-  .map-list-item small{display:block;overflow:hidden;color:#a9bbce;font-size:.72rem;line-height:1.35;text-overflow:ellipsis;white-space:normal}
-  .empty-map{margin:0;padding:1rem;color:#a9bbce}
+  :global(.map-list-item){display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;gap:.7rem;width:100%;min-width:0;border:1px solid transparent;border-radius:.85rem;background:rgba(255,255,255,.04);color:#fff;padding:.55rem;text-align:left;cursor:pointer;transition:border-color .2s ease,background .2s ease}
+  :global(.map-list-item:hover),:global(.map-list-item:focus-visible){border-color:rgba(128,174,213,.35);background:rgba(255,255,255,.08);outline:0}
+  :global(.map-list-item img){width:44px;height:44px;object-fit:cover;border-radius:.6rem;background:#fff;padding:0;display:block}
+  :global(.map-list-item span){min-width:0;display:block}
+  :global(.map-list-item b){display:block;font-size:.9rem;color:#fff;line-height:1.25}
+  :global(.map-list-item small){display:block;overflow:hidden;color:#a9bbce;font-size:.72rem;line-height:1.35;text-overflow:ellipsis;white-space:normal}
+  :global(.empty-map){margin:0;padding:1rem;color:#a9bbce}
 
   /* ── Partner Card Global Component Styling Guarantee ──────────────────────── */
   :global(.partner){position:relative;overflow:hidden;display:grid;grid-template-columns:104px 1fr;align-items:center;gap:1.25rem;border-radius:1.25rem;padding:1.15rem 1.25rem;transition:border-color .25s ease,transform .25s ease,background .25s ease,box-shadow .25s ease}
