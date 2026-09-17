@@ -122,8 +122,8 @@ const labels = locale === 'tr' ? {
       </div>
 
       <div class="view-panel is-active" data-view-panel="grid">
-        <div class="filter-space"><FilterControls locale={locale} categories={categories} /></div>
-        <div class="grid-auto" id="partners-grid-container">{active.map((partner) => <PartnerCard partner={partner} locale={locale} />)}</div>
+        <div class="filter-space"><FilterControls locale={locale} categories={categories} showSort={true} /></div>
+        <div class="grid-auto" id="partners-grid-container">{active.map((partner, idx) => <PartnerCard partner={partner} locale={locale} originalIndex={idx} />)}</div>
       </div>
 
       <div class="view-panel" data-view-panel="map" hidden>
@@ -397,18 +397,36 @@ const labels = locale === 'tr' ? {
       const apiShops = await res.json();
       if (!Array.isArray(apiShops)) return;
 
+      function extractDiscountPercent(text: string | null | undefined): number | null {
+        if (!text) return null;
+        const match = text.match(/(?:%\s*(\d+(?:[.,]\d+)?))|(?:(\d+(?:[.,]\d+)?)\s*%)/);
+        if (match) {
+          const rawNum = match[1] || match[2];
+          const parsed = parseFloat(rawNum.replace(',', '.'));
+          if (!isNaN(parsed) && parsed > 0) return parsed;
+        }
+        return null;
+      }
+
       // 1. Live update Grid Cards
       const gridContainer = document.getElementById('partners-grid-container');
       if (gridContainer) {
-        const newCardsHtml = apiShops.map((s: any) => {
+        const newCardsHtml = apiShops.map((s: any, idx: number) => {
           const cat = pageLocale === 'tr' ? (s.category_tr || 'Diğer') : (s.category_en || 'Other');
           const offer = s.discount || (pageLocale === 'tr' ? 'Kampanya bilgisi güncellenecek' : 'Offer details to be updated');
+          const percent = extractDiscountPercent(offer);
           let logo = s.logo_url || '/images/partners/arc-logo.png';
           if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
 
           const searchStr = `${s.name} ${cat} ${offer}`.toLowerCase();
 
-          return `<article class="partner glass" data-filter-card data-category="${escapeHtml(cat.toLowerCase())}" data-search="${escapeHtml(searchStr)}">
+          return `<article class="partner glass" data-filter-card
+            data-category="${escapeHtml(cat.toLowerCase())}"
+            data-search="${escapeHtml(searchStr)}"
+            data-name="${escapeHtml(s.name)}"
+            data-discount-percent="${percent !== null ? percent : ''}"
+            data-original-index="${idx}"
+            data-order="${s.order_num || idx}">
             <div class="logo"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" width="240" height="160" loading="lazy" /></div>
             <div class="body">
               <span class="chip">${escapeHtml(cat)}</span>
@@ -468,12 +486,13 @@ const labels = locale === 'tr' ? {
         categorySelect.value = existingVal;
       }
 
-      // Re-trigger filter listener if user typed in search or category filter
+      // Re-trigger filter listener if user typed in search, category or sort filter
       const searchInput = root?.querySelector<HTMLInputElement>('[data-filter-search]');
-      if (searchInput || categorySelect) {
-        const event = new Event('input', { bubbles: true });
-        searchInput?.dispatchEvent(event);
+      const sortSelect = root?.querySelector<HTMLSelectElement>('[data-filter-sort]');
+      if (searchInput || categorySelect || sortSelect) {
+        searchInput?.dispatchEvent(new Event('input', { bubbles: true }));
         categorySelect?.dispatchEvent(new Event('change', { bubbles: true }));
+        sortSelect?.dispatchEvent(new Event('change', { bubbles: true }));
       }
     } catch {}
   })();

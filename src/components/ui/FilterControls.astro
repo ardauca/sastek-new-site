@@ -1,8 +1,78 @@
 ---
-interface Props { locale: 'tr' | 'en'; categories: string[]; showSearch?: boolean; }
-const { locale, categories, showSearch = true } = Astro.props;
+interface Props {
+  locale: 'tr' | 'en';
+  categories: string[];
+  showSearch?: boolean;
+  showSort?: boolean;
+}
+const { locale, categories, showSearch = true, showSort = false } = Astro.props;
 
-const defaultLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
+const defaultCategoryLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
+
+const sortOptions = locale === 'tr' ? [
+  { value: 'default', label: 'Varsayılan', triggerLabel: 'Sırala: Varsayılan', icon: 'sliders' },
+  { value: 'discount-desc', label: 'İndirimi yüksekten düşüğe', triggerLabel: 'Sırala: İndirim (Azalan)', icon: 'arrow-down-wide' },
+  { value: 'discount-asc', label: 'İndirimi düşükten yükseğe', triggerLabel: 'Sırala: İndirim (Artan)', icon: 'arrow-up-wide' },
+  { value: 'alphabetical', label: 'Alfabetik (A–Z)', triggerLabel: 'Sırala: Alfabetik (A–Z)', icon: 'arrow-down-az' }
+] : [
+  { value: 'default', label: 'Default', triggerLabel: 'Sort: Default', icon: 'sliders' },
+  { value: 'discount-desc', label: 'Discount: High to Low', triggerLabel: 'Sort: Discount (High-Low)', icon: 'arrow-down-wide' },
+  { value: 'discount-asc', label: 'Discount: Low to High', triggerLabel: 'Sort: Discount (Low-High)', icon: 'arrow-up-wide' },
+  { value: 'alphabetical', label: 'Alphabetical (A–Z)', triggerLabel: 'Sort: Alphabetical (A–Z)', icon: 'arrow-down-az' }
+];
+
+const defaultSort = sortOptions[0];
+
+function cleanCategoryKey(name: string): string {
+  return (name || '')
+    .toLowerCase()
+    .replace(/ı/g, 'i')
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function getCategoryLucideSvg(name: string): string {
+  const n = cleanCategoryKey(name);
+  if (!n || n.includes('tum') || n.includes('all')) {
+    return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 12h18"/><path d="M12 3v18"/></svg>`;
+  }
+  if (n.includes('kafe') || n.includes('cafe') || n.includes('kahve')) {
+    return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v2a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h12Z"/><path d="M6 2v2"/><path d="M17 9h1a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3h-1"/><path d="M6 19h12"/></svg>`;
+  }
+  if (n.includes('spor') || n.includes('gym') || n.includes('fit') || n.includes('sport')) {
+    return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>`;
+  }
+  if (n.includes('egitim') || n.includes('education') || n.includes('akademi')) {
+    return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>`;
+  }
+  if (n.includes('saglik') || n.includes('health') || n.includes('med')) {
+    return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>`;
+  }
+  if (n.includes('sosyal') || n.includes('oyun') || n.includes('game') || n.includes('venue')) {
+    return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+  }
+  if (n.includes('teknoloji') || n.includes('tech') || n.includes('yazilim') || n.includes('bilisim')) {
+    return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>`;
+  }
+  if (n.includes('yemek') || n.includes('yeme') || n.includes('icme') || n.includes('food') || n.includes('pizza') || n.includes('restoran')) {
+    return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/><path d="M15 2v10"/><path d="M18 12v8a2 2 0 0 1-2 2h-2"/><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/></svg>`;
+  }
+  if (n.includes('giyim') || n.includes('clothing') || n.includes('wear')) {
+    return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>`;
+  }
+  if (n.includes('kitap') || n.includes('kirtasiye') || n.includes('book')) {
+    return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
+  }
+  if (n.includes('hizmet') || n.includes('service')) {
+    return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`;
+  }
+  return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>`;
+}
 ---
 
 <div class="filters" data-filter-controls data-locale={locale}>
@@ -11,40 +81,120 @@ const defaultLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
       <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
       </svg>
-      <input type="search" placeholder={locale === 'tr' ? 'İşletme veya kategori ara…' : 'Search partners or category…'} data-filter-search aria-label={locale === 'tr' ? 'Ara' : 'Search'} />
+      <input
+        type="search"
+        placeholder={locale === 'tr' ? 'İşletme veya kategori ara…' : 'Search partners or category…'}
+        data-filter-search
+        aria-label={locale === 'tr' ? 'Ara' : 'Search'}
+      />
     </div>
   )}
 
-  <div class="tactical-dropdown" data-custom-dropdown>
-    <!-- Hidden native select keeping 100% compatibility with accessibility and dynamic scripts -->
-    <select class="native-hidden-select" data-filter-category aria-hidden="true" tabindex="-1">
-      <option value="">{defaultLabel}</option>
-      {categories.map((category) => <option value={category.toLowerCase()}>{category}</option>)}
-    </select>
+  <div class="filter-controls-group">
+    <!-- Tactical Category Dropdown -->
+    <div class="tactical-dropdown" data-custom-dropdown="category">
+      <select class="native-hidden-select" data-filter-category aria-hidden="true" tabindex="-1">
+        <option value="">{defaultCategoryLabel}</option>
+        {categories.map((category) => <option value={category.toLowerCase()}>{category}</option>)}
+      </select>
 
-    <!-- Custom Glassmorphism Trigger Button -->
-    <button type="button" class="dropdown-trigger" data-dropdown-trigger aria-haspopup="listbox" aria-expanded="false">
-      <span class="trigger-text" data-trigger-text>{defaultLabel}</span>
-      <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-        <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-      </svg>
-    </button>
+      <button type="button" class="dropdown-trigger" data-dropdown-trigger aria-haspopup="listbox" aria-expanded="false">
+        <span class="trigger-label">
+          <span class="trigger-badge-icon trigger-spark" aria-hidden="true">✦</span>
+          <span class="trigger-text" data-trigger-text>{defaultCategoryLabel}</span>
+        </span>
+        <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+        </svg>
+      </button>
 
-    <!-- Animated Dropdown Menu -->
-    <div class="dropdown-menu" data-dropdown-menu role="listbox" aria-label={locale === 'tr' ? 'Kategori Seçimi' : 'Category Filter'}>
-      <div class="dropdown-options" data-dropdown-options>
-        <button type="button" class="dropdown-option is-active" data-val="" role="option" aria-selected="true">
-          <span class="option-label">{defaultLabel}</span>
-          <span class="active-indicator">●</span>
-        </button>
-        {categories.map((cat) => (
-          <button type="button" class="dropdown-option" data-val={cat.toLowerCase()} role="option" aria-selected="false">
-            <span class="option-label">{cat}</span>
+      <div class="dropdown-menu" data-dropdown-menu role="listbox" aria-label={locale === 'tr' ? 'Kategori Seçimi' : 'Category Filter'}>
+        <div class="dropdown-options" data-dropdown-options>
+          <button type="button" class="dropdown-option is-active" data-val="" role="option" aria-selected="true">
+            <span class="option-left">
+              <Fragment set:html={getCategoryLucideSvg(defaultCategoryLabel)} />
+              <span class="option-label">{defaultCategoryLabel}</span>
+            </span>
             <span class="active-indicator">●</span>
           </button>
-        ))}
+          {categories.map((cat) => (
+            <button type="button" class="dropdown-option" data-val={cat.toLowerCase()} role="option" aria-selected="false">
+              <span class="option-left">
+                <Fragment set:html={getCategoryLucideSvg(cat)} />
+                <span class="option-label">{cat}</span>
+              </span>
+              <span class="active-indicator">●</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
+
+    <!-- Tactical Sort Dropdown -->
+    {showSort && (
+      <div class="tactical-dropdown" data-custom-dropdown="sort">
+        <select class="native-hidden-select" data-filter-sort aria-hidden="true" tabindex="-1">
+          {sortOptions.map((opt) => (
+            <option value={opt.value} selected={opt.value === 'default'}>{opt.label}</option>
+          ))}
+        </select>
+
+        <button type="button" class="dropdown-trigger" data-dropdown-trigger aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">
+            <svg class="trigger-badge-icon sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m3 16 4 4 4-4"/>
+              <path d="M7 20V4"/>
+              <path d="m21 8-4-4-4 4"/>
+              <path d="M17 4v16"/>
+            </svg>
+            <span class="trigger-text" data-trigger-text>{defaultSort.triggerLabel}</span>
+          </span>
+          <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+          </svg>
+        </button>
+
+        <div class="dropdown-menu" data-dropdown-menu role="listbox" aria-label={locale === 'tr' ? 'Sıralama Seçimi' : 'Sorting'}>
+          <div class="dropdown-options" data-dropdown-options>
+            {sortOptions.map((opt) => (
+              <button
+                type="button"
+                class={`dropdown-option ${opt.value === 'default' ? 'is-active' : ''}`}
+                data-val={opt.value}
+                data-trigger-label={opt.triggerLabel}
+                role="option"
+                aria-selected={opt.value === 'default' ? 'true' : 'false'}
+              >
+                <span class="option-left">
+                  {opt.icon === 'sliders' && (
+                    <svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>
+                    </svg>
+                  )}
+                  {opt.icon === 'arrow-down-wide' && (
+                    <svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="M11 4h10"/><path d="M11 8h7"/><path d="M11 12h4"/>
+                    </svg>
+                  )}
+                  {opt.icon === 'arrow-up-wide' && (
+                    <svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m3 8 4-4 4 4"/><path d="M7 4v16"/><path d="M11 12h4"/><path d="M11 8h7"/><path d="M11 4h10"/>
+                    </svg>
+                  )}
+                  {opt.icon === 'arrow-down-az' && (
+                    <svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="M20 8h-5"/><path d="M15 10V6.5a2.5 2.5 0 0 1 5 0V10"/><path d="M15 14h5l-5 6h5"/>
+                    </svg>
+                  )}
+                  <span class="option-label">{opt.label}</span>
+                </span>
+                <span class="active-indicator">●</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    )}
   </div>
 </div>
 
@@ -52,110 +202,267 @@ const defaultLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
   function setupFilters() {
     document.querySelectorAll<HTMLElement>('[data-filter-root]').forEach((root) => {
       const search = root.querySelector<HTMLInputElement>('[data-filter-search]');
-      const select = root.querySelector<HTMLSelectElement>('[data-filter-category]');
-      const dropdown = root.querySelector<HTMLElement>('[data-custom-dropdown]');
-      const trigger = dropdown?.querySelector<HTMLButtonElement>('[data-dropdown-trigger]');
-      const triggerText = dropdown?.querySelector<HTMLElement>('[data-trigger-text]');
-      const optionsContainer = dropdown?.querySelector<HTMLElement>('[data-dropdown-options]');
+      const categorySelect = root.querySelector<HTMLSelectElement>('[data-filter-category]');
+      const sortSelect = root.querySelector<HTMLSelectElement>('[data-filter-sort]');
+      const locale = root.dataset.locale || 'tr';
 
-      const apply = () => {
-        const term = search?.value.trim().toLocaleLowerCase('tr') ?? '';
-        const category = select?.value ?? '';
-        const cards = root.querySelectorAll<HTMLElement>('[data-filter-card]');
+      // ── Filter and Sorting Engine ───────────────────────────────────────────
+      const applyFiltersAndSort = () => {
+        const term = search?.value.trim().toLocaleLowerCase(locale) ?? '';
+        const selectedCategory = categorySelect?.value ?? '';
+        const sortMode = sortSelect?.value ?? 'default';
+
+        const cards = Array.from(root.querySelectorAll<HTMLElement>('[data-filter-card]'));
+        if (!cards.length) return;
+
+        // 1. Sort cards if sortSelect is present
+        if (sortSelect) {
+          const sortedCards = [...cards].sort((a, b) => {
+            const origA = Number(a.dataset.originalIndex ?? 0);
+            const origB = Number(b.dataset.originalIndex ?? 0);
+
+            if (sortMode === 'discount-desc') {
+              const pA = a.dataset.discountPercent ? parseFloat(a.dataset.discountPercent) : null;
+              const pB = b.dataset.discountPercent ? parseFloat(b.dataset.discountPercent) : null;
+              if (pA !== null && pB !== null) {
+                if (pB !== pA) return pB - pA;
+                return origA - origB;
+              }
+              if (pA !== null && pB === null) return -1;
+              if (pA === null && pB !== null) return 1;
+              return origA - origB;
+            }
+
+            if (sortMode === 'discount-asc') {
+              const pA = a.dataset.discountPercent ? parseFloat(a.dataset.discountPercent) : null;
+              const pB = b.dataset.discountPercent ? parseFloat(b.dataset.discountPercent) : null;
+              if (pA !== null && pB !== null) {
+                if (pA !== pB) return pA - pB;
+                return origA - origB;
+              }
+              if (pA !== null && pB === null) return -1;
+              if (pA === null && pB !== null) return 1;
+              return origA - origB;
+            }
+
+            if (sortMode === 'alphabetical') {
+              const nameA = a.dataset.name || '';
+              const nameB = b.dataset.name || '';
+              const cmp = nameA.localeCompare(nameB, locale === 'tr' ? 'tr' : 'en', { sensitivity: 'base', numeric: true });
+              if (cmp !== 0) return cmp;
+              return origA - origB;
+            }
+
+            // Default order (original index)
+            return origA - origB;
+          });
+
+          // Re-append sorted cards in new order
+          const container = cards[0]?.parentElement;
+          if (container) {
+            sortedCards.forEach((card) => container.appendChild(card));
+          }
+        }
+
+        // 2. Filter visibility by search and category
         cards.forEach((card) => {
-          const cardSearch = card.dataset.search?.toLocaleLowerCase('tr') ?? '';
+          const cardSearch = card.dataset.search?.toLocaleLowerCase(locale) ?? '';
           const cardCat = card.dataset.category ?? '';
           const matchesTerm = !term || cardSearch.includes(term);
-          const matchesCategory = !category || cardCat === category;
+          const matchesCategory = !selectedCategory || cardCat === selectedCategory;
           card.hidden = !(matchesTerm && matchesCategory);
         });
       };
 
-      search?.addEventListener('input', apply);
-      select?.addEventListener('change', apply);
+      search?.addEventListener('input', applyFiltersAndSort);
+      categorySelect?.addEventListener('change', applyFiltersAndSort);
+      sortSelect?.addEventListener('change', applyFiltersAndSort);
 
-      if (!dropdown || !trigger || !optionsContainer || !select) return;
+      // ── Dropdown Controller Helper ──────────────────────────────────────────
+      function bindCustomDropdown(
+        dropdown: HTMLElement | null,
+        select: HTMLSelectElement | null,
+        isSort: boolean = false
+      ) {
+        if (!dropdown || !select) return;
 
-      const toggleDropdown = (open?: boolean) => {
-        const isCurrentlyOpen = dropdown.classList.contains('is-open');
-        const shouldOpen = open !== undefined ? open : !isCurrentlyOpen;
-        dropdown.classList.toggle('is-open', shouldOpen);
-        trigger.setAttribute('aria-expanded', String(shouldOpen));
-      };
+        const trigger = dropdown.querySelector<HTMLButtonElement>('[data-dropdown-trigger]');
+        const triggerText = dropdown.querySelector<HTMLElement>('[data-trigger-text]');
+        const optionsContainer = dropdown.querySelector<HTMLElement>('[data-dropdown-options]');
+        if (!trigger || !optionsContainer) return;
 
-      trigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleDropdown();
-      });
+        const toggle = (open?: boolean) => {
+          const isOpen = dropdown.classList.contains('is-open');
+          const shouldOpen = open !== undefined ? open : !isOpen;
 
-      const syncUIFromSelect = () => {
-        const selectedVal = select.value;
-        const selectedOption = select.options[select.selectedIndex];
-        const label = selectedOption ? selectedOption.text : (select.options[0]?.text || 'Tüm kategoriler');
-        if (triggerText) triggerText.textContent = label;
+          // If opening, close other dropdowns in root
+          if (shouldOpen) {
+            root.querySelectorAll<HTMLElement>('[data-custom-dropdown]').forEach((other) => {
+              if (other !== dropdown) {
+                other.classList.remove('is-open');
+                other.querySelector<HTMLButtonElement>('[data-dropdown-trigger]')?.setAttribute('aria-expanded', 'false');
+              }
+            });
+          }
 
-        optionsContainer.querySelectorAll<HTMLButtonElement>('.dropdown-option').forEach((btn) => {
-          const isActive = btn.dataset.val === selectedVal;
-          btn.classList.toggle('is-active', isActive);
-          btn.setAttribute('aria-selected', String(isActive));
+          dropdown.classList.toggle('is-open', shouldOpen);
+          trigger.setAttribute('aria-expanded', String(shouldOpen));
+        };
+
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggle();
         });
-      };
 
-      const rebuildOptionsFromSelect = () => {
-        const currentVal = select.value;
-        const opts = Array.from(select.options);
-        optionsContainer.innerHTML = opts.map((opt) => {
-          const val = opt.value;
-          const label = opt.text;
-          const isSelected = val === currentVal;
-          return `
-            <button type="button" class="dropdown-option ${isSelected ? 'is-active' : ''}" data-val="${val}" role="option" aria-selected="${isSelected}">
-              <span class="option-label">${label}</span>
-              <span class="active-indicator">●</span>
-            </button>
-          `;
-        }).join('');
-        syncUIFromSelect();
-      };
+        const syncUIFromSelect = () => {
+          const selectedVal = select.value;
+          const selectedOption = select.options[select.selectedIndex];
+          const activeBtn = optionsContainer.querySelector<HTMLButtonElement>(`.dropdown-option[data-val="${CSS.escape(selectedVal)}"]`);
 
-      // Option click delegation
-      optionsContainer.addEventListener('click', (e) => {
-        const btn = (e.target as HTMLElement)?.closest<HTMLButtonElement>('.dropdown-option');
-        if (!btn) return;
-        const val = btn.dataset.val ?? '';
-        select.value = val;
-        select.dispatchEvent(new Event('change', { bubbles: true }));
-        syncUIFromSelect();
-        toggleDropdown(false);
-      });
+          if (triggerText) {
+            if (isSort && activeBtn?.dataset.triggerLabel) {
+              triggerText.textContent = activeBtn.dataset.triggerLabel;
+            } else if (selectedOption) {
+              triggerText.textContent = selectedOption.text;
+            } else {
+              triggerText.textContent = select.options[0]?.text || '';
+            }
+          }
 
-      // Listen for programmatic updates to select options (e.g. PartnersPage live hydration)
-      const observer = new MutationObserver(() => {
-        rebuildOptionsFromSelect();
-      });
-      observer.observe(select, { childList: true });
+          optionsContainer.querySelectorAll<HTMLButtonElement>('.dropdown-option').forEach((btn) => {
+            const isActive = btn.dataset.val === selectedVal;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-selected', String(isActive));
+          });
+        };
 
-      // Also listen to select change to update trigger label
-      select.addEventListener('change', syncUIFromSelect);
-
-      // Close on outside click
-      document.addEventListener('click', (e) => {
-        if (!dropdown.contains(e.target as Node)) {
-          toggleDropdown(false);
-        }
-      });
-
-      // Close on Escape key
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && dropdown.classList.contains('is-open')) {
-          toggleDropdown(false);
+        // Option click delegation
+        optionsContainer.addEventListener('click', (e) => {
+          const btn = (e.target as HTMLElement)?.closest<HTMLButtonElement>('.dropdown-option');
+          if (!btn) return;
+          const val = btn.dataset.val ?? '';
+          select.value = val;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          syncUIFromSelect();
+          toggle(false);
           trigger.focus();
+        });
+
+        // Close on escape key
+        dropdown.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && dropdown.classList.contains('is-open')) {
+            toggle(false);
+            trigger.focus();
+          }
+        });
+
+        function cleanCategoryKey(name: string): string {
+          return (name || '')
+            .toLowerCase()
+            .replace(/ı/g, 'i')
+            .replace(/ğ/g, 'g')
+            .replace(/ü/g, 'u')
+            .replace(/ş/g, 's')
+            .replace(/ö/g, 'o')
+            .replace(/ç/g, 'c')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
         }
+
+        function renderCategoryLucideSvg(name: string): string {
+          const n = cleanCategoryKey(name);
+          if (!n || n.includes('tum') || n.includes('all')) {
+            return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 12h18"/><path d="M12 3v18"/></svg>`;
+          }
+          if (n.includes('kafe') || n.includes('cafe') || n.includes('kahve')) {
+            return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v2a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h12Z"/><path d="M6 2v2"/><path d="M17 9h1a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3h-1"/><path d="M6 19h12"/></svg>`;
+          }
+          if (n.includes('spor') || n.includes('gym') || n.includes('fit') || n.includes('sport')) {
+            return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>`;
+          }
+          if (n.includes('egitim') || n.includes('education') || n.includes('akademi')) {
+            return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>`;
+          }
+          if (n.includes('saglik') || n.includes('health') || n.includes('med')) {
+            return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>`;
+          }
+          if (n.includes('sosyal') || n.includes('oyun') || n.includes('game') || n.includes('venue')) {
+            return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+          }
+          if (n.includes('teknoloji') || n.includes('tech') || n.includes('yazilim') || n.includes('bilisim')) {
+            return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>`;
+          }
+          if (n.includes('yemek') || n.includes('yeme') || n.includes('icme') || n.includes('food') || n.includes('pizza') || n.includes('restoran')) {
+            return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/><path d="M15 2v10"/><path d="M18 12v8a2 2 0 0 1-2 2h-2"/><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/></svg>`;
+          }
+          if (n.includes('giyim') || n.includes('clothing') || n.includes('wear')) {
+            return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>`;
+          }
+          if (n.includes('kitap') || n.includes('kirtasiye') || n.includes('book')) {
+            return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
+          }
+          if (n.includes('hizmet') || n.includes('service')) {
+            return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`;
+          }
+          return `<svg class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>`;
+        }
+
+        select.addEventListener('change', syncUIFromSelect);
+
+        return {
+          syncUIFromSelect,
+          rebuildCategoryOptions: () => {
+            if (isSort) return;
+            const currentVal = select.value;
+            const opts = Array.from(select.options);
+            optionsContainer.innerHTML = opts.map((opt) => {
+              const val = opt.value;
+              const label = opt.text;
+              const isSelected = val === currentVal;
+              return `
+                <button type="button" class="dropdown-option ${isSelected ? 'is-active' : ''}" data-val="${val}" role="option" aria-selected="${isSelected}">
+                  <span class="option-left">
+                    ${renderCategoryLucideSvg(label)}
+                    <span class="option-label">${label}</span>
+                  </span>
+                  <span class="active-indicator">●</span>
+                </button>
+              `;
+            }).join('');
+            syncUIFromSelect();
+          }
+        };
+      }
+
+      // Initialize Category Dropdown
+      const categoryDropdownEl = root.querySelector<HTMLElement>('[data-custom-dropdown="category"]');
+      const categoryController = bindCustomDropdown(categoryDropdownEl, categorySelect, false);
+
+      // Listen for programmatic updates to category select options (live client hydration)
+      if (categorySelect && categoryController) {
+        const observer = new MutationObserver(() => {
+          categoryController.rebuildCategoryOptions();
+        });
+        observer.observe(categorySelect, { childList: true });
+      }
+
+      // Initialize Sort Dropdown (if present)
+      const sortDropdownEl = root.querySelector<HTMLElement>('[data-custom-dropdown="sort"]');
+      bindCustomDropdown(sortDropdownEl, sortSelect, true);
+
+      // Global click outside to close dropdowns
+      document.addEventListener('click', (e) => {
+        root.querySelectorAll<HTMLElement>('[data-custom-dropdown]').forEach((dropdown) => {
+          if (!dropdown.contains(e.target as Node) && dropdown.classList.contains('is-open')) {
+            dropdown.classList.remove('is-open');
+            dropdown.querySelector<HTMLButtonElement>('[data-dropdown-trigger]')?.setAttribute('aria-expanded', 'false');
+          }
+        });
       });
     });
   }
 
-  // Run on page load
+  // Run setup on load
   setupFilters();
 </script>
 
@@ -173,8 +480,8 @@ const defaultLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
     position: relative;
     display: flex;
     align-items: center;
-    flex: 1;
-    min-width: min(100%, 280px);
+    flex: 1 1 280px;
+    min-width: min(100%, 240px);
     max-width: 420px;
   }
 
@@ -218,10 +525,19 @@ const defaultLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
     box-shadow: 0 0 24px rgba(0, 212, 255, 0.16), 0 8px 30px rgba(0, 0, 0, 0.45);
   }
 
+  .filter-controls-group {
+    display: flex;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    align-items: center;
+    flex: 2 1 auto;
+  }
+
   /* ── Tactical Custom Dropdown ──────────────────────────────────────────────── */
   .tactical-dropdown {
     position: relative;
-    min-width: 220px;
+    flex: 1 1 200px;
+    min-width: 190px;
     user-select: none;
   }
 
@@ -242,7 +558,7 @@ const defaultLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.85rem;
+    gap: 0.75rem;
     width: 100%;
     min-height: 3.1rem;
     padding: 0.65rem 1.15rem;
@@ -269,6 +585,34 @@ const defaultLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
     border-color: #00d4ff;
     background: rgba(13, 36, 61, 0.95);
     box-shadow: 0 0 25px rgba(0, 212, 255, 0.22), 0 8px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .trigger-label {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    overflow: hidden;
+  }
+
+  .trigger-badge-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  .trigger-spark {
+    color: #00d4ff;
+    filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.6));
+  }
+
+  .sort-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+    color: #ffb184;
+    filter: drop-shadow(0 0 5px rgba(255, 107, 26, 0.45));
   }
 
   .trigger-text {
@@ -385,6 +729,30 @@ const defaultLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
     font-weight: 700;
   }
 
+  :global(.dropdown-option .option-left) {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+  }
+
+  :global(.dropdown-option .option-icon-svg) {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: #8fa6bb;
+    flex-shrink: 0;
+    transition: color 0.18s ease, transform 0.18s ease;
+  }
+
+  :global(.dropdown-option:hover .option-icon-svg) {
+    color: #00d4ff;
+    transform: scale(1.08);
+  }
+
+  :global(.dropdown-option.is-active .option-icon-svg) {
+    color: #ffb184;
+  }
+
   :global(.dropdown-option .option-label) {
     white-space: nowrap;
     overflow: hidden;
@@ -405,21 +773,51 @@ const defaultLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
     transform: scale(1);
   }
 
-  @media (max-width: 600px) {
+  /* ── Responsive Behavior ───────────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .search-field {
+      flex: 1 1 100%;
+      max-width: 100%;
+      min-width: 100%;
+    }
+    .filter-controls-group {
+      width: 100%;
+    }
+    .tactical-dropdown {
+      flex: 1 1 calc(50% - 0.5rem);
+      min-width: 150px;
+    }
+  }
+
+  @media (max-width: 480px) {
     .filters {
       flex-direction: column;
       align-items: stretch;
     }
-    .search-field {
-      max-width: 100%;
-      min-width: 100%;
+    .filter-controls-group {
+      flex-direction: column;
+      align-items: stretch;
     }
     .tactical-dropdown {
       width: 100%;
+      max-width: 100%;
     }
     .dropdown-menu {
       width: 100%;
       max-width: 100%;
+    }
+  }
+
+  /* ── Reduced Motion ────────────────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .dropdown-menu,
+    .chevron-icon,
+    .dropdown-trigger,
+    :global(.dropdown-option),
+    :global(.option-icon-svg) {
+      transition: none !important;
+      animation: none !important;
+      transform: none !important;
     }
   }
 </style>

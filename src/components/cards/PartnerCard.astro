@@ -2,20 +2,44 @@
 import { t } from '../../lib/content';
 import type { Locale, Partner } from '../../types/content';
 
-interface Props { partner: Partner; locale: Locale; }
-const { partner, locale } = Astro.props;
+interface Props { partner: Partner; locale: Locale; originalIndex?: number; }
+const { partner, locale, originalIndex = 0 } = Astro.props;
+
+function extractDiscountPercent(text: string | null | undefined): number | null {
+  if (!text) return null;
+  const match = text.match(/(?:%\s*(\d+(?:[.,]\d+)?))|(?:(\d+(?:[.,]\d+)?)\s*%)/);
+  if (match) {
+    const rawNum = match[1] || match[2];
+    const parsed = parseFloat(rawNum.replace(',', '.'));
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  return null;
+}
+
+const discountStr = t(partner.discountLabel, locale);
+const discountPercent = extractDiscountPercent(discountStr);
+const categoryStr = t(partner.category, locale);
 ---
 
-<article class="partner glass" data-filter-card data-category={t(partner.category, locale).toLowerCase()} data-search={`${partner.name} ${t(partner.category, locale)}`.toLowerCase()}>
+<article
+  class="partner glass"
+  data-filter-card
+  data-category={categoryStr.toLowerCase()}
+  data-search={`${partner.name} ${categoryStr} ${discountStr}`.toLowerCase()}
+  data-name={partner.name}
+  data-discount-percent={discountPercent !== null ? String(discountPercent) : ''}
+  data-original-index={String(originalIndex)}
+  data-order={String(partner.order ?? originalIndex)}
+>
   <div class="logo">
     <img src={partner.logo} alt={`${partner.name} logo`} width="240" height="160" loading="lazy" />
   </div>
   <div class="body">
     <div class="meta">
-      <span class="chip">{t(partner.category, locale)}</span>
+      <span class="chip">{categoryStr}</span>
     </div>
     <h3>{partner.name}</h3>
-    <p class="offer">{t(partner.discountLabel, locale)}</p>
+    <p class="offer">{discountStr}</p>
     {!partner.isVerified && <p class="verify">● {locale === 'tr' ? 'Doğrulama bekliyor' : 'Awaiting verification'}</p>}
   </div>
 </article>
