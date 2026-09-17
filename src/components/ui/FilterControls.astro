@@ -1,33 +1,495 @@
 ---
 interface Props { locale: 'tr' | 'en'; categories: string[]; showSearch?: boolean; }
 const { locale, categories, showSearch = true } = Astro.props;
+
+const defaultLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
+
+function getInitialIcon(name: string) {
+  const n = (name || '').toLowerCase();
+  if (!n || n.includes('tüm') || n.includes('all')) return '✨';
+  if (n.includes('kafe') || n.includes('cafe') || n.includes('kahve')) return '☕';
+  if (n.includes('spor') || n.includes('gym') || n.includes('fit')) return '⚽';
+  if (n.includes('sosyal') || n.includes('oyun') || n.includes('game') || n.includes('venue')) return '🎲';
+  if (n.includes('yeme') || n.includes('içme') || n.includes('food') || n.includes('pizza') || n.includes('restoran')) return '🍕';
+  if (n.includes('giyim') || n.includes('wear') || n.includes('clothing')) return '👕';
+  if (n.includes('kitap') || n.includes('kırtasiye') || n.includes('book')) return '📚';
+  if (n.includes('teknoloji') || n.includes('tech')) return '💻';
+  if (n.includes('hizmet') || n.includes('service')) return '🛠️';
+  if (n.includes('eğlence') || n.includes('entertainment')) return '🎉';
+  if (n.includes('diğer') || n.includes('other')) return '🏪';
+  return '🔹';
+}
 ---
-<div class="filters" data-filter-controls>
-  {showSearch && <label><span class="sr-only">{locale === 'tr' ? 'Ara' : 'Search'}</span><input type="search" placeholder={locale === 'tr' ? 'Ara…' : 'Search…'} data-filter-search /></label>}
-  <label><span class="sr-only">{locale === 'tr' ? 'Kategori' : 'Category'}</span><select data-filter-category><option value="">{locale === 'tr' ? 'Tüm kategoriler' : 'All categories'}</option>{categories.map((category) => <option value={category.toLowerCase()}>{category}</option>)}</select></label>
+
+<div class="filters" data-filter-controls data-locale={locale}>
+  {showSearch && (
+    <div class="search-field">
+      <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
+      </svg>
+      <input type="search" placeholder={locale === 'tr' ? 'İşletme veya kategori ara…' : 'Search partners or category…'} data-filter-search aria-label={locale === 'tr' ? 'Ara' : 'Search'} />
+    </div>
+  )}
+
+  <div class="tactical-dropdown" data-custom-dropdown>
+    <!-- Hidden native select keeping 100% compatibility with accessibility and dynamic scripts -->
+    <select class="native-hidden-select" data-filter-category aria-hidden="true" tabindex="-1">
+      <option value="">{defaultLabel}</option>
+      {categories.map((category) => <option value={category.toLowerCase()}>{category}</option>)}
+    </select>
+
+    <!-- Custom Glassmorphism Trigger Button -->
+    <button type="button" class="dropdown-trigger" data-dropdown-trigger aria-haspopup="listbox" aria-expanded="false">
+      <span class="trigger-label">
+        <span class="trigger-icon" data-trigger-icon>✨</span>
+        <span class="trigger-text" data-trigger-text>{defaultLabel}</span>
+      </span>
+      <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+      </svg>
+    </button>
+
+    <!-- Animated Dropdown Menu -->
+    <div class="dropdown-menu" data-dropdown-menu role="listbox" aria-label={locale === 'tr' ? 'Kategori Seçimi' : 'Category Filter'}>
+      <div class="dropdown-options" data-dropdown-options>
+        <button type="button" class="dropdown-option is-active" data-val="" role="option" aria-selected="true">
+          <span class="option-left">
+            <span class="option-icon">✨</span>
+            <span class="option-label">{defaultLabel}</span>
+          </span>
+          <span class="active-indicator">●</span>
+        </button>
+        {categories.map((cat) => (
+          <button type="button" class="dropdown-option" data-val={cat.toLowerCase()} role="option" aria-selected="false">
+            <span class="option-left">
+              <span class="option-icon">{getInitialIcon(cat)}</span>
+              <span class="option-label">{cat}</span>
+            </span>
+            <span class="active-indicator">●</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
 </div>
+
 <script>
-  document.querySelectorAll('[data-filter-root]').forEach((root) => {
-    const search = root.querySelector<HTMLInputElement>('[data-filter-search]');
-    const select = root.querySelector<HTMLSelectElement>('[data-filter-category]');
+  function mapCategoryIcon(name: string) {
+    const n = (name || '').toLowerCase();
+    if (!n || n.includes('tüm') || n.includes('all')) return '✨';
+    if (n.includes('kafe') || n.includes('cafe') || n.includes('kahve')) return '☕';
+    if (n.includes('spor') || n.includes('gym') || n.includes('fit')) return '⚽';
+    if (n.includes('sosyal') || n.includes('oyun') || n.includes('game') || n.includes('venue')) return '🎲';
+    if (n.includes('yeme') || n.includes('içme') || n.includes('food') || n.includes('pizza') || n.includes('restoran')) return '🍕';
+    if (n.includes('giyim') || n.includes('wear') || n.includes('clothing')) return '👕';
+    if (n.includes('kitap') || n.includes('kırtasiye') || n.includes('book')) return '📚';
+    if (n.includes('teknoloji') || n.includes('tech')) return '💻';
+    if (n.includes('hizmet') || n.includes('service')) return '🛠️';
+    if (n.includes('eğlence') || n.includes('entertainment')) return '🎉';
+    if (n.includes('diğer') || n.includes('other')) return '🏪';
+    return '🔹';
+  }
 
-    const apply = () => {
-      const term = search?.value.trim().toLocaleLowerCase('tr') ?? '';
-      const category = select?.value ?? '';
-      const cards = root.querySelectorAll<HTMLElement>('[data-filter-card]');
-      cards.forEach((card) => {
-        const cardSearch = card.dataset.search?.toLocaleLowerCase('tr') ?? '';
-        const cardCat = card.dataset.category ?? '';
-        const matchesTerm = !term || cardSearch.includes(term);
-        const matchesCategory = !category || cardCat === category;
-        card.hidden = !(matchesTerm && matchesCategory);
+  function setupFilters() {
+    document.querySelectorAll<HTMLElement>('[data-filter-root]').forEach((root) => {
+      const search = root.querySelector<HTMLInputElement>('[data-filter-search]');
+      const select = root.querySelector<HTMLSelectElement>('[data-filter-category]');
+      const dropdown = root.querySelector<HTMLElement>('[data-custom-dropdown]');
+      const trigger = dropdown?.querySelector<HTMLButtonElement>('[data-dropdown-trigger]');
+      const triggerText = dropdown?.querySelector<HTMLElement>('[data-trigger-text]');
+      const triggerIcon = dropdown?.querySelector<HTMLElement>('[data-trigger-icon]');
+      const optionsContainer = dropdown?.querySelector<HTMLElement>('[data-dropdown-options]');
+
+      const apply = () => {
+        const term = search?.value.trim().toLocaleLowerCase('tr') ?? '';
+        const category = select?.value ?? '';
+        const cards = root.querySelectorAll<HTMLElement>('[data-filter-card]');
+        cards.forEach((card) => {
+          const cardSearch = card.dataset.search?.toLocaleLowerCase('tr') ?? '';
+          const cardCat = card.dataset.category ?? '';
+          const matchesTerm = !term || cardSearch.includes(term);
+          const matchesCategory = !category || cardCat === category;
+          card.hidden = !(matchesTerm && matchesCategory);
+        });
+      };
+
+      search?.addEventListener('input', apply);
+      select?.addEventListener('change', apply);
+
+      if (!dropdown || !trigger || !optionsContainer || !select) return;
+
+      const toggleDropdown = (open?: boolean) => {
+        const isCurrentlyOpen = dropdown.classList.contains('is-open');
+        const shouldOpen = open !== undefined ? open : !isCurrentlyOpen;
+        dropdown.classList.toggle('is-open', shouldOpen);
+        trigger.setAttribute('aria-expanded', String(shouldOpen));
+      };
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleDropdown();
       });
-    };
 
-    search?.addEventListener('input', apply);
-    select?.addEventListener('change', apply);
-  });
+      const syncUIFromSelect = () => {
+        const selectedVal = select.value;
+        const selectedOption = select.options[select.selectedIndex];
+        const label = selectedOption ? selectedOption.text : (select.options[0]?.text || 'Tüm kategoriler');
+        if (triggerText) triggerText.textContent = label;
+        if (triggerIcon) triggerIcon.textContent = mapCategoryIcon(label);
+
+        optionsContainer.querySelectorAll<HTMLButtonElement>('.dropdown-option').forEach((btn) => {
+          const isActive = btn.dataset.val === selectedVal;
+          btn.classList.toggle('is-active', isActive);
+          btn.setAttribute('aria-selected', String(isActive));
+        });
+      };
+
+      const rebuildOptionsFromSelect = () => {
+        const currentVal = select.value;
+        const opts = Array.from(select.options);
+        optionsContainer.innerHTML = opts.map((opt) => {
+          const val = opt.value;
+          const label = opt.text;
+          const icon = mapCategoryIcon(label);
+          const isSelected = val === currentVal;
+          return `
+            <button type="button" class="dropdown-option ${isSelected ? 'is-active' : ''}" data-val="${val}" role="option" aria-selected="${isSelected}">
+              <span class="option-left">
+                <span class="option-icon">${icon}</span>
+                <span class="option-label">${label}</span>
+              </span>
+              <span class="active-indicator">●</span>
+            </button>
+          `;
+        }).join('');
+        syncUIFromSelect();
+      };
+
+      // Option click delegation
+      optionsContainer.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement)?.closest<HTMLButtonElement>('.dropdown-option');
+        if (!btn) return;
+        const val = btn.dataset.val ?? '';
+        select.value = val;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        syncUIFromSelect();
+        toggleDropdown(false);
+      });
+
+      // Listen for programmatic updates to select options (e.g. PartnersPage live hydration)
+      const observer = new MutationObserver(() => {
+        rebuildOptionsFromSelect();
+      });
+      observer.observe(select, { childList: true });
+
+      // Also listen to select change to update trigger label
+      select.addEventListener('change', syncUIFromSelect);
+
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target as Node)) {
+          toggleDropdown(false);
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && dropdown.classList.contains('is-open')) {
+          toggleDropdown(false);
+          trigger.focus();
+        }
+      });
+    });
+  }
+
+  // Run on page load
+  setupFilters();
 </script>
+
 <style>
-  .filters{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem}.filters input,.filters select{min-height:3rem;border:1px solid #36516c;border-radius:.75rem;background:#081727;color:#fff;padding:.6rem .85rem}.filters input{min-width:min(100%,320px)}.filters select{min-width:190px}
+  .filters {
+    display: flex;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 1.8rem;
+    position: relative;
+  }
+
+  .search-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: min(100%, 280px);
+    max-width: 420px;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    color: #6b8ea8;
+    pointer-events: none;
+    transition: color 0.25s ease, transform 0.25s ease;
+  }
+
+  .search-field:focus-within .search-icon {
+    color: #00d4ff;
+    transform: scale(1.1);
+  }
+
+  .search-field input {
+    width: 100%;
+    min-height: 3.1rem;
+    border: 1px solid rgba(84, 119, 151, 0.24);
+    border-radius: 0.95rem;
+    background: rgba(7, 21, 38, 0.65);
+    color: #ffffff;
+    padding: 0.65rem 1rem 0.65rem 2.75rem;
+    font-size: 0.92rem;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.35);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  }
+
+  .search-field input::placeholder {
+    color: #8fa6bb;
+  }
+
+  .search-field input:focus {
+    outline: none;
+    border-color: rgba(0, 212, 255, 0.5);
+    background: rgba(10, 29, 51, 0.85);
+    box-shadow: 0 0 24px rgba(0, 212, 255, 0.16), 0 8px 30px rgba(0, 0, 0, 0.45);
+  }
+
+  /* ── Tactical Custom Dropdown ──────────────────────────────────────────────── */
+  .tactical-dropdown {
+    position: relative;
+    min-width: 220px;
+    user-select: none;
+  }
+
+  .native-hidden-select {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    width: 100%;
+    min-height: 3.1rem;
+    padding: 0.65rem 1.15rem;
+    border: 1px solid rgba(84, 119, 151, 0.28);
+    border-radius: 0.95rem;
+    background: rgba(7, 21, 38, 0.7);
+    color: #f0f6fc;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.35);
+    transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+  }
+
+  .dropdown-trigger:hover {
+    border-color: rgba(0, 212, 255, 0.45);
+    background: rgba(12, 33, 56, 0.85);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.5), 0 0 16px rgba(0, 212, 255, 0.1);
+  }
+
+  .tactical-dropdown.is-open .dropdown-trigger {
+    border-color: #00d4ff;
+    background: rgba(13, 36, 61, 0.95);
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.22), 0 8px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .trigger-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    overflow: hidden;
+  }
+
+  .trigger-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+  }
+
+  .trigger-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chevron-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    color: #8fa6bb;
+    flex-shrink: 0;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+  }
+
+  .tactical-dropdown.is-open .chevron-icon {
+    transform: rotate(180deg);
+    color: #00d4ff;
+  }
+
+  /* ── Animated Dropdown Menu ────────────────────────────────────────────────── */
+  .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 100%;
+    width: max-content;
+    max-width: min(320px, calc(100vw - 2rem));
+    z-index: 120;
+    border-radius: 1.1rem;
+    padding: 0.5rem;
+    background: rgba(6, 18, 32, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    box-shadow: 0 28px 60px -10px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 212, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    /* Smooth animated state transitions */
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
+  }
+
+  .tactical-dropdown.is-open .dropdown-menu {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+    visibility: visible;
+  }
+
+  .dropdown-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    max-height: 290px;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+    overscroll-behavior: contain;
+  }
+
+  .dropdown-options::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .dropdown-options::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .dropdown-options::-webkit-scrollbar-thumb {
+    background: rgba(84, 119, 151, 0.35);
+    border-radius: 999px;
+  }
+
+  .dropdown-options::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 212, 255, 0.5);
+  }
+
+  /* ── Option Item ───────────────────────────────────────────────────────────── */
+  :global(.dropdown-option) {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid transparent;
+    border-radius: 0.75rem;
+    background: transparent;
+    color: #c9ddf0;
+    font-size: 0.88rem;
+    font-weight: 550;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+  }
+
+  :global(.dropdown-option:hover) {
+    background: rgba(0, 212, 255, 0.1);
+    border-color: rgba(0, 212, 255, 0.2);
+    color: #ffffff;
+    transform: translateX(3px);
+  }
+
+  :global(.dropdown-option.is-active) {
+    background: linear-gradient(90deg, rgba(255, 107, 26, 0.18), rgba(255, 107, 26, 0.05));
+    border-color: rgba(255, 107, 26, 0.35);
+    color: #ffb184;
+    font-weight: 700;
+  }
+
+  :global(.dropdown-option .option-left) {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  :global(.dropdown-option .option-icon) {
+    font-size: 1.05rem;
+    flex-shrink: 0;
+  }
+
+  :global(.dropdown-option .option-label) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.dropdown-option .active-indicator) {
+    font-size: 0.65rem;
+    color: #ff6b1a;
+    opacity: 0;
+    transform: scale(0.4);
+    filter: drop-shadow(0 0 6px rgba(255, 107, 26, 0.7));
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  :global(.dropdown-option.is-active .active-indicator) {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  @media (max-width: 600px) {
+    .filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .search-field {
+      max-width: 100%;
+      min-width: 100%;
+    }
+    .tactical-dropdown {
+      width: 100%;
+    }
+    .dropdown-menu {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
 </style>
