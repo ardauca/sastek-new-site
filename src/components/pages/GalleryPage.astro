@@ -19,10 +19,12 @@ try {
     if (Array.isArray(apiItems) && apiItems.length > 0) {
       rawGallery = apiItems.map((item: any) => {
         const rawTag = (item.event_tag || '').trim();
+        const capTr = typeof item.caption_tr === 'string' ? item.caption_tr.trim() : '';
+        const capEn = typeof item.caption_en === 'string' ? item.caption_en.trim() : '';
         return {
           id: String(item.id),
           src: item.url,
-          alt: { tr: item.caption_tr || 'SASTEK Etkinlik Görseli', en: item.caption_en || 'SASTEK Event Photo' },
+          caption: { tr: capTr, en: capEn },
           category: { tr: rawTag, en: rawTag },
           order: item.id,
         };
@@ -37,7 +39,7 @@ if (!rawGallery.length) {
   rawGallery = staticGallery.map((g, idx) => ({
     id: g.id,
     src: g.src,
-    alt: g.alt,
+    caption: g.alt,
     category: {
       tr: (t(g.category, 'tr') || '').trim(),
       en: (t(g.category, 'en') || '').trim(),
@@ -59,18 +61,20 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
       <div class="gallery-grid" id="gallery-grid-container">
         {rawGallery.map((item, index) => {
           const categoryName = (t(item.category, locale) || '').trim();
-          const altText = t(item.alt, locale) || '';
+          const captionText = (t(item.caption, locale) || '').trim();
+          const accessibleAlt = captionText || (locale === 'tr' ? 'SASTEK galeri fotoğrafı' : 'SASTEK gallery photo');
           return (
             <button
               type="button"
               data-filter-card
               data-category={categoryName.toLowerCase()}
-              data-search={altText.toLowerCase()}
+              data-search={(captionText || categoryName).toLowerCase()}
               data-lightbox-src={item.src.startsWith('/images/') ? 'https://sastek.org' + item.src : item.src}
-              data-lightbox-alt={altText}
-              aria-label={`${locale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}: ${altText}`}
+              data-lightbox-caption={captionText}
+              data-lightbox-alt={accessibleAlt}
+              aria-label={`${locale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}${captionText ? `: ${captionText}` : ''}`}
             >
-              <img src={item.src.startsWith('/images/') ? 'https://sastek.org' + item.src : item.src} alt={altText} width="720" height="520" loading={index > 1 ? 'lazy' : 'eager'} />
+              <img src={item.src.startsWith('/images/') ? 'https://sastek.org' + item.src : item.src} alt={accessibleAlt} width="720" height="520" loading={index > 1 ? 'lazy' : 'eager'} />
               {categoryName ? <span>{categoryName}</span> : null}
             </button>
           );
@@ -119,7 +123,7 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
   const nextBtn = document.querySelector<HTMLButtonElement>('#lb-next');
   const closeBtn = dialog?.querySelector<HTMLButtonElement>('.close');
 
-  let currentGalleryItems: { src: string; alt: string }[] = [];
+  let currentGalleryItems: { src: string; alt: string; caption: string }[] = [];
   let currentActiveIndex = 0;
 
   function updateActiveItems() {
@@ -129,6 +133,7 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
     currentGalleryItems = visibleButtons.map((btn) => ({
       src: btn.dataset.lightboxSrc ?? '',
       alt: btn.dataset.lightboxAlt ?? '',
+      caption: (btn.dataset.lightboxCaption ?? '').trim(),
     }));
   }
 
@@ -141,7 +146,15 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
 
     image.src = current.src;
     image.alt = current.alt;
-    if (caption) caption.textContent = current.alt;
+    if (caption) {
+      if (current.caption) {
+        caption.textContent = current.caption;
+        caption.style.display = '';
+      } else {
+        caption.textContent = '';
+        caption.style.display = 'none';
+      }
+    }
     if (counter) counter.textContent = `${currentActiveIndex + 1} / ${currentGalleryItems.length}`;
   }
 
@@ -246,7 +259,9 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
 
       gridContainer.innerHTML = items.map((item: any, index: number) => {
         const rawTag = (item.event_tag || '').trim();
-        const alt = item.caption_tr || (pageLocale === 'tr' ? 'SASTEK Etkinlik Görseli' : 'SASTEK Event Photo');
+        const cap = pageLocale === 'tr' ? item.caption_tr : item.caption_en;
+        const captionText = typeof cap === 'string' ? cap.trim() : '';
+        const accessibleAlt = captionText || (pageLocale === 'tr' ? 'SASTEK galeri fotoğrafı' : 'SASTEK gallery photo');
         let src = item.url;
         if (src.startsWith('/images/')) src = 'https://sastek.org' + src;
 
@@ -257,12 +272,13 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
           type="button"
           data-filter-card
           data-category="${catAttr}"
-          data-search="${escapeHtml(alt.toLowerCase())}"
+          data-search="${escapeHtml((captionText || rawTag).toLowerCase())}"
           data-lightbox-src="${escapeHtml(src)}"
-          data-lightbox-alt="${escapeHtml(alt)}"
-          aria-label="${pageLocale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}: ${escapeHtml(alt)}"
+          data-lightbox-caption="${escapeHtml(captionText)}"
+          data-lightbox-alt="${escapeHtml(accessibleAlt)}"
+          aria-label="${pageLocale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}${captionText ? `: ${escapeHtml(captionText)}` : ''}"
         >
-          <img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" width="720" height="520" loading="${index > 1 ? 'lazy' : 'eager'}" />
+          <img src="${escapeHtml(src)}" alt="${escapeHtml(accessibleAlt)}" width="720" height="520" loading="${index > 1 ? 'lazy' : 'eager'}" />
           ${catHtml}
         </button>`;
       }).join('');
