@@ -46,7 +46,7 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
 ---
 
 <BaseLayout title={title} description={desc} locale={locale}>
-  <PageHero eyebrow="SASTEK / GALLERY" title={title} text={desc} />
+  <PageHero eyebrow={locale === 'tr' ? 'SASTEK / GALERİ' : 'SASTEK / GALLERY'} title={title} text={desc} />
   <section class="section">
     <div class="container" data-filter-root data-gallery-root data-locale={locale} data-api="https://admin.sastek.org/api">
       <FilterControls locale={locale} categories={categories} showSearch={false} />

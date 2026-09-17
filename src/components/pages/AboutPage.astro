@@ -46,7 +46,7 @@ const c = locale === 'tr' ? {
 ---
 
 <BaseLayout title={c.title} description={c.desc} locale={locale}>
-  <PageHero eyebrow="SASTEK / ABOUT" title={c.title} text={c.desc} />
+  <PageHero eyebrow={locale === 'tr' ? 'SASTEK / HAKKIMIZDA' : 'SASTEK / ABOUT'} title={c.title} text={c.desc} />
 
   <section class="section about-intro">
     <div class="container split">
@@ -78,7 +78,7 @@ const c = locale === 'tr' ? {
   <section class="section">
     <div class="container activity-block">
       <div class="activity-head">
-        <p class="eyebrow">SASTEK / EXPERIENCE</p>
+        <p class="eyebrow">{locale === 'tr' ? 'SASTEK / DENEYİM' : 'SASTEK / EXPERIENCE'}</p>
         <h2>{c.activitiesTitle}</h2>
         <p>{c.activitiesText}</p>
       </div>

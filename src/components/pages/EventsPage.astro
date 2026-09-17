@@ -43,7 +43,7 @@ const desc  = locale === 'tr' ? 'Teknik bilgi, sektör deneyimi ve güçlü bir 
 ---
 
 <BaseLayout title={title} description={desc} locale={locale}>
-  <PageHero eyebrow="SASTEK / EVENTS" title={title} text={desc} />
+  <PageHero eyebrow={locale === 'tr' ? 'SASTEK / ETKİNLİKLER' : 'SASTEK / EVENTS'} title={title} text={desc} />
   <section class="section">
     <div class="container" data-events-root data-locale={locale} data-api="https://admin.sastek.org/api">
       <div class="grid-auto" id="events-grid-container">

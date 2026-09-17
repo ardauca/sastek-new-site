@@ -71,7 +71,7 @@ const desc  = locale === 'tr' ? 'Öğrencilerin teknolojiyle buluşmasına katk�
 ---
 
 <BaseLayout title={title} description={desc} locale={locale}>
-  <PageHero eyebrow="SASTEK / SPONSORS" title={title} text={desc} />
+  <PageHero eyebrow={locale === 'tr' ? 'SASTEK / SPONSORLAR' : 'SASTEK / SPONSORS'} title={title} text={desc} />
   <section class="section">
     <div class="container" data-sponsors-root data-locale={locale} data-api="https://admin.sastek.org/api">
       <div class="notice" id="sponsors-notice-banner" style={showNotice ? '' : 'display:none;'}>
@@ -116,7 +116,7 @@ const desc  = locale === 'tr' ? 'Öğrencilerin teknolojiyle buluşmasına katk�
   <section class="section support">
     <div class="container support-inner">
       <div>
-        <p class="eyebrow">COLLABORATE</p>
+        <p class="eyebrow">{locale === 'tr' ? 'İŞ BİRLİĞİ' : 'COLLABORATE'}</p>
         <h2 class="title">{locale === 'tr' ? 'Geleceğin mühendislerine birlikte alan açalım.' : 'Let’s create opportunities for future engineers.'}</h2>
       </div>
       <a class="btn btn-primary" href={locale === 'tr' ? '/iletisim' : '/en/contact'}>{locale === 'tr' ? 'İletişime geç' : 'Get in touch'} →</a>

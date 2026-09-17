@@ -139,7 +139,7 @@ const pageTitle = locale === 'tr'
   <!-- Featured Events -->
   <section class="section" id="home-events-section" style={featuredEvents.length > 0 ? '' : 'display:none;'}>
     <div class="container">
-      <SectionHeading eyebrow="SASTEK / EVENTS" title={copy.eventTitle} text={copy.eventText} />
+      <SectionHeading eyebrow={locale==='tr'?'SASTEK / ETKİNLİKLER':'SASTEK / EVENTS'} title={copy.eventTitle} text={copy.eventText} />
       <div class="grid-auto" id="home-events-grid">{featuredEvents.map((event) => <EventCard event={event} locale={locale} />)}</div>
       <div class="section-link"><a class="btn btn-secondary" href={path('/etkinlikler','/events')}>{copy.all} →</a></div>
     </div>
@@ -148,7 +148,7 @@ const pageTitle = locale === 'tr'
   <!-- Featured Partners -->
   <section class="section band" id="home-partners-section" style={featuredPartners.length > 0 ? '' : 'display:none;'}>
     <div class="container">
-      <SectionHeading eyebrow="SASTEK / PARTNERS" title={copy.partnerTitle} text={copy.partnerText} />
+      <SectionHeading eyebrow={locale==='tr'?'SASTEK / ANLAŞMALI NOKTALAR':'SASTEK / PARTNERS'} title={copy.partnerTitle} text={copy.partnerText} />
       <div class="grid-auto" id="home-partners-grid">{featuredPartners.map((partner) => <PartnerCard partner={partner} locale={locale} />)}</div>
       <div class="section-link"><a class="btn btn-secondary" href={path('/anlasmali-noktalar','/partners')}>{copy.all} →</a></div>
     </div>
@@ -158,7 +158,7 @@ const pageTitle = locale === 'tr'
   <section class="section" id="home-sponsors-section" style={featuredSponsors.length > 0 ? '' : 'display:none;'}>
     <div class="container sponsor-row">
       <div class="sponsor-copy">
-        <SectionHeading eyebrow="SASTEK / SUPPORT" title={copy.sponsorTitle} text={copy.sponsorText} />
+        <SectionHeading eyebrow={locale==='tr'?'SASTEK / SPONSORLAR':'SASTEK / SPONSORS'} title={copy.sponsorTitle} text={copy.sponsorText} />
         <div class="sponsor-cta">
           <a class="btn btn-secondary" href={path('/sponsorlar','/sponsors')}>{copy.all} →</a>
         </div>
@@ -187,7 +187,7 @@ const pageTitle = locale === 'tr'
   <!-- Featured Gallery -->
   <section class="section" id="home-gallery-section" style={featuredGallery.length > 0 ? '' : 'display:none;'}>
     <div class="container">
-      <SectionHeading eyebrow="SASTEK / GALLERY" title={copy.galleryTitle} text={copy.galleryText} />
+      <SectionHeading eyebrow={locale==='tr'?'SASTEK / GALERİ':'SASTEK / GALLERY'} title={copy.galleryTitle} text={copy.galleryText} />
       <div class="gallery-preview" id="home-gallery-grid">
         {featuredGallery.map((item: any, index: number) => (
           <img class={`g${index+1}`} src={(item.url || item.src)?.startsWith('/images/') ? 'https://sastek.org' + (item.url || item.src) : (item.url || item.src)} alt={item.caption_tr || 'SASTEK Fotoğraf'} width="720" height="520" loading="lazy" />
@@ -200,7 +200,7 @@ const pageTitle = locale === 'tr'
   <section class="section">
     <div class="container cta glass">
       <div>
-        <p class="eyebrow">SASTEK / CONTACT</p>
+        <p class="eyebrow">{locale==='tr'?'SASTEK / İLETİŞİM':'SASTEK / CONTACT'}</p>
         <h2 class="title">{copy.cta}</h2>
         <p class="muted">{copy.ctaText}</p>
       </div>
@@ -211,6 +211,7 @@ const pageTitle = locale === 'tr'
 
 <script>
   (async () => {
+    const isEn = document.documentElement.lang === 'en' || window.location.pathname.startsWith('/en');
     const apiBase = 'https://admin.sastek.org/api';
     function escapeHtml(val: string) {
       return String(val).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c] || c));
@@ -264,12 +265,16 @@ const pageTitle = locale === 'tr'
               homeEventsGrid.innerHTML = feat.slice(0, 3).map((e: any) => {
                 let img = e.image_url || '/images/events/coffeetalk.png';
                 if (img.startsWith('/images/')) img = 'https://sastek.org' + img;
+                const titleText = isEn ? (e.title_en || e.title_tr) : e.title_tr;
+                const categoryText = isEn ? (e.category_en || 'Event') : (e.category_tr || 'Etkinlik');
+                const summaryText = isEn ? (e.summary_en || '') : (e.summary_tr || '');
+                const eventLink = isEn ? `/en/events/${escapeHtml(e.slug)}` : `/etkinlikler/${escapeHtml(e.slug)}`;
                 return `<article class="event-card glass">
-                  <a href="/etkinlikler/${escapeHtml(e.slug)}" class="visual"><img src="${escapeHtml(img)}" alt="${escapeHtml(e.title_tr)}" /></a>
+                  <a href="${eventLink}" class="visual"><img src="${escapeHtml(img)}" alt="${escapeHtml(titleText)}" /></a>
                   <div class="body">
-                    <span class="chip">${escapeHtml(e.category_tr || 'Etkinlik')}</span>
-                    <h3><a href="/etkinlikler/${escapeHtml(e.slug)}">${escapeHtml(e.title_tr)}</a></h3>
-                    <p class="muted">${escapeHtml(e.summary_tr || '')}</p>
+                    <span class="chip">${escapeHtml(categoryText)}</span>
+                    <h3><a href="${eventLink}">${escapeHtml(titleText)}</a></h3>
+                    <p class="muted">${escapeHtml(summaryText)}</p>
                   </div>
                 </article>`;
               }).join('');
@@ -296,12 +301,14 @@ const pageTitle = locale === 'tr'
               homePartnersGrid.innerHTML = feat.slice(0, 3).map((s: any) => {
                 let logo = s.logo_url || '/images/partners/arc-logo.png';
                 if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
+                const cat = isEn ? (s.category_en || 'Other') : (s.category_tr || 'Diğer');
+                const offer = s.discount || (isEn ? 'Offer details to be updated' : 'Kampanya bilgisi güncellenecek');
                 return `<article class="partner glass">
                   <div class="logo"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" /></div>
                   <div class="body">
-                    <span class="chip">${escapeHtml(s.category_tr || 'Diğer')}</span>
+                    <span class="chip">${escapeHtml(cat)}</span>
                     <h3>${escapeHtml(s.name)}</h3>
-                    <p class="offer">${escapeHtml(s.discount || '')}</p>
+                    <p class="offer">${escapeHtml(offer)}</p>
                   </div>
                 </article>`;
               }).join('');

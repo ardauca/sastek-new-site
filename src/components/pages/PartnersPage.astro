@@ -105,7 +105,7 @@ const labels = locale === 'tr' ? {
 ---
 
 <BaseLayout title={title} description={desc} locale={locale}>
-  <PageHero eyebrow="SASTEK / PARTNERS" title={title} text={desc} />
+  <PageHero eyebrow={locale === 'tr' ? 'SASTEK / ANLAŞMALI NOKTALAR' : 'SASTEK / PARTNERS'} title={title} text={desc} />
   <section class="section">
     <div class="container partners-page" data-filter-root data-partners-view data-map-token={mapboxToken} data-locale={locale} data-api="https://admin.sastek.org/api">
       <div class="notice" id="partners-notice-banner" style={showNotice ? '' : 'display:none;'}>{locale === 'tr' ? 'Anlaşmalı noktalar doğrulanmış güncel liste ile değiştirilmek üzere örnek olarak gösterilmektedir.' : 'The partner locations are shown for illustrative purposes only and will be replaced with the verified, up-to-date list.'}</div>

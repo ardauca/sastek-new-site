@@ -61,7 +61,7 @@ const desc  = locale === 'tr' ? 'SASTEK yönetimi ve sosyal medya hesaplarıyla 
 ---
 
 <BaseLayout title={title} description={desc} locale={locale}>
-  <PageHero eyebrow="SASTEK / CONTACT" title={title} text={desc} />
+  <PageHero eyebrow={locale === 'tr' ? 'SASTEK / İLETİŞİM' : 'SASTEK / CONTACT'} title={title} text={desc} />
 
   <section class="section contact-section">
     <div class="container contact-layout" data-contact-root data-locale={locale} data-api="https://admin.sastek.org/api">
