@@ -3,22 +3,6 @@ interface Props { locale: 'tr' | 'en'; categories: string[]; showSearch?: boolea
 const { locale, categories, showSearch = true } = Astro.props;
 
 const defaultLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
-
-function getInitialIcon(name: string) {
-  const n = (name || '').toLowerCase();
-  if (!n || n.includes('tüm') || n.includes('all')) return '✨';
-  if (n.includes('kafe') || n.includes('cafe') || n.includes('kahve')) return '☕';
-  if (n.includes('spor') || n.includes('gym') || n.includes('fit')) return '⚽';
-  if (n.includes('sosyal') || n.includes('oyun') || n.includes('game') || n.includes('venue')) return '🎲';
-  if (n.includes('yeme') || n.includes('içme') || n.includes('food') || n.includes('pizza') || n.includes('restoran')) return '🍕';
-  if (n.includes('giyim') || n.includes('wear') || n.includes('clothing')) return '👕';
-  if (n.includes('kitap') || n.includes('kırtasiye') || n.includes('book')) return '📚';
-  if (n.includes('teknoloji') || n.includes('tech')) return '💻';
-  if (n.includes('hizmet') || n.includes('service')) return '🛠️';
-  if (n.includes('eğlence') || n.includes('entertainment')) return '🎉';
-  if (n.includes('diğer') || n.includes('other')) return '🏪';
-  return '🔹';
-}
 ---
 
 <div class="filters" data-filter-controls data-locale={locale}>
@@ -40,10 +24,7 @@ function getInitialIcon(name: string) {
 
     <!-- Custom Glassmorphism Trigger Button -->
     <button type="button" class="dropdown-trigger" data-dropdown-trigger aria-haspopup="listbox" aria-expanded="false">
-      <span class="trigger-label">
-        <span class="trigger-icon" data-trigger-icon>✨</span>
-        <span class="trigger-text" data-trigger-text>{defaultLabel}</span>
-      </span>
+      <span class="trigger-text" data-trigger-text>{defaultLabel}</span>
       <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
       </svg>
@@ -53,18 +34,12 @@ function getInitialIcon(name: string) {
     <div class="dropdown-menu" data-dropdown-menu role="listbox" aria-label={locale === 'tr' ? 'Kategori Seçimi' : 'Category Filter'}>
       <div class="dropdown-options" data-dropdown-options>
         <button type="button" class="dropdown-option is-active" data-val="" role="option" aria-selected="true">
-          <span class="option-left">
-            <span class="option-icon">✨</span>
-            <span class="option-label">{defaultLabel}</span>
-          </span>
+          <span class="option-label">{defaultLabel}</span>
           <span class="active-indicator">●</span>
         </button>
         {categories.map((cat) => (
           <button type="button" class="dropdown-option" data-val={cat.toLowerCase()} role="option" aria-selected="false">
-            <span class="option-left">
-              <span class="option-icon">{getInitialIcon(cat)}</span>
-              <span class="option-label">{cat}</span>
-            </span>
+            <span class="option-label">{cat}</span>
             <span class="active-indicator">●</span>
           </button>
         ))}
@@ -74,22 +49,6 @@ function getInitialIcon(name: string) {
 </div>
 
 <script>
-  function mapCategoryIcon(name: string) {
-    const n = (name || '').toLowerCase();
-    if (!n || n.includes('tüm') || n.includes('all')) return '✨';
-    if (n.includes('kafe') || n.includes('cafe') || n.includes('kahve')) return '☕';
-    if (n.includes('spor') || n.includes('gym') || n.includes('fit')) return '⚽';
-    if (n.includes('sosyal') || n.includes('oyun') || n.includes('game') || n.includes('venue')) return '🎲';
-    if (n.includes('yeme') || n.includes('içme') || n.includes('food') || n.includes('pizza') || n.includes('restoran')) return '🍕';
-    if (n.includes('giyim') || n.includes('wear') || n.includes('clothing')) return '👕';
-    if (n.includes('kitap') || n.includes('kırtasiye') || n.includes('book')) return '📚';
-    if (n.includes('teknoloji') || n.includes('tech')) return '💻';
-    if (n.includes('hizmet') || n.includes('service')) return '🛠️';
-    if (n.includes('eğlence') || n.includes('entertainment')) return '🎉';
-    if (n.includes('diğer') || n.includes('other')) return '🏪';
-    return '🔹';
-  }
-
   function setupFilters() {
     document.querySelectorAll<HTMLElement>('[data-filter-root]').forEach((root) => {
       const search = root.querySelector<HTMLInputElement>('[data-filter-search]');
@@ -97,7 +56,6 @@ function getInitialIcon(name: string) {
       const dropdown = root.querySelector<HTMLElement>('[data-custom-dropdown]');
       const trigger = dropdown?.querySelector<HTMLButtonElement>('[data-dropdown-trigger]');
       const triggerText = dropdown?.querySelector<HTMLElement>('[data-trigger-text]');
-      const triggerIcon = dropdown?.querySelector<HTMLElement>('[data-trigger-icon]');
       const optionsContainer = dropdown?.querySelector<HTMLElement>('[data-dropdown-options]');
 
       const apply = () => {
@@ -135,7 +93,6 @@ function getInitialIcon(name: string) {
         const selectedOption = select.options[select.selectedIndex];
         const label = selectedOption ? selectedOption.text : (select.options[0]?.text || 'Tüm kategoriler');
         if (triggerText) triggerText.textContent = label;
-        if (triggerIcon) triggerIcon.textContent = mapCategoryIcon(label);
 
         optionsContainer.querySelectorAll<HTMLButtonElement>('.dropdown-option').forEach((btn) => {
           const isActive = btn.dataset.val === selectedVal;
@@ -150,14 +107,10 @@ function getInitialIcon(name: string) {
         optionsContainer.innerHTML = opts.map((opt) => {
           const val = opt.value;
           const label = opt.text;
-          const icon = mapCategoryIcon(label);
           const isSelected = val === currentVal;
           return `
             <button type="button" class="dropdown-option ${isSelected ? 'is-active' : ''}" data-val="${val}" role="option" aria-selected="${isSelected}">
-              <span class="option-left">
-                <span class="option-icon">${icon}</span>
-                <span class="option-label">${label}</span>
-              </span>
+              <span class="option-label">${label}</span>
               <span class="active-indicator">●</span>
             </button>
           `;
@@ -318,23 +271,11 @@ function getInitialIcon(name: string) {
     box-shadow: 0 0 25px rgba(0, 212, 255, 0.22), 0 8px 30px rgba(0, 0, 0, 0.5);
   }
 
-  .trigger-label {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    overflow: hidden;
-  }
-
-  .trigger-icon {
-    font-size: 1.1rem;
-    flex-shrink: 0;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
-  }
-
   .trigger-text {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    letter-spacing: 0.01em;
   }
 
   .chevron-icon {
@@ -417,13 +358,14 @@ function getInitialIcon(name: string) {
     justify-content: space-between;
     gap: 0.75rem;
     width: 100%;
-    padding: 0.65rem 0.85rem;
+    padding: 0.7rem 0.95rem;
     border: 1px solid transparent;
     border-radius: 0.75rem;
     background: transparent;
     color: #c9ddf0;
     font-size: 0.88rem;
     font-weight: 550;
+    letter-spacing: 0.01em;
     text-align: left;
     cursor: pointer;
     transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
@@ -441,18 +383,6 @@ function getInitialIcon(name: string) {
     border-color: rgba(255, 107, 26, 0.35);
     color: #ffb184;
     font-weight: 700;
-  }
-
-  :global(.dropdown-option .option-left) {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    min-width: 0;
-  }
-
-  :global(.dropdown-option .option-icon) {
-    font-size: 1.05rem;
-    flex-shrink: 0;
   }
 
   :global(.dropdown-option .option-label) {
