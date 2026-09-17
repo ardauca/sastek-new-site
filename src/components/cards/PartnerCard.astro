@@ -13,11 +13,6 @@ const { partner, locale } = Astro.props;
   <div class="body">
     <div class="meta">
       <span class="chip">{t(partner.category, locale)}</span>
-      {partner.mapUrl && (
-        <a href={partner.mapUrl} target="_blank" rel="noopener noreferrer" class="map-action" aria-label={`${partner.name} ${locale === 'tr' ? 'harita konumu' : 'map location'}`}>
-          <span>{locale === 'tr' ? 'Harita' : 'Map'}</span> ↗
-        </a>
-      )}
     </div>
     <h3>{partner.name}</h3>
     <p class="offer">{t(partner.discountLabel, locale)}</p>

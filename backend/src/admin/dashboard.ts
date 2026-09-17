@@ -165,6 +165,12 @@ export const dashboardPage = `<!DOCTYPE html>
     }
     .modal h3 { font-size:.95rem;font-weight:600;margin-bottom:18px;color:#fff; }
     .grid-2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+    .form-section-title {
+      font-size:.72rem;font-weight:700;color:var(--signal);letter-spacing:.08em;
+      text-transform:uppercase;margin:20px 0 10px;padding-bottom:6px;
+      border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;
+    }
+    .form-section-title:first-of-type { margin-top:4px; }
     .form-field { margin-bottom:14px; }
     .form-field label { display:block;font-size:.7rem;color:var(--muted);margin-bottom:4px;letter-spacing:.05em;font-weight:500; }
     .form-field input, .form-field select, .form-field textarea {
@@ -662,35 +668,50 @@ export const dashboardPage = `<!DOCTYPE html>
   <div class="modal">
     <h3 id="shopModalTitle">Yeni Anlaşmalı Nokta</h3>
     <input type="hidden" id="shopId" />
+    <input type="hidden" id="shopLogoUrl" />
+    <input type="hidden" id="shopDescTr" />
+    <input type="hidden" id="shopDescEn" />
+    <input type="hidden" id="shopWebsite" />
+
+    <!-- Bölüm 1: İşletme Bilgileri -->
+    <div class="form-section-title">🏢 İŞLETME BİLGİLERİ</div>
     <div class="form-field"><label>İŞLETME ADI *</label><input id="shopName" placeholder="Örn: ARC Kafe" /></div>
-    <div class="form-field"><label>KATEGORİ</label><select id="shopCategory"><option value="">Seçiniz...</option></select></div>
-    <div class="form-field"><label>İNDİRİM METNİ</label><input id="shopDiscount" placeholder="Örn: SASTEK üyelerine %15 indirim" /></div>
-    <div class="form-field"><label>AÇIKLAMA (TR)</label><textarea id="shopDescTr"></textarea></div>
-    <div class="form-field"><label>AÇIKLAMA (EN)</label><textarea id="shopDescEn"></textarea></div>
+    <div class="grid-2">
+      <div class="form-field"><label>KATEGORİ *</label><select id="shopCategory"><option value="">Seçiniz...</option></select></div>
+      <div class="form-field"><label>İNDİRİM METNİ</label><input id="shopDiscount" placeholder="Örn: SASTEK üyelerine %15 indirim" /></div>
+    </div>
+    <div class="form-field"><label>ADRES</label><input id="shopAddress" placeholder="Örn: Üniversite Cd. No:12, Tepebaşı/Eskişehir" /></div>
+    <div class="grid-2">
+      <div class="form-field">
+        <label>KOORDİNATLAR (Enlem, Boylam)</label>
+        <input id="shopCoords" placeholder="39.7756, 30.5151" />
+      </div>
+      <div class="form-field">
+        <label>GOOGLE MAPS URL</label>
+        <input id="shopMapUrl" placeholder="https://maps.app.goo.gl/..." />
+      </div>
+    </div>
     <div class="form-field">
-      <label>KOORDİNATLAR (Enlem, Boylam)</label>
-      <input id="shopCoords" placeholder="39.7756, 30.5151 (Google Maps'ten yapıştırabilirsiniz)" />
-    </div>
-    <div class="grid-2">
-      <div class="form-field"><label>ÖNE ÇIKARILAN (Ana Sayfa)</label><select id="shopFeatured"><option value="1">⭐ Öne Çıkarılan (Evet)</option><option value="0">Normal (Hayır)</option></select></div>
-      <div class="form-field"><label>HARİTADA GÖSTER</label><select id="shopShowOnMap"><option value="1">📍 Göster (Evet)</option><option value="0">Gizle (Hayır)</option></select></div>
-    </div>
-    <div class="grid-2">
-      <div class="form-field"><label>DOĞRULANMIŞ İŞLETME</label><select id="shopVerified"><option value="1">✅ Doğrulanmış (Evet)</option><option value="0">Bekliyor (Hayır)</option></select></div>
-      <div class="form-field"><label>SIRALAMA ÖNCELİĞİ</label><input id="shopOrderNum" type="number" value="1" /></div>
-    </div>
-    <div class="form-field"><label>HARİTA URL (Google Maps)</label><input id="shopMapUrl" placeholder="https://maps.app.goo.gl/..." /></div>
-    <div class="form-field"><label>LOGO YÜKLE</label>
+      <label>LOGO YÜKLE</label>
       <div class="upload-area" onclick="document.getElementById('shopLogoFile').click()">
         📎 Tıkla veya sürükle (maks. 5MB, WebP/PNG/JPG)
         <div class="upload-preview" id="shopLogoPreview"></div>
       </div>
       <input type="file" id="shopLogoFile" accept="image/jpeg,image/png,image/webp" style="display:none" />
     </div>
-    <div class="form-field"><label>LOGO URL (mevcut veya dış link)</label><input id="shopLogoUrl" placeholder="https://..." /></div>
-    <div class="form-field"><label>WEBSİTE</label><input id="shopWebsite" placeholder="https://..." /></div>
-    <div class="form-field"><label>ADRES</label><input id="shopAddress" /></div>
-    <div class="form-field"><label>DURUM</label><select id="shopActive"><option value="1">Aktif (Görünür)</option><option value="0">Pasif (Görünmez)</option></select></div>
+
+    <!-- Bölüm 2: Yayın Ayarları -->
+    <div class="form-section-title">⚙️ YAYIN AYARLARI</div>
+    <div class="grid-2">
+      <div class="form-field"><label>DURUM</label><select id="shopActive"><option value="1">Aktif (Görünür)</option><option value="0">Pasif (Görünmez)</option></select></div>
+      <div class="form-field"><label>ÖNE ÇIKARILAN (Ana Sayfa)</label><select id="shopFeatured"><option value="1">⭐ Öne Çıkarılan (Evet)</option><option value="0">Normal (Hayır)</option></select></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-field"><label>HARİTADA GÖSTER</label><select id="shopShowOnMap"><option value="1">📍 Göster (Evet)</option><option value="0">Gizle (Hayır)</option></select></div>
+      <div class="form-field"><label>DOĞRULANMIŞ İŞLETME</label><select id="shopVerified"><option value="1">✅ Doğrulanmış (Evet)</option><option value="0">Bekliyor (Hayır)</option></select></div>
+    </div>
+    <div class="form-field"><label>SIRALAMA ÖNCELİĞİ</label><input id="shopOrderNum" type="number" value="1" /></div>
+
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('shopModal')">İptal</button>
       <button class="btn btn-primary" id="btnSaveShop" onclick="saveShop()">Kaydet</button>
@@ -1267,6 +1288,7 @@ async function saveShop() {
   try {
     const id = document.getElementById('shopId').value;
     if (!document.getElementById('shopName').value.trim()) { toast('İşletme adı zorunludur', 'error'); return; }
+    if (!document.getElementById('shopCategory').value) { toast('Kategori seçimi zorunludur', 'error'); return; }
     const logoFile = document.getElementById('shopLogoFile').files[0];
     let logoUrl = document.getElementById('shopLogoUrl').value;
 
@@ -1294,21 +1316,21 @@ async function saveShop() {
     }
 
     const body = {
-      name: document.getElementById('shopName').value,
-      category_id: document.getElementById('shopCategory').value || null,
-      discount: document.getElementById('shopDiscount').value,
-      description_tr: document.getElementById('shopDescTr').value,
-      description_en: document.getElementById('shopDescEn').value,
+      name: document.getElementById('shopName').value.trim(),
+      category_id: document.getElementById('shopCategory').value ? parseInt(document.getElementById('shopCategory').value) : null,
+      discount: document.getElementById('shopDiscount').value.trim(),
+      description_tr: document.getElementById('shopDescTr').value || null,
+      description_en: document.getElementById('shopDescEn').value || null,
       lat,
       lng,
       is_featured: parseInt(document.getElementById('shopFeatured').value),
       show_on_map: parseInt(document.getElementById('shopShowOnMap').value),
       is_verified: parseInt(document.getElementById('shopVerified').value),
       order_num: parseInt(document.getElementById('shopOrderNum').value) || 1,
-      map_url: document.getElementById('shopMapUrl').value,
-      logo_url: logoUrl,
-      website: document.getElementById('shopWebsite').value,
-      address: document.getElementById('shopAddress').value,
+      map_url: document.getElementById('shopMapUrl').value.trim(),
+      logo_url: logoUrl || null,
+      website: document.getElementById('shopWebsite').value || null,
+      address: document.getElementById('shopAddress').value.trim(),
       is_active: parseInt(document.getElementById('shopActive').value),
     };
     const url = id ? \`/api/shops/\${id}\` : '/api/shops';
