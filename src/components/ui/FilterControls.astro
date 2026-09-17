@@ -4,10 +4,11 @@ interface Props {
   categories: string[];
   showSearch?: boolean;
   showSort?: boolean;
+  allLabel?: string;
 }
-const { locale, categories, showSearch = true, showSort = false } = Astro.props;
+const { locale, categories, showSearch = true, showSort = false, allLabel } = Astro.props;
 
-const defaultCategoryLabel = locale === 'tr' ? 'Tüm kategoriler' : 'All categories';
+const defaultCategoryLabel = allLabel || (locale === 'tr' ? 'Tüm kategoriler' : 'All categories');
 
 const sortOptions = locale === 'tr' ? [
   { value: 'default', label: 'Varsayılan', triggerLabel: 'Sırala: Varsayılan', icon: 'sliders' },

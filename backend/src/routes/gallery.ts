@@ -31,6 +31,33 @@ galleryRoutes.post('/', requireAuth(), async (c) => {
   return c.json({ ok: true, id: result.meta.last_row_id }, 201);
 });
 
+// PUT /api/gallery/:id — update gallery item
+galleryRoutes.put('/:id', requireAuth(), async (c) => {
+  const data = await c.req.json<Partial<GalleryItem>>();
+  const id = c.req.param('id');
+
+  const hasEventTag = 'event_tag' in data && data.event_tag !== undefined;
+  const newEventTag = hasEventTag
+    ? (typeof data.event_tag === 'string' && data.event_tag.trim() ? data.event_tag.trim() : null)
+    : null;
+
+  await c.env.DB.prepare(`
+    UPDATE gallery SET
+      event_tag = CASE WHEN ? = 1 THEN ? ELSE event_tag END,
+      caption_tr = COALESCE(?, caption_tr),
+      caption_en = COALESCE(?, caption_en)
+    WHERE id = ?
+  `).bind(
+    hasEventTag ? 1 : 0,
+    newEventTag,
+    data.caption_tr ?? null,
+    data.caption_en ?? null,
+    id
+  ).run();
+
+  return c.json({ ok: true });
+});
+
 function getR2KeyFromUrl(url: string): string | null {
   if (!url || typeof url !== 'string') return null;
   const match = url.match(/\/api\/upload\/file\/(.+)$/);

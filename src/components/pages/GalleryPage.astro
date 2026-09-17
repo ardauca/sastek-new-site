@@ -17,13 +17,16 @@ try {
   if (response.ok) {
     const apiItems = await response.json();
     if (Array.isArray(apiItems) && apiItems.length > 0) {
-      rawGallery = apiItems.map((item: any) => ({
-        id: String(item.id),
-        src: item.url,
-        alt: { tr: item.caption_tr || 'SASTEK Etkinlik Görseli', en: item.caption_en || 'SASTEK Event Photo' },
-        category: { tr: item.event_tag || 'Genel', en: item.event_tag || 'General' },
-        order: item.id,
-      }));
+      rawGallery = apiItems.map((item: any) => {
+        const rawTag = (item.event_tag || '').trim();
+        return {
+          id: String(item.id),
+          src: item.url,
+          alt: { tr: item.caption_tr || 'SASTEK Etkinlik Görseli', en: item.caption_en || 'SASTEK Event Photo' },
+          category: { tr: rawTag, en: rawTag },
+          order: item.id,
+        };
+      });
     }
   }
 } catch (e) {
@@ -35,12 +38,15 @@ if (!rawGallery.length) {
     id: g.id,
     src: g.src,
     alt: g.alt,
-    category: g.category,
+    category: {
+      tr: (t(g.category, 'tr') || '').trim(),
+      en: (t(g.category, 'en') || '').trim(),
+    },
     order: g.order || idx + 1,
   }));
 }
 
-const categories = [...new Set(rawGallery.map((item) => t(item.category, locale)))];
+const categories = [...new Set(rawGallery.map((item) => (t(item.category, locale) || '').trim()).filter(Boolean))];
 const title = locale === 'tr' ? 'Galeri' : 'Gallery';
 const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp yaşamından seçilmiş anlar.' : 'Selected moments from events, technical meetups and club life.';
 ---
@@ -49,22 +55,26 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
   <PageHero eyebrow={locale === 'tr' ? 'SASTEK / GALERİ' : 'SASTEK / GALLERY'} title={title} text={desc} />
   <section class="section">
     <div class="container" data-filter-root data-gallery-root data-locale={locale} data-api="https://admin.sastek.org/api">
-      <FilterControls locale={locale} categories={categories} showSearch={false} />
+      <FilterControls locale={locale} categories={categories} showSearch={false} allLabel={locale === 'tr' ? 'Tüm etiketler' : 'All tags'} />
       <div class="gallery-grid" id="gallery-grid-container">
-        {rawGallery.map((item, index) => (
-          <button
-            type="button"
-            data-filter-card
-            data-category={t(item.category, locale).toLowerCase()}
-            data-search={t(item.alt, locale).toLowerCase()}
-            data-lightbox-src={item.src.startsWith('/images/') ? 'https://sastek.org' + item.src : item.src}
-            data-lightbox-alt={t(item.alt, locale)}
-            aria-label={`${locale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}: ${t(item.alt, locale)}`}
-          >
-            <img src={item.src.startsWith('/images/') ? 'https://sastek.org' + item.src : item.src} alt={t(item.alt, locale)} width="720" height="520" loading={index > 1 ? 'lazy' : 'eager'} />
-            <span>{t(item.category, locale)}</span>
-          </button>
-        ))}
+        {rawGallery.map((item, index) => {
+          const categoryName = (t(item.category, locale) || '').trim();
+          const altText = t(item.alt, locale) || '';
+          return (
+            <button
+              type="button"
+              data-filter-card
+              data-category={categoryName.toLowerCase()}
+              data-search={altText.toLowerCase()}
+              data-lightbox-src={item.src.startsWith('/images/') ? 'https://sastek.org' + item.src : item.src}
+              data-lightbox-alt={altText}
+              aria-label={`${locale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}: ${altText}`}
+            >
+              <img src={item.src.startsWith('/images/') ? 'https://sastek.org' + item.src : item.src} alt={altText} width="720" height="520" loading={index > 1 ? 'lazy' : 'eager'} />
+              {categoryName ? <span>{categoryName}</span> : null}
+            </button>
+          );
+        })}
       </div>
     </div>
   </section>
@@ -75,21 +85,23 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
       <span aria-hidden="true">&times;</span>
     </button>
 
-    <button id="lb-prev" class="lightbox-nav prev" aria-label={locale === 'tr' ? 'Önceki fotoğraf' : 'Previous photo'}>
-      <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="15 18 9 12 15 6"></polyline>
-      </svg>
-    </button>
+    <div class="lightbox-body">
+      <button id="lb-prev" class="lightbox-nav prev" type="button" aria-label={locale === 'tr' ? 'Önceki fotoğraf' : 'Previous photo'}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
 
-    <div class="lightbox-stage">
-      <img id="lb-image" alt={locale === 'tr' ? 'Seçilen galeri görseli' : 'Selected gallery image'} />
+      <div class="lightbox-stage">
+        <img id="lb-image" alt={locale === 'tr' ? 'Seçilen galeri görseli' : 'Selected gallery image'} />
+      </div>
+
+      <button id="lb-next" class="lightbox-nav next" type="button" aria-label={locale === 'tr' ? 'Sonraki fotoğraf' : 'Next photo'}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
     </div>
-
-    <button id="lb-next" class="lightbox-nav next" aria-label={locale === 'tr' ? 'Sonraki fotoğraf' : 'Next photo'}>
-      <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="9 18 15 12 9 6"></polyline>
-      </svg>
-    </button>
 
     <div class="lightbox-foot">
       <span id="lb-caption" class="lightbox-caption"></span>
@@ -167,9 +179,17 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
     }
   });
 
-  // Dışarı tıklanınca kapat (stage dışı)
+  // Dışarı tıklanınca kapat (stage / body dışı)
   dialog?.addEventListener('click', (event) => {
-    if (event.target === dialog) dialog.close();
+    const target = event.target as HTMLElement;
+    if (target === dialog || target.classList.contains('lightbox-body') || target.classList.contains('lightbox-stage')) {
+      dialog.close();
+    }
+  });
+
+  // Fotoğrafa tıklanınca modalın kapanmasını engelle
+  image?.addEventListener('click', (e) => {
+    e.stopPropagation();
   });
 
   // Klavye Navigasyonu (Ok tuşları)
@@ -225,22 +245,25 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
       }
 
       gridContainer.innerHTML = items.map((item: any, index: number) => {
-        const cat = item.event_tag || (pageLocale === 'tr' ? 'Genel' : 'General');
+        const rawTag = (item.event_tag || '').trim();
         const alt = item.caption_tr || (pageLocale === 'tr' ? 'SASTEK Etkinlik Görseli' : 'SASTEK Event Photo');
         let src = item.url;
         if (src.startsWith('/images/')) src = 'https://sastek.org' + src;
 
+        const catHtml = rawTag ? `<span>${escapeHtml(rawTag)}</span>` : '';
+        const catAttr = rawTag ? escapeHtml(rawTag.toLowerCase()) : '';
+
         return `<button
           type="button"
           data-filter-card
-          data-category="${escapeHtml(cat.toLowerCase())}"
+          data-category="${catAttr}"
           data-search="${escapeHtml(alt.toLowerCase())}"
           data-lightbox-src="${escapeHtml(src)}"
           data-lightbox-alt="${escapeHtml(alt)}"
           aria-label="${pageLocale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}: ${escapeHtml(alt)}"
         >
           <img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" width="720" height="520" loading="${index > 1 ? 'lazy' : 'eager'}" />
-          <span>${escapeHtml(cat)}</span>
+          ${catHtml}
         </button>`;
       }).join('');
 
@@ -249,8 +272,9 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
       const categorySelect = root.querySelector<HTMLSelectElement>('[data-filter-category]');
       if (categorySelect) {
         const existingVal = categorySelect.value;
-        const apiCategories = [...new Set(items.map((item: any) => item.event_tag || (pageLocale === 'tr' ? 'Genel' : 'General')))];
-        categorySelect.innerHTML = `<option value="">${pageLocale === 'tr' ? 'Tüm kategoriler' : 'All categories'}</option>` +
+        const apiCategories = [...new Set(items.map((item: any) => (item.event_tag || '').trim()).filter(Boolean))];
+        const defaultAllLabel = pageLocale === 'tr' ? 'Tüm etiketler' : 'All tags';
+        categorySelect.innerHTML = `<option value="">${defaultAllLabel}</option>` +
           apiCategories.map((c: string) => `<option value="${escapeHtml(c.toLowerCase())}">${escapeHtml(c)}</option>`).join('');
         categorySelect.value = existingVal;
         categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -306,20 +330,21 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
     position: fixed;
     inset: 50% auto auto 50%;
     transform: translate(-50%, -50%);
-    width: min(1120px, calc(100vw - 2.5rem));
-    max-height: calc(100dvh - 3rem);
+    width: min(1180px, calc(100vw - 2rem));
+    max-height: calc(100dvh - 2.5rem);
     margin: 0;
     overflow: hidden;
-    border: 1px solid rgba(128, 174, 213, .3);
+    border: 1px solid rgba(0, 212, 255, .25);
     border-radius: 1.25rem;
     background: rgba(4, 11, 20, .96);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    padding: clamp(.8rem, 2vw, 1.2rem);
-    box-shadow: 0 28px 90px rgba(0, 0, 0, .75), 0 0 0 1px rgba(255, 255, 255, .04);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    padding: clamp(.75rem, 2vw, 1.25rem);
+    box-shadow: 0 28px 90px rgba(0, 0, 0, .8), 0 0 40px rgba(0, 212, 255, .08);
     display: none;
     grid-template-rows: 1fr auto;
     gap: .75rem;
+    box-sizing: border-box;
   }
   dialog[open] {
     display: grid;
@@ -330,17 +355,33 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
     -webkit-backdrop-filter: blur(8px);
   }
 
+  /* 3 Sütunlu Lightbox Gövdesi: [ ← ] [ Fotoğraf ] [ → ] */
+  .lightbox-body {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) 52px;
+    align-items: center;
+    gap: .75rem;
+    width: 100%;
+    min-height: 0;
+    max-height: calc(100dvh - 8.5rem);
+  }
+
   .lightbox-stage {
     position: relative;
-    display: grid;
-    place-items: center;
-    max-height: calc(100dvh - 9rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    max-height: calc(100dvh - 8.5rem);
+    min-height: 0;
+    min-width: 0;
     overflow: hidden;
   }
   .lightbox-stage img {
     display: block;
     max-width: 100%;
-    max-height: calc(100dvh - 9rem);
+    max-height: calc(100dvh - 8.5rem);
     width: auto;
     height: auto;
     object-fit: contain;
@@ -358,52 +399,59 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
     place-items: center;
     width: 2.5rem;
     height: 2.5rem;
-    border: 1px solid rgba(255, 255, 255, .2);
+    border: 1px solid rgba(0, 212, 255, .25);
     border-radius: 50%;
     background: rgba(7, 21, 38, .85);
-    color: #fff;
+    color: #e3edf7;
     font-size: 1.4rem;
     cursor: pointer;
     backdrop-filter: blur(8px);
-    transition: background .2s, border-color .2s, transform .2s;
+    transition: background .2s, border-color .2s, color .2s, transform .2s, box-shadow .2s;
   }
   .close:hover {
-    background: #ff6b1a;
-    border-color: #ff8a49;
-    color: #07111f;
-    transform: scale(1.05);
+    background: rgba(255, 107, 26, .2);
+    border-color: #ff6b1a;
+    color: #ff9a62;
+    transform: scale(1.06);
+    box-shadow: 0 0 14px rgba(255, 107, 26, .35);
+  }
+  .close:focus-visible {
+    outline: 2px solid #00d4ff;
+    outline-offset: 2px;
   }
 
-  /* Ok Butonları (Prev / Next) */
+  /* Ok Butonları (Prev / Next) - Fotoğrafın Dışında */
   .lightbox-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
+    position: static;
+    transform: none;
+    justify-self: center;
     display: grid;
     place-items: center;
-    width: 3rem;
-    height: 3rem;
-    border: 1px solid rgba(128, 174, 213, .3);
+    width: 3.25rem;
+    height: 3.25rem;
+    border: 1px solid rgba(0, 212, 255, .3);
     border-radius: 50%;
     background: rgba(6, 17, 30, .85);
     backdrop-filter: blur(12px);
     color: #ffffff;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, .4);
-    transition: border-color .2s, background .2s, transform .2s, color .2s;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+    transition: border-color .2s, background .2s, transform .2s, color .2s, box-shadow .2s;
+    flex-shrink: 0;
   }
   .lightbox-nav:hover {
-    border-color: #ff6b1a;
-    background: rgba(255, 107, 26, .18);
-    color: #ff9a62;
-    transform: translateY(-50%) scale(1.08);
+    border-color: #00d4ff;
+    background: rgba(0, 212, 255, .16);
+    color: #00d4ff;
+    transform: scale(1.08);
+    box-shadow: 0 0 16px rgba(0, 212, 255, .35);
   }
-  .lightbox-nav.prev {
-    left: 1.2rem;
+  .lightbox-nav:active {
+    transform: scale(0.96);
   }
-  .lightbox-nav.next {
-    right: 1.2rem;
+  .lightbox-nav:focus-visible {
+    outline: 2px solid #00d4ff;
+    outline-offset: 2px;
   }
 
   /* Alt Bilgi & Sayaç */
@@ -413,7 +461,7 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
     justify-content: space-between;
     gap: 1rem;
     padding: .5rem .6rem 0;
-    border-top: 1px solid rgba(84, 119, 151, .2);
+    border-top: 1px solid rgba(0, 212, 255, .15);
     font-size: .85rem;
     color: #bad0e4;
   }
@@ -427,7 +475,7 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: .78rem;
     font-weight: 700;
-    color: #ff9a62;
+    color: #00d4ff;
     letter-spacing: .08em;
     flex-shrink: 0;
   }
@@ -445,28 +493,46 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
       width: calc(100vw - 1rem);
       max-height: calc(100dvh - 1rem);
       padding: .6rem;
+      gap: .5rem;
+    }
+    .lightbox-body {
+      grid-template-columns: 42px minmax(0, 1fr) 42px;
+      gap: .35rem;
+      max-height: calc(100dvh - 6.5rem);
     }
     .lightbox-stage {
-      max-height: calc(100dvh - 7rem);
+      max-height: calc(100dvh - 6.5rem);
     }
     .lightbox-stage img {
-      max-height: calc(100dvh - 7rem);
+      max-height: calc(100dvh - 6.5rem);
     }
     .lightbox-nav {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 2.5rem;
+      height: 2.5rem;
     }
-    .lightbox-nav.prev {
-      left: .4rem;
-    }
-    .lightbox-nav.next {
-      right: .4rem;
+    .lightbox-nav svg {
+      width: 18px;
+      height: 18px;
     }
     .close {
       right: .5rem;
       top: .5rem;
       width: 2.2rem;
       height: 2.2rem;
+      font-size: 1.2rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lightbox-nav,
+    .close,
+    :global(.gallery-grid img) {
+      transition: none;
+      transform: none;
+    }
+    .lightbox-nav:hover,
+    .close:hover {
+      transform: none;
     }
   }
 </style>

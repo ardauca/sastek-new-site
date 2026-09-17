@@ -194,6 +194,193 @@ export const dashboardPage = `<!DOCTYPE html>
     .upload-preview { margin-top:8px; display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
     .upload-preview img { max-width:100%;max-height:90px;border-radius:5px;object-fit:contain;border:1px solid var(--border); }
 
+    /* ── Admin Custom Dropdown (SASTEK Deep-Space Glassmorphism) ── */
+    .admin-custom-dropdown {
+      position: relative;
+      width: 100%;
+    }
+    .admin-dropdown-trigger {
+      width: 100%;
+      padding: 9px 12px;
+      background: rgba(10, 18, 32, 0.85);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      border-radius: 7px;
+      color: var(--text);
+      font-size: .8rem;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    .admin-dropdown-trigger:hover {
+      border-color: var(--signal);
+      box-shadow: 0 0 14px rgba(0, 212, 255, 0.25);
+    }
+    .admin-dropdown-trigger:focus-visible {
+      outline: none;
+      border-color: var(--signal);
+      box-shadow: 0 0 16px rgba(0, 212, 255, 0.35);
+    }
+    .admin-dropdown-trigger-text {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .admin-dropdown-trigger .sparkle-icon {
+      color: var(--signal);
+      font-size: .85rem;
+      flex-shrink: 0;
+    }
+    .admin-dropdown-chevron {
+      width: 16px;
+      height: 16px;
+      color: var(--muted);
+      transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1), color .2s;
+      flex-shrink: 0;
+    }
+    .admin-custom-dropdown.is-open .admin-dropdown-chevron {
+      transform: rotate(180deg);
+      color: var(--signal);
+    }
+    .admin-custom-dropdown.is-open .admin-dropdown-trigger {
+      border-color: var(--signal);
+      box-shadow: 0 0 16px rgba(0, 212, 255, 0.3);
+    }
+    .admin-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      z-index: 120;
+      background: rgba(10, 18, 32, 0.97);
+      border: 1px solid rgba(0, 212, 255, 0.35);
+      border-radius: 9px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 212, 255, 0.15);
+      padding: 6px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-6px) scale(0.98);
+      transition: opacity .18s ease, transform .18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .admin-custom-dropdown.is-open .admin-dropdown-menu {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+    .admin-dropdown-list {
+      max-height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .admin-dropdown-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    .admin-dropdown-list::-webkit-scrollbar-thumb {
+      background: rgba(0, 212, 255, 0.3);
+      border-radius: 3px;
+    }
+    .admin-dropdown-item {
+      width: 100%;
+      padding: 7px 10px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      color: var(--text);
+      font-size: .78rem;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background .15s, color .15s;
+    }
+    .admin-dropdown-item:hover, .admin-dropdown-item:focus-visible {
+      background: rgba(0, 212, 255, 0.12);
+      color: var(--signal);
+      outline: none;
+    }
+    .admin-dropdown-item.is-selected {
+      background: rgba(0, 212, 255, 0.18);
+      color: var(--signal);
+      font-weight: 600;
+    }
+    .admin-dropdown-item .item-check {
+      color: var(--signal);
+      font-size: .8rem;
+      opacity: 0;
+    }
+    .admin-dropdown-item.is-selected .item-check {
+      opacity: 1;
+    }
+    .admin-dropdown-footer {
+      border-top: 1px solid rgba(30, 45, 69, 0.8);
+      margin-top: 5px;
+      padding-top: 5px;
+    }
+    .admin-dropdown-add-btn {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px dashed rgba(0, 212, 255, 0.4);
+      background: rgba(0, 212, 255, 0.05);
+      border-radius: 6px;
+      color: var(--signal);
+      font-size: .76rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .15s, border-color .15s;
+    }
+    .admin-dropdown-add-btn:hover {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: var(--signal);
+    }
+    .admin-dropdown-add-btn .plus-icon {
+      font-size: .95rem;
+      font-weight: 700;
+    }
+
+    /* New Tag Inline Input Box */
+    .admin-new-tag-box {
+      margin-top: 8px;
+      padding: 10px;
+      background: rgba(0, 212, 255, 0.04);
+      border: 1px solid rgba(0, 212, 255, 0.25);
+      border-radius: 7px;
+    }
+    .admin-new-tag-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .admin-new-tag-row input {
+      flex: 1;
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text);
+      font-size: .78rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .admin-new-tag-row input:focus {
+      border-color: var(--signal);
+    }
+
     #toast {
       position:fixed;bottom:24px;right:24px;
       background:var(--panel2);border:1px solid var(--border);
@@ -865,18 +1052,47 @@ export const dashboardPage = `<!DOCTYPE html>
 <!-- Gallery Modal -->
 <div class="modal-backdrop" id="galleryModal">
   <div class="modal">
-    <h3>Fotoğraf Yükle</h3>
-    <div class="form-field"><label>FOTOĞRAF SEÇ *</label>
+    <h3 id="galleryModalTitle">Fotoğraf Yükle</h3>
+    <input type="hidden" id="galleryEditId" value="" />
+    <div class="form-field" id="galleryUploadAreaField"><label>FOTOĞRAF SEÇ *</label>
       <div class="upload-area" onclick="document.getElementById('galleryFile').click()">
         📎 Tıkla veya sürükle (maks. 5MB)
         <div class="upload-preview" id="galleryPreview"></div>
       </div>
       <input type="file" id="galleryFile" accept="image/*" style="display:none" multiple />
     </div>
-    <div class="form-field"><label>ETİKET (etkinlik adı)</label><input id="galleryTag" placeholder="teknik-gezi-2024" /></div>
+    <div class="form-field">
+      <label>ETİKET (İSTEĞE BAĞLI)</label>
+      <input type="hidden" id="galleryTag" value="" />
+      <div class="admin-custom-dropdown" id="galleryTagDropdown">
+        <button type="button" class="admin-dropdown-trigger" id="galleryTagTrigger" aria-haspopup="listbox" aria-expanded="false" onclick="toggleGalleryTagDropdown()">
+          <span class="admin-dropdown-trigger-text" id="galleryTagTriggerText">
+            <span class="sparkle-icon">✦</span> Etiket seçin
+          </span>
+          <svg class="admin-dropdown-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <div class="admin-dropdown-menu" id="galleryTagMenu" role="listbox">
+          <div class="admin-dropdown-list" id="galleryTagList"></div>
+          <div class="admin-dropdown-footer">
+            <button type="button" class="admin-dropdown-add-btn" onclick="showNewTagInput()">
+              <span class="plus-icon">+</span> Yeni etiket oluştur
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="admin-new-tag-box" id="adminNewTagBox" style="display:none;">
+        <div class="admin-new-tag-row">
+          <input type="text" id="newTagNameInput" placeholder="Yeni etiket adı..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();saveNewTag();}if(event.key==='Escape'){cancelNewTag();}" />
+          <button type="button" class="btn btn-sm btn-primary" onclick="saveNewTag()">Kaydet</button>
+          <button type="button" class="btn btn-sm btn-ghost" onclick="cancelNewTag()">İptal</button>
+        </div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('galleryModal')">İptal</button>
-      <button class="btn btn-primary" id="btnUploadGallery" onclick="uploadGallery()">Yükle</button>
+      <button class="btn btn-primary" id="btnUploadGallery" onclick="submitGalleryModal()">Yükle</button>
     </div>
   </div>
 </div>
@@ -1744,6 +1960,137 @@ async function deleteSocial(id) {
 
 // ── Gallery ───────────────────────────────────────────────────────────────────
 let allGalleryData = [];
+const sessionCustomTags = new Set();
+
+function escapeHtml(str) {
+  return String(str || '').replace(/[&<>"']/g, function(m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+  });
+}
+
+function getUniqueGalleryTags() {
+  const tagMap = new Map();
+  if (Array.isArray(allGalleryData)) {
+    allGalleryData.forEach(g => {
+      const raw = (g.event_tag || '').trim();
+      if (raw && !tagMap.has(raw.toLowerCase())) {
+        tagMap.set(raw.toLowerCase(), raw);
+      }
+    });
+  }
+  sessionCustomTags.forEach(raw => {
+    const trimmed = (raw || '').trim();
+    if (trimmed && !tagMap.has(trimmed.toLowerCase())) {
+      tagMap.set(trimmed.toLowerCase(), trimmed);
+    }
+  });
+  return Array.from(tagMap.values());
+}
+
+function setGalleryTagValue(tag, isExplicit = false) {
+  const input = document.getElementById('galleryTag');
+  const triggerText = document.getElementById('galleryTagTriggerText');
+  const cleanTag = (tag || '').trim();
+  if (input) input.value = cleanTag;
+  if (triggerText) {
+    if (cleanTag) {
+      triggerText.innerHTML = '<span class="sparkle-icon">✦</span> ' + escapeHtml(cleanTag);
+    } else if (isExplicit) {
+      triggerText.innerHTML = '<span class="sparkle-icon">✦</span> Etiketsiz';
+    } else {
+      triggerText.innerHTML = '<span class="sparkle-icon">✦</span> Etiket seçin';
+    }
+  }
+}
+
+function toggleGalleryTagDropdown(force) {
+  const dd = document.getElementById('galleryTagDropdown');
+  const trigger = document.getElementById('galleryTagTrigger');
+  if (!dd) return;
+  const isOpen = dd.classList.contains('is-open');
+  const nextState = typeof force === 'boolean' ? force : !isOpen;
+  dd.classList.toggle('is-open', nextState);
+  if (trigger) trigger.setAttribute('aria-expanded', String(nextState));
+}
+
+function renderGalleryTagDropdown(currentVal = '') {
+  const list = document.getElementById('galleryTagList');
+  if (!list) return;
+  const tags = getUniqueGalleryTags();
+  const activeVal = (currentVal || '').trim().toLowerCase();
+
+  let html = \`
+    <button type="button" class="admin-dropdown-item \${!activeVal ? 'is-selected' : ''}" data-val="" onclick="selectGalleryTag('')" role="option" aria-selected="\${!activeVal}">
+      <span>Etiketsiz</span>
+      <span class="item-check">✓</span>
+    </button>
+  \`;
+
+  tags.forEach(tag => {
+    const isSel = tag.toLowerCase() === activeVal;
+    html += \`
+      <button type="button" class="admin-dropdown-item \${isSel ? 'is-selected' : ''}" data-val="\${escapeHtml(tag)}" onclick="selectGalleryTag('\${escapeHtml(tag).replace(/'/g, "\\\\'")}')" role="option" aria-selected="\${isSel}">
+        <span>\${escapeHtml(tag)}</span>
+        <span class="item-check">✓</span>
+      </button>
+    \`;
+  });
+
+  list.innerHTML = html;
+}
+
+function selectGalleryTag(tag) {
+  setGalleryTagValue(tag, true);
+  renderGalleryTagDropdown(tag);
+  toggleGalleryTagDropdown(false);
+}
+
+function showNewTagInput() {
+  toggleGalleryTagDropdown(false);
+  const box = document.getElementById('adminNewTagBox');
+  const input = document.getElementById('newTagNameInput');
+  if (box) box.style.display = 'block';
+  if (input) {
+    input.value = '';
+    setTimeout(() => input.focus(), 50);
+  }
+}
+
+function cancelNewTag() {
+  const box = document.getElementById('adminNewTagBox');
+  if (box) box.style.display = 'none';
+}
+
+function saveNewTag() {
+  const input = document.getElementById('newTagNameInput');
+  const val = (input?.value || '').trim();
+  if (!val) {
+    toast('Lütfen bir etiket adı girin', 'error');
+    return;
+  }
+  sessionCustomTags.add(val);
+  setGalleryTagValue(val, true);
+  renderGalleryTagDropdown(val);
+  cancelNewTag();
+  toast('Yeni etiket eklendi: ' + val, 'info');
+}
+
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('galleryTagDropdown');
+  if (dd && !dd.contains(e.target) && dd.classList.contains('is-open')) {
+    toggleGalleryTagDropdown(false);
+  }
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const dd = document.getElementById('galleryTagDropdown');
+    if (dd && dd.classList.contains('is-open')) {
+      toggleGalleryTagDropdown(false);
+      document.getElementById('galleryTagTrigger')?.focus();
+    }
+  }
+});
+
 async function loadGallery() {
   try {
     const res = await fetch('/api/gallery', { credentials: 'include' });
@@ -1765,7 +2112,12 @@ async function loadGallery() {
         <td>\${g.event_tag || '—'}</td>
         <td>\${g.file_size ? Math.round(g.file_size/1024) + ' KB' : '—'}</td>
         <td style="font-size:.75rem;color:var(--muted)">\${g.uploaded_at?.slice(0,10) || ''}</td>
-        <td><button class="btn btn-sm btn-danger" onclick="deleteGallery(\${g.id})">Sil</button></td>
+        <td>
+          <div style="display:flex;gap:5px;">
+            <button class="btn btn-sm btn-secondary" onclick="editGallery(\${g.id})">Düzenle</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteGallery(\${g.id})">Sil</button>
+          </div>
+        </td>
       </tr>
     \`).join('');
   } catch (e) {
@@ -1773,40 +2125,92 @@ async function loadGallery() {
     document.getElementById('galleryTable').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--error);padding:30px 0;font-size:.85rem">⚠️ Veriler yüklenirken bir hata oluştu.</td></tr>';
   }
 }
+
 function openGalleryModal() {
+  document.getElementById('galleryEditId').value = '';
+  document.getElementById('galleryModalTitle').textContent = 'Fotoğraf Yükle';
+  document.getElementById('btnUploadGallery').textContent = 'Yükle';
+  const uploadArea = document.getElementById('galleryUploadAreaField');
+  if (uploadArea) uploadArea.style.display = 'block';
   document.getElementById('galleryFile').value = '';
   document.getElementById('galleryPreview').innerHTML = '';
-  document.getElementById('galleryTag').value = '';
+  cancelNewTag();
+  toggleGalleryTagDropdown(false);
+  setGalleryTagValue('', false);
+  renderGalleryTagDropdown('');
   openModal('galleryModal');
 }
 
-async function uploadGallery() {
+function editGallery(id) {
+  const g = allGalleryData.find(x => x.id === id);
+  if (!g) return;
+  document.getElementById('galleryEditId').value = g.id;
+  document.getElementById('galleryModalTitle').textContent = 'Fotoğraf Düzenle';
+  document.getElementById('btnUploadGallery').textContent = 'Kaydet';
+  const uploadArea = document.getElementById('galleryUploadAreaField');
+  if (uploadArea) uploadArea.style.display = 'none';
+  cancelNewTag();
+  toggleGalleryTagDropdown(false);
+  const currentTag = (g.event_tag || '').trim();
+  setGalleryTagValue(currentTag, true);
+  renderGalleryTagDropdown(currentTag);
+  openModal('galleryModal');
+}
+
+async function submitGalleryModal() {
+  const editId = document.getElementById('galleryEditId').value;
+  const tag = document.getElementById('galleryTag').value.trim();
   const btn = document.getElementById('btnUploadGallery');
-  if (btn) { btn.disabled = true; btn.textContent = 'Yükleniyor...'; }
-  try {
-    const files = document.getElementById('galleryFile').files;
-    if (!files.length) { toast('Lütfen en az bir dosya seçin', 'error'); return; }
-    const tag = document.getElementById('galleryTag').value;
-    let ok = 0;
-    toast('Fotoğraflar yükleniyor...', 'info');
-    for (const file of files) {
-      try {
-        const url = await uploadFile(file, 'gallery');
-        await fetch('/api/gallery', {
-          method: 'POST', credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, event_tag: tag || null, file_size: file.size }),
-        });
-        ok++;
-      } catch (e) { toast('Yükleme hatası: ' + (e.message || ''), 'error'); }
+
+  if (editId) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Kaydediliyor...'; }
+    try {
+      const res = await fetch(\`/api/gallery/\${editId}\`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_tag: tag || null })
+      });
+      if (res.ok) {
+        closeModal('galleryModal');
+        toast('Fotoğraf güncellendi ✓');
+        loadGallery();
+      } else {
+        toast('Güncelleme hatası oluştu', 'error');
+      }
+    } catch (e) {
+      toast('Hata: ' + (e.message || ''), 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Kaydet'; }
     }
-    closeModal('galleryModal');
-    toast(\`\${ok} fotoğraf yüklendi ✓\`);
-    loadGallery();
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Yükle'; }
+  } else {
+    // New upload
+    if (btn) { btn.disabled = true; btn.textContent = 'Yükleniyor...'; }
+    try {
+      const files = document.getElementById('galleryFile').files;
+      if (!files.length) { toast('Lütfen en az bir dosya seçin', 'error'); return; }
+      let ok = 0;
+      toast('Fotoğraflar yükleniyor...', 'info');
+      for (const file of files) {
+        try {
+          const url = await uploadFile(file, 'gallery');
+          await fetch('/api/gallery', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url, event_tag: tag || null, file_size: file.size }),
+          });
+          ok++;
+        } catch (e) { toast('Yükleme hatası: ' + (e.message || ''), 'error'); }
+      }
+      closeModal('galleryModal');
+      toast(\`\${ok} fotoğraf yüklendi ✓\`);
+      loadGallery();
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Yükle'; }
+    }
   }
 }
+
 async function deleteGallery(id) {
   const g = allGalleryData.find(x => x.id === id);
   const name = g?.event_tag ? \`"\${g.event_tag}" etiketli \` : 'Bu ';
