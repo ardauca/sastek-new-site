@@ -1306,12 +1306,18 @@ async function saveShop() {
     let lat = null;
     let lng = null;
     if (rawCoords.trim()) {
-      const parts = rawCoords.split(',').map(p => p.trim());
-      if (parts.length >= 2) {
-        const parsedLat = parseFloat(parts[0]);
-        const parsedLng = parseFloat(parts[1]);
-        if (!isNaN(parsedLat)) lat = parsedLat;
-        if (!isNaN(parsedLng)) lng = parsedLng;
+      const coordMatch = rawCoords.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+      if (coordMatch) {
+        lat = parseFloat(coordMatch[1]);
+        lng = parseFloat(coordMatch[2]);
+      } else {
+        const parts = rawCoords.split(',').map(p => p.trim());
+        if (parts.length >= 2) {
+          const parsedLat = parseFloat(parts[0]);
+          const parsedLng = parseFloat(parts[1]);
+          if (!isNaN(parsedLat)) lat = parsedLat;
+          if (!isNaN(parsedLng)) lng = parsedLng;
+        }
       }
     }
 

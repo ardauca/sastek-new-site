@@ -44,7 +44,7 @@ try {
           ? { lat: Number(s.lat), lng: Number(s.lng) }
           : undefined,
         mapUrl: s.map_url || s.website || '',
-        showOnMap: Boolean((s.show_on_map === 1 || s.show_on_map === true || s.show_on_map == null) && s.lat != null && s.lng != null),
+        showOnMap: Boolean((s.show_on_map != null ? Number(s.show_on_map) === 1 : true) && s.lat != null && s.lng != null && !isNaN(Number(s.lat)) && !isNaN(Number(s.lng))),
         isActive: Boolean(s.is_active === 1 || s.is_active === true),
         isFeatured: Boolean(s.is_featured === 1 || s.is_featured === true),
         isVerified: Boolean(s.is_verified === 1 || s.is_verified === true),
@@ -173,8 +173,9 @@ const labels = locale === 'tr' ? {
   const parsed = JSON.parse(dataElement?.textContent || '{"partners":[],"labels":{}}');
   let mapPartners = parsed.partners || [];
   const labels = parsed.labels || {};
-  let map: any;
+  let map: any = null;
   let mapStarted = false;
+  let mapboxglInstance: any = null;
   const markers = new Map<string, any>();
   const pageLocale = root?.dataset.locale ?? 'tr';
   const apiBase = root?.dataset.api || 'https://admin.sastek.org/api';
@@ -190,7 +191,13 @@ const labels = locale === 'tr' ? {
       panel.classList.toggle('is-active', active);
       panel.hidden = !active;
     });
-    if (view === 'map') initMap();
+    if (view === 'map') {
+      if (!mapStarted) {
+        initMap();
+      } else if (map) {
+        setTimeout(() => map.resize(), 100);
+      }
+    }
   }
 
   function loadMapbox() {
@@ -257,6 +264,68 @@ const labels = locale === 'tr' ? {
     </div>`;
   }
 
+  function renderMapMarkers() {
+    if (!map || !mapboxglInstance) return;
+
+    markers.forEach((m) => m.remove());
+    markers.clear();
+
+    if (!mapPartners.length) {
+      if (mapMessage) {
+        mapMessage.hidden = false;
+        mapMessage.textContent = mapElement?.dataset.mapEmpty || (pageLocale === 'tr' ? 'Haritada gösterilecek anlaşmalı nokta bulunamadı.' : 'No partner locations found on map.');
+      }
+      return;
+    }
+
+    if (mapMessage) mapMessage.hidden = true;
+
+    const bounds = new mapboxglInstance.LngLatBounds();
+    mapPartners.forEach((partner: any) => {
+      const markerNode = document.createElement('button');
+      markerNode.type = 'button';
+      markerNode.className = 'map-logo-marker';
+      markerNode.setAttribute('aria-label', partner.name);
+      markerNode.innerHTML = `<img src="${escapeHtml(partner.logo)}" alt="${escapeHtml(partner.name)} logo" />`;
+      const popup = new mapboxglInstance.Popup({ offset: 28, closeButton: true }).setHTML(popupHtml(partner));
+      const marker = new mapboxglInstance.Marker({ element: markerNode, anchor: 'center' })
+        .setLngLat([partner.lng, partner.lat])
+        .setPopup(popup)
+        .addTo(map);
+      markers.set(String(partner.id), marker);
+      bounds.extend([partner.lng, partner.lat]);
+    });
+
+    if (mapPartners.length > 1) {
+      map.fitBounds(bounds, { padding: 70, maxZoom: 14 });
+    } else if (mapPartners.length === 1) {
+      map.flyTo({ center: [mapPartners[0].lng, mapPartners[0].lat], zoom: 13.5 });
+    }
+  }
+
+  function updateMapSidebar() {
+    const listContainer = document.getElementById('map-list-items');
+    const countSpan = document.getElementById('map-partners-count');
+    if (countSpan) {
+      countSpan.textContent = `${mapPartners.length} ${pageLocale === 'tr' ? 'konum' : 'locations'}`;
+    }
+    if (listContainer) {
+      if (!mapPartners.length) {
+        listContainer.innerHTML = `<p class="empty-map">${escapeHtml(labels.emptyMap || (pageLocale === 'tr' ? 'Haritada gösterilecek anlaşmalı nokta bulunamadı.' : 'No partner locations found on map.'))}</p>`;
+      } else {
+        listContainer.innerHTML = mapPartners.map((partner: any) => `
+          <button type="button" class="map-list-item" data-map-partner="${escapeHtml(partner.id)}">
+            <img src="${escapeHtml(partner.logo)}" alt="${escapeHtml(partner.name)} logo" width="44" height="44" loading="lazy" />
+            <span>
+              <b>${escapeHtml(partner.name)}</b>
+              <small>${escapeHtml(partner.location || partner.category)}</small>
+            </span>
+          </button>
+        `).join('');
+      }
+    }
+  }
+
   async function initMap() {
     if (mapStarted || !root || !mapElement || !mapMessage) return;
     mapStarted = true;
@@ -267,11 +336,13 @@ const labels = locale === 'tr' ? {
     }
     if (!mapPartners.length) {
       mapMessage.textContent = mapElement.dataset.mapEmpty || '';
+      mapStarted = false;
       return;
     }
     try {
       mapMessage.textContent = mapElement.dataset.mapLoading || '';
       const mapboxgl: any = await loadMapbox();
+      mapboxglInstance = mapboxgl;
       mapboxgl.accessToken = token;
       injectMapboxThemeStyles();
       const first = mapPartners[0];
@@ -286,20 +357,7 @@ const labels = locale === 'tr' ? {
       map.scrollZoom.enable();
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
       map.on('load', () => {
-        mapMessage.hidden = true;
-        const bounds = new mapboxgl.LngLatBounds();
-        mapPartners.forEach((partner: any) => {
-          const markerNode = document.createElement('button');
-          markerNode.type = 'button';
-          markerNode.className = 'map-logo-marker';
-          markerNode.setAttribute('aria-label', partner.name);
-          markerNode.innerHTML = `<img src="${escapeHtml(partner.logo)}" alt="${escapeHtml(partner.name)} logo" />`;
-          const popup = new mapboxgl.Popup({ offset: 28, closeButton: true }).setHTML(popupHtml(partner));
-          const marker = new mapboxgl.Marker({ element: markerNode, anchor: 'center' }).setLngLat([partner.lng, partner.lat]).setPopup(popup).addTo(map);
-          markers.set(String(partner.id), marker);
-          bounds.extend([partner.lng, partner.lat]);
-        });
-        if (mapPartners.length > 1) map.fitBounds(bounds, { padding: 70, maxZoom: 14 });
+        renderMapMarkers();
       });
     } catch (error) {
       mapStarted = false;
@@ -308,13 +366,18 @@ const labels = locale === 'tr' ? {
   }
 
   buttons?.forEach((button) => button.addEventListener('click', () => setView(button.dataset.viewButton || 'grid')));
-  root?.querySelectorAll<HTMLButtonElement>('[data-map-partner]').forEach((button) => button.addEventListener('click', () => {
-    const partner = mapPartners.find((item: any) => String(item.id) === String(button.dataset.mapPartner));
-    const marker = markers.get(String(button.dataset.mapPartner || ''));
+
+  // Event delegation for clicking a partner in the map sidebar list
+  root?.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement)?.closest<HTMLButtonElement>('[data-map-partner]');
+    if (!btn) return;
+    const pId = btn.dataset.mapPartner;
+    const partner = mapPartners.find((item: any) => String(item.id) === String(pId));
+    const marker = markers.get(String(pId || ''));
     if (!partner || !map) return;
     map.flyTo({ center: [partner.lng, partner.lat], zoom: 15, essential: true });
     marker?.togglePopup();
-  }));
+  });
 
   // ── Live Client-Side Hydration ────────────────────────────────────────────────
   (async () => {
@@ -334,30 +397,68 @@ const labels = locale === 'tr' ? {
       const apiShops = await res.json();
       if (!Array.isArray(apiShops)) return;
 
+      // 1. Live update Grid Cards
       const gridContainer = document.getElementById('partners-grid-container');
-      if (!gridContainer) return;
+      if (gridContainer) {
+        const newCardsHtml = apiShops.map((s: any) => {
+          const cat = pageLocale === 'tr' ? (s.category_tr || 'Diğer') : (s.category_en || 'Other');
+          const offer = s.discount || (pageLocale === 'tr' ? 'Kampanya bilgisi güncellenecek' : 'Offer details to be updated');
+          let logo = s.logo_url || '/images/partners/arc-logo.png';
+          if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
 
-      const newCardsHtml = apiShops.map((s: any) => {
-        const cat = pageLocale === 'tr' ? (s.category_tr || 'Diğer') : (s.category_en || 'Other');
-        const offer = s.discount || (pageLocale === 'tr' ? 'Kampanya bilgisi güncellenecek' : 'Offer details to be updated');
-        let logo = s.logo_url || '/images/partners/arc-logo.png';
-        if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
+          const searchStr = `${s.name} ${cat} ${offer}`.toLowerCase();
 
-        const searchStr = `${s.name} ${cat} ${offer}`.toLowerCase();
+          return `<article class="partner glass" data-filter-card data-category="${escapeHtml(cat.toLowerCase())}" data-search="${escapeHtml(searchStr)}">
+            <div class="logo"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" width="240" height="160" loading="lazy" /></div>
+            <div class="body">
+              <span class="chip">${escapeHtml(cat)}</span>
+              <h3>${escapeHtml(s.name)}</h3>
+              <p class="offer">${escapeHtml(offer)}</p>
+            </div>
+          </article>`;
+        }).join('');
 
-        return `<article class="partner glass" data-filter-card data-category="${escapeHtml(cat.toLowerCase())}" data-search="${escapeHtml(searchStr)}">
-          <div class="logo"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" width="240" height="160" loading="lazy" /></div>
-          <div class="body">
-            <span class="chip">${escapeHtml(cat)}</span>
-            <h3>${escapeHtml(s.name)}</h3>
-            <p class="offer">${escapeHtml(offer)}</p>
-          </div>
-        </article>`;
-      }).join('');
+        gridContainer.innerHTML = newCardsHtml;
+      }
 
-      gridContainer.innerHTML = newCardsHtml;
+      // 2. Live update Map Partners
+      mapPartners = apiShops
+        .filter((s: any) => {
+          const isActive = s.is_active === 1 || s.is_active === true;
+          const showOnMap = s.show_on_map != null ? (Number(s.show_on_map) === 1) : true;
+          const hasCoords = s.lat != null && s.lng != null && !isNaN(Number(s.lat)) && !isNaN(Number(s.lng));
+          return isActive && showOnMap && hasCoords;
+        })
+        .map((s: any) => {
+          const cat = pageLocale === 'tr' ? (s.category_tr || 'Diğer') : (s.category_en || 'Other');
+          const discount = s.discount || (pageLocale === 'tr' ? 'Kampanya bilgisi güncellenecek' : 'Offer details to be updated');
+          let logo = s.logo_url || '/images/partners/arc-logo.png';
+          if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
+          return {
+            id: String(s.id),
+            name: s.name,
+            category: cat,
+            discount: discount,
+            logo: logo,
+            location: s.address || '',
+            mapUrl: s.map_url || s.website || '',
+            lat: Number(s.lat),
+            lng: Number(s.lng),
+          };
+        });
 
-      // Update category select dropdown options dynamically
+      // Update sidebar list and count
+      updateMapSidebar();
+
+      // If map panel is already active or map already initialized, sync markers
+      const mapPanel = root?.querySelector<HTMLElement>('[data-view-panel="map"]');
+      if (mapPanel && !mapPanel.hidden && !mapStarted && mapPartners.length) {
+        initMap();
+      } else if (map && mapboxglInstance) {
+        renderMapMarkers();
+      }
+
+      // 3. Update category select dropdown options dynamically
       const categorySelect = root?.querySelector<HTMLSelectElement>('[data-filter-category]');
       if (categorySelect) {
         const existingVal = categorySelect.value;

@@ -48,8 +48,13 @@ shopRoutes.get('/admin/all', requireAuth(), async (c) => {
 
 // POST /api/shops — create shop
 shopRoutes.post('/', requireAuth(), async (c) => {
-  const data = await c.req.json<Partial<Shop> & { is_featured?: number; show_on_map?: number; is_verified?: number; order_num?: number }>();
+  const data = await c.req.json<Partial<Shop> & { is_featured?: number | boolean; show_on_map?: number | boolean; is_verified?: number | boolean; order_num?: number }>();
   if (!data.name) return c.json({ error: 'Name is required' }, 400);
+
+  const isActive = data.is_active !== undefined ? (Number(data.is_active) === 1 ? 1 : 0) : 1;
+  const isFeatured = data.is_featured !== undefined ? (Number(data.is_featured) === 1 ? 1 : 0) : 0;
+  const showOnMap = data.show_on_map !== undefined ? (Number(data.show_on_map) === 1 ? 1 : 0) : 1;
+  const isVerified = data.is_verified !== undefined ? (Number(data.is_verified) === 1 ? 1 : 0) : 1;
 
   const result = await c.env.DB.prepare(`
     INSERT INTO shops (name, category_id, discount, description_tr, description_en, logo_url, website, address, phone, lat, lng, map_url, is_active, is_featured, show_on_map, is_verified, order_num)
@@ -67,10 +72,10 @@ shopRoutes.post('/', requireAuth(), async (c) => {
     data.lat ?? null,
     data.lng ?? null,
     data.map_url ?? null,
-    data.is_active ?? 1,
-    data.is_featured ?? 0,
-    data.show_on_map ?? 1,
-    data.is_verified ?? 1,
+    isActive,
+    isFeatured,
+    showOnMap,
+    isVerified,
     data.order_num ?? 1,
   ).run();
 
@@ -79,8 +84,13 @@ shopRoutes.post('/', requireAuth(), async (c) => {
 
 // PUT /api/shops/:id — update shop
 shopRoutes.put('/:id', requireAuth(), async (c) => {
-  const data = await c.req.json<Partial<Shop> & { is_featured?: number; show_on_map?: number; is_verified?: number; order_num?: number }>();
+  const data = await c.req.json<Partial<Shop> & { is_featured?: number | boolean; show_on_map?: number | boolean; is_verified?: number | boolean; order_num?: number }>();
   const { id } = c.req.param();
+
+  const isActive = data.is_active !== undefined ? (Number(data.is_active) === 1 ? 1 : 0) : null;
+  const isFeatured = data.is_featured !== undefined ? (Number(data.is_featured) === 1 ? 1 : 0) : null;
+  const showOnMap = data.show_on_map !== undefined ? (Number(data.show_on_map) === 1 ? 1 : 0) : null;
+  const isVerified = data.is_verified !== undefined ? (Number(data.is_verified) === 1 ? 1 : 0) : null;
 
   await c.env.DB.prepare(`
     UPDATE shops SET
@@ -116,10 +126,10 @@ shopRoutes.put('/:id', requireAuth(), async (c) => {
     data.lat ?? null,
     data.lng ?? null,
     data.map_url ?? null,
-    data.is_active ?? null,
-    data.is_featured ?? null,
-    data.show_on_map ?? null,
-    data.is_verified ?? null,
+    isActive,
+    isFeatured,
+    showOnMap,
+    isVerified,
     data.order_num ?? null,
     id,
   ).run();
