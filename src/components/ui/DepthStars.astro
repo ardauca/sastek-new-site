@@ -54,6 +54,9 @@
     let scrollTargetY = typeof window !== 'undefined' ? (window.scrollY || 0) : 0;
     let scrollCurrentY = scrollTargetY;
     let hasUserScrolled = false;
+    let hasMouseEntered = false;
+    let refMouseX = 0;
+    let refMouseY = 0;
 
     interface Star {
       x: number;
@@ -153,14 +156,35 @@
     // Event Dinleyicileri (Pasif & Throttled)
     window.addEventListener('resize', resize, { passive: true });
 
+    function onPointerEnter(clientX: number, clientY: number) {
+      hasMouseEntered = true;
+      const halfW = (width || window.innerWidth) * 0.5 || 1;
+      const halfH = (height || window.innerHeight) * 0.5 || 1;
+      refMouseX = clientX - mouseCurrentX * halfW;
+      refMouseY = clientY - mouseCurrentY * halfH;
+      mouseTargetX = mouseCurrentX;
+      mouseTargetY = mouseCurrentY;
+    }
+
+    document.addEventListener('mouseenter', (e) => {
+      onPointerEnter(e.clientX, e.clientY);
+    }, { passive: true });
+
     window.addEventListener('mousemove', (e) => {
-      // Merkeze göre normalize (-1 ile +1 arası)
-      mouseTargetX = (e.clientX / width - 0.5) * 2;
-      mouseTargetY = (e.clientY / height - 0.5) * 2;
+      if (!hasMouseEntered) {
+        onPointerEnter(e.clientX, e.clientY);
+        return;
+      }
+
+      const halfW = (width || window.innerWidth) * 0.5 || 1;
+      const halfH = (height || window.innerHeight) * 0.5 || 1;
+
+      mouseTargetX = Math.max(-1, Math.min(1, (e.clientX - refMouseX) / halfW));
+      mouseTargetY = Math.max(-1, Math.min(1, (e.clientY - refMouseY) / halfH));
     }, { passive: true });
 
     window.addEventListener('mouseleave', () => {
-      // Fare pencereden çıkınca ortaya dön
+      hasMouseEntered = false;
       mouseTargetX = 0;
       mouseTargetY = 0;
     }, { passive: true });
