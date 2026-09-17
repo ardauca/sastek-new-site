@@ -51,8 +51,9 @@
     let mouseCurrentX = 0;
     let mouseCurrentY = 0;
 
-    let scrollTargetY = 0;
-    let scrollCurrentY = 0;
+    let scrollTargetY = typeof window !== 'undefined' ? (window.scrollY || 0) : 0;
+    let scrollCurrentY = scrollTargetY;
+    let hasUserScrolled = false;
 
     interface Star {
       x: number;
@@ -165,6 +166,7 @@
     }, { passive: true });
 
     window.addEventListener('scroll', () => {
+      hasUserScrolled = true;
       scrollTargetY = window.scrollY;
     }, { passive: true });
 
@@ -179,6 +181,15 @@
     let time = 0;
 
     function render() {
+      // Tarayıcı sayfa yenileme/restoration scroll'u yaparsa ilk kullanıcı etkileşimine kadar senkron tut
+      if (!hasUserScrolled) {
+        const sy = window.scrollY || 0;
+        if (sy !== scrollTargetY) {
+          scrollTargetY = sy;
+          scrollCurrentY = sy;
+        }
+      }
+
       // Yumuşak Atalet (Lerp Damping - %4.5 hız adımı = tam dengeli akıcı süzülme)
       const lerpFactor = 0.045;
 
@@ -250,6 +261,8 @@
 
     // Başlat
     resize();
+    scrollTargetY = window.scrollY || 0;
+    scrollCurrentY = scrollTargetY;
     render();
   })();
 </script>

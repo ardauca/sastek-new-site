@@ -17,7 +17,7 @@ try {
   ]);
   if (response.ok) {
     const apiSponsors = await response.json();
-    if (Array.isArray(apiSponsors) && apiSponsors.length > 0) {
+    if (Array.isArray(apiSponsors)) {
       rawSponsors = apiSponsors;
     }
   }
@@ -29,7 +29,7 @@ try {
   // Fallback to static
 }
 
-if (!rawSponsors.length) {
+if (!rawSponsors.length && staticSponsors.length > 0) {
   rawSponsors = staticSponsors.map(s => ({
     id: s.id,
     name: s.name,
@@ -90,7 +90,7 @@ const desc  = locale === 'tr' ? 'Öğrencilerin teknolojiyle buluşmasına katk�
               </div>
               <div class="tier-logos">
                 {group.sponsors.map((sponsor) => {
-                  let logo = sponsor.logo_url || '/images/sponsors/sample-sponsor.png';
+                  let logo = sponsor.logo_url || '';
                   if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
                   const inner = (
                     <img src={logo} alt={`${sponsor.name} logo`} loading="lazy" />
@@ -191,7 +191,7 @@ const desc  = locale === 'tr' ? 'Öğrencilerin teknolojiyle buluşmasına katk�
           </div>
           <div class="tier-logos">
             ${group.sponsors.map((sponsor: any) => {
-              let logo = sponsor.logo_url || '/images/sponsors/sample-sponsor.png';
+              let logo = sponsor.logo_url || '';
               if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
               const imgHtml = `<img src="${escapeHtml(logo)}" alt="${escapeHtml(sponsor.name)} logo" loading="lazy" />`;
               if (sponsor.website) {

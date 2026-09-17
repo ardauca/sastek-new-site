@@ -60,9 +60,9 @@ const featuredPartners: Partner[] = (rawPartners !== null)
         id: String(s.id),
         name: s.name,
         category: { tr: s.category_tr || 'Diğer', en: s.category_en || 'Other' },
-        discountLabel: { tr: s.discount || 'Kampanya bilgisi güncellenecek', en: s.discount || 'Offer details to be updated' },
+        discountLabel: { tr: s.discount || 'Özel İndirim', en: s.discount || 'Special Offer' },
         description: { tr: s.description_tr || '', en: s.description_en || '' },
-        logo: s.logo_url || '/images/partners/arc-logo.png',
+        logo: s.logo_url || '',
         isActive: Boolean(s.is_active === 1 || s.is_active === true),
       }))
   : (rawPartners === null ? staticPartners.filter((item) => item.isActive && item.isFeatured).sort((a,b) => (a.order||0)-(b.order||0)).slice(0, 3) : []);
@@ -165,7 +165,7 @@ const pageTitle = locale === 'tr'
       </div>
       <div class="sponsor-list" id="home-sponsors-grid">
         {featuredSponsors.map((sponsor: any) => {
-          let logo = sponsor.logo_url?.startsWith('/images/') ? 'https://sastek.org' + sponsor.logo_url : (sponsor.logo_url || sponsor.logo || '/images/sponsors/sample-sponsor.png');
+          let logo = sponsor.logo_url?.startsWith('/images/') ? 'https://sastek.org' + sponsor.logo_url : (sponsor.logo_url || sponsor.logo || '');
           const inner = <img src={logo} alt={`${sponsor.name} logo`} loading="lazy" />;
           return sponsor.website ? (
             <a href={sponsor.website} target="_blank" rel="noopener noreferrer" class="sponsor-slot" title={sponsor.name}>
@@ -234,7 +234,7 @@ const pageTitle = locale === 'tr'
             } else {
               if (homeSponsorsSection) homeSponsorsSection.style.display = '';
               homeSponsorsGrid.innerHTML = feat.map((s: any) => {
-                let logo = s.logo_url || '/images/sponsors/sample-sponsor.png';
+                let logo = s.logo_url || '';
                 if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
                 const imgHtml = `<img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" loading="lazy" />`;
                 if (s.website) {
@@ -299,10 +299,10 @@ const pageTitle = locale === 'tr'
             } else {
               if (homePartnersSection) homePartnersSection.style.display = '';
               homePartnersGrid.innerHTML = feat.slice(0, 3).map((s: any) => {
-                let logo = s.logo_url || '/images/partners/arc-logo.png';
+                let logo = s.logo_url || '';
                 if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
                 const cat = isEn ? (s.category_en || 'Other') : (s.category_tr || 'Diğer');
-                const offer = s.discount || (isEn ? 'Offer details to be updated' : 'Kampanya bilgisi güncellenecek');
+                const offer = s.discount || (isEn ? 'Special Offer' : 'Özel İndirim');
                 return `<article class="partner glass">
                   <div class="logo"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" /></div>
                   <div class="body">

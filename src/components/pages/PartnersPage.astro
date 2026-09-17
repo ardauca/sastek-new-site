@@ -22,7 +22,7 @@ try {
   ]);
   if (response.ok) {
     const apiShops = await response.json();
-    if (Array.isArray(apiShops) && apiShops.length > 0) {
+    if (Array.isArray(apiShops)) {
       rawPartners = apiShops.map((s: any) => ({
         id: String(s.id),
         name: s.name,
@@ -31,14 +31,14 @@ try {
           en: s.category_en || 'Other',
         },
         discountLabel: {
-          tr: s.discount || (locale === 'tr' ? 'Kampanya bilgisi güncellenecek' : 'Offer details to be updated'),
-          en: s.discount || 'Offer details to be updated',
+          tr: s.discount || (locale === 'tr' ? 'Özel İndirim' : 'Special Offer'),
+          en: s.discount || 'Special Offer',
         },
         description: {
           tr: s.description_tr || '',
           en: s.description_en || '',
         },
-        logo: s.logo_url || '/images/partners/arc-logo.png',
+        logo: s.logo_url || '',
         location: s.address || '',
         coordinates: (s.lat != null && s.lng != null && !isNaN(Number(s.lat)) && !isNaN(Number(s.lng)))
           ? { lat: Number(s.lat), lng: Number(s.lng) }
@@ -89,7 +89,7 @@ const labels = locale === 'tr' ? {
   tokenMissing: 'Harita görünümü için PUBLIC_MAPBOX_TOKEN gerekli.',
   emptyMap: 'Haritada gösterilecek koordinatlı anlaşmalı nokta yok.',
   mapLoading: 'Harita yükleniyor…',
-  noOffer: 'Kampanya bilgisi güncellenecek',
+  noOffer: 'Özel İndirim',
   unverified: 'Doğrulama bekliyor',
 } : {
   grid: 'Grid View',
@@ -99,7 +99,7 @@ const labels = locale === 'tr' ? {
   tokenMissing: 'PUBLIC_MAPBOX_TOKEN is required for the map view.',
   emptyMap: 'No partners with coordinates to show on the map.',
   mapLoading: 'Loading map…',
-  noOffer: 'Offer details to be updated',
+  noOffer: 'Special Offer',
   unverified: 'Awaiting verification',
 };
 ---
@@ -123,7 +123,15 @@ const labels = locale === 'tr' ? {
 
       <div class="view-panel is-active" data-view-panel="grid">
         <div class="filter-space"><FilterControls locale={locale} categories={categories} showSort={true} /></div>
-        <div class="grid-auto" id="partners-grid-container">{active.map((partner, idx) => <PartnerCard partner={partner} locale={locale} originalIndex={idx} />)}</div>
+        <div class="grid-auto" id="partners-grid-container">
+          {active.length === 0 ? (
+            <p class="empty-msg" style="grid-column: 1 / -1; text-align: center; color: #a9bbce; margin: 3rem auto; font-size: 0.95rem;">
+              {locale === 'tr' ? 'Henüz anlaşmalı nokta bulunmuyor.' : 'No partner locations found yet.'}
+            </p>
+          ) : (
+            active.map((partner, idx) => <PartnerCard partner={partner} locale={locale} originalIndex={idx} />)
+          )}
+        </div>
       </div>
 
       <div class="view-panel" data-view-panel="map" hidden>
@@ -411,32 +419,36 @@ const labels = locale === 'tr' ? {
       // 1. Live update Grid Cards
       const gridContainer = document.getElementById('partners-grid-container');
       if (gridContainer) {
-        const newCardsHtml = apiShops.map((s: any, idx: number) => {
-          const cat = pageLocale === 'tr' ? (s.category_tr || 'Diğer') : (s.category_en || 'Other');
-          const offer = s.discount || (pageLocale === 'tr' ? 'Kampanya bilgisi güncellenecek' : 'Offer details to be updated');
-          const percent = extractDiscountPercent(offer);
-          let logo = s.logo_url || '/images/partners/arc-logo.png';
-          if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
+        if (apiShops.length === 0) {
+          gridContainer.innerHTML = `<p class="empty-msg" style="grid-column: 1 / -1; text-align: center; color: #a9bbce; margin: 3rem auto; font-size: 0.95rem;">${pageLocale === 'tr' ? 'Henüz anlaşmalı nokta bulunmuyor.' : 'No partner locations found yet.'}</p>`;
+        } else {
+          const newCardsHtml = apiShops.map((s: any, idx: number) => {
+            const cat = pageLocale === 'tr' ? (s.category_tr || 'Diğer') : (s.category_en || 'Other');
+            const offer = s.discount || (pageLocale === 'tr' ? 'Özel İndirim' : 'Special Offer');
+            const percent = extractDiscountPercent(offer);
+            let logo = s.logo_url || '';
+            if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
 
-          const searchStr = `${s.name} ${cat} ${offer}`.toLowerCase();
+            const searchStr = `${s.name} ${cat} ${offer}`.toLowerCase();
 
-          return `<article class="partner glass" data-filter-card
-            data-category="${escapeHtml(cat.toLowerCase())}"
-            data-search="${escapeHtml(searchStr)}"
-            data-name="${escapeHtml(s.name)}"
-            data-discount-percent="${percent !== null ? percent : ''}"
-            data-original-index="${idx}"
-            data-order="${s.order_num || idx}">
-            <div class="logo"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" width="240" height="160" loading="lazy" /></div>
-            <div class="body">
-              <span class="chip">${escapeHtml(cat)}</span>
-              <h3>${escapeHtml(s.name)}</h3>
-              <p class="offer">${escapeHtml(offer)}</p>
-            </div>
-          </article>`;
-        }).join('');
+            return `<article class="partner glass" data-filter-card
+              data-category="${escapeHtml(cat.toLowerCase())}"
+              data-search="${escapeHtml(searchStr)}"
+              data-name="${escapeHtml(s.name)}"
+              data-discount-percent="${percent !== null ? percent : ''}"
+              data-original-index="${idx}"
+              data-order="${s.order_num || idx}">
+              <div class="logo"><img src="${escapeHtml(logo)}" alt="${escapeHtml(s.name)} logo" width="240" height="160" loading="lazy" /></div>
+              <div class="body">
+                <span class="chip">${escapeHtml(cat)}</span>
+                <h3>${escapeHtml(s.name)}</h3>
+                <p class="offer">${escapeHtml(offer)}</p>
+              </div>
+            </article>`;
+          }).join('');
 
-        gridContainer.innerHTML = newCardsHtml;
+          gridContainer.innerHTML = newCardsHtml;
+        }
       }
 
       // 2. Live update Map Partners
@@ -449,8 +461,8 @@ const labels = locale === 'tr' ? {
         })
         .map((s: any) => {
           const cat = pageLocale === 'tr' ? (s.category_tr || 'Diğer') : (s.category_en || 'Other');
-          const discount = s.discount || (pageLocale === 'tr' ? 'Kampanya bilgisi güncellenecek' : 'Offer details to be updated');
-          let logo = s.logo_url || '/images/partners/arc-logo.png';
+          const discount = s.discount || (pageLocale === 'tr' ? 'Özel İndirim' : 'Special Offer');
+          let logo = s.logo_url || '';
           if (logo.startsWith('/images/')) logo = 'https://sastek.org' + logo;
           return {
             id: String(s.id),
