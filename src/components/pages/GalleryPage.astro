@@ -19,12 +19,9 @@ try {
     if (Array.isArray(apiItems) && apiItems.length > 0) {
       rawGallery = apiItems.map((item: any) => {
         const rawTag = (item.event_tag || '').trim();
-        const capTr = typeof item.caption_tr === 'string' ? item.caption_tr.trim() : '';
-        const capEn = typeof item.caption_en === 'string' ? item.caption_en.trim() : '';
         return {
           id: String(item.id),
           src: item.url,
-          caption: { tr: capTr, en: capEn },
           category: { tr: rawTag, en: rawTag },
           order: item.id,
         };
@@ -39,7 +36,6 @@ if (!rawGallery.length) {
   rawGallery = staticGallery.map((g, idx) => ({
     id: g.id,
     src: g.src,
-    caption: g.alt,
     category: {
       tr: (t(g.category, 'tr') || '').trim(),
       en: (t(g.category, 'en') || '').trim(),
@@ -61,18 +57,15 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
       <div class="gallery-grid" id="gallery-grid-container">
         {rawGallery.map((item, index) => {
           const categoryName = (t(item.category, locale) || '').trim();
-          const captionText = (t(item.caption, locale) || '').trim();
-          const accessibleAlt = captionText || (locale === 'tr' ? 'SASTEK galeri fotoğrafı' : 'SASTEK gallery photo');
+          const accessibleAlt = locale === 'tr' ? 'SASTEK galeri fotoğrafı' : 'SASTEK gallery photo';
           return (
             <button
               type="button"
               data-filter-card
               data-category={categoryName.toLowerCase()}
-              data-search={(captionText || categoryName).toLowerCase()}
+              data-search={categoryName.toLowerCase()}
               data-lightbox-src={item.src.startsWith('/images/') ? 'https://sastek.org' + item.src : item.src}
-              data-lightbox-caption={captionText}
-              data-lightbox-alt={accessibleAlt}
-              aria-label={`${locale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}${captionText ? `: ${captionText}` : ''}`}
+              aria-label={`${locale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}${categoryName ? `: ${categoryName}` : ''}`}
             >
               <img src={item.src.startsWith('/images/') ? 'https://sastek.org' + item.src : item.src} alt={accessibleAlt} width="720" height="520" loading={index > 1 ? 'lazy' : 'eager'} />
               {categoryName ? <span>{categoryName}</span> : null}
@@ -108,7 +101,6 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
     </div>
 
     <div class="lightbox-foot">
-      <span id="lb-caption" class="lightbox-caption"></span>
       <span id="lb-counter" class="lightbox-counter"></span>
     </div>
   </dialog>
@@ -117,13 +109,12 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
 <script>
   const dialog = document.querySelector<HTMLDialogElement>('#lightbox');
   const image = document.querySelector<HTMLImageElement>('#lb-image');
-  const caption = document.querySelector<HTMLElement>('#lb-caption');
   const counter = document.querySelector<HTMLElement>('#lb-counter');
   const prevBtn = document.querySelector<HTMLButtonElement>('#lb-prev');
   const nextBtn = document.querySelector<HTMLButtonElement>('#lb-next');
   const closeBtn = dialog?.querySelector<HTMLButtonElement>('.close');
 
-  let currentGalleryItems: { src: string; alt: string; caption: string }[] = [];
+  let currentGalleryItems: { src: string }[] = [];
   let currentActiveIndex = 0;
 
   function updateActiveItems() {
@@ -132,8 +123,6 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
 
     currentGalleryItems = visibleButtons.map((btn) => ({
       src: btn.dataset.lightboxSrc ?? '',
-      alt: btn.dataset.lightboxAlt ?? '',
-      caption: (btn.dataset.lightboxCaption ?? '').trim(),
     }));
   }
 
@@ -145,16 +134,6 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
     const current = currentGalleryItems[currentActiveIndex];
 
     image.src = current.src;
-    image.alt = current.alt;
-    if (caption) {
-      if (current.caption) {
-        caption.textContent = current.caption;
-        caption.style.display = '';
-      } else {
-        caption.textContent = '';
-        caption.style.display = 'none';
-      }
-    }
     if (counter) counter.textContent = `${currentActiveIndex + 1} / ${currentGalleryItems.length}`;
   }
 
@@ -259,9 +238,7 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
 
       gridContainer.innerHTML = items.map((item: any, index: number) => {
         const rawTag = (item.event_tag || '').trim();
-        const cap = pageLocale === 'tr' ? item.caption_tr : item.caption_en;
-        const captionText = typeof cap === 'string' ? cap.trim() : '';
-        const accessibleAlt = captionText || (pageLocale === 'tr' ? 'SASTEK galeri fotoğrafı' : 'SASTEK gallery photo');
+        const accessibleAlt = pageLocale === 'tr' ? 'SASTEK galeri fotoğrafı' : 'SASTEK gallery photo';
         let src = item.url;
         if (src.startsWith('/images/')) src = 'https://sastek.org' + src;
 
@@ -272,11 +249,9 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
           type="button"
           data-filter-card
           data-category="${catAttr}"
-          data-search="${escapeHtml((captionText || rawTag).toLowerCase())}"
+          data-search="${escapeHtml(rawTag.toLowerCase())}"
           data-lightbox-src="${escapeHtml(src)}"
-          data-lightbox-caption="${escapeHtml(captionText)}"
-          data-lightbox-alt="${escapeHtml(accessibleAlt)}"
-          aria-label="${pageLocale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}${captionText ? `: ${escapeHtml(captionText)}` : ''}"
+          aria-label="${pageLocale === 'tr' ? 'Görseli büyüt' : 'Enlarge image'}${rawTag ? `: ${escapeHtml(rawTag)}` : ''}"
         >
           <img src="${escapeHtml(src)}" alt="${escapeHtml(accessibleAlt)}" width="720" height="520" loading="${index > 1 ? 'lazy' : 'eager'}" />
           ${catHtml}
@@ -474,26 +449,20 @@ const desc  = locale === 'tr' ? 'Etkinliklerden, teknik buluşmalardan ve kulüp
   .lightbox-foot {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: .5rem .6rem 0;
-    border-top: 1px solid rgba(0, 212, 255, .15);
-    font-size: .85rem;
-    color: #bad0e4;
-  }
-  .lightbox-caption {
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    justify-content: center;
+    padding: .35rem 0 0;
+    border-top: 1px solid rgba(0, 212, 255, .12);
   }
   .lightbox-counter {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: .78rem;
+    font-size: .8rem;
     font-weight: 700;
     color: #00d4ff;
     letter-spacing: .08em;
-    flex-shrink: 0;
+    padding: .2rem .75rem;
+    border-radius: 999px;
+    background: rgba(0, 212, 255, .08);
+    border: 1px solid rgba(0, 212, 255, .18);
   }
 
   @media (max-width: 700px) {
