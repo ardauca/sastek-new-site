@@ -364,6 +364,20 @@ const labels = locale === 'tr' ? {
       });
       map.scrollZoom.enable();
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+      const geolocate = new mapboxgl.GeolocateControl({
+        positionOptions: {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        },
+        trackUserLocation: false,
+        showUserLocation: true,
+        showAccuracyCircle: true,
+      });
+      geolocate.on('error', () => {
+        // Native control handles visual error state gracefully without breaking the map
+      });
+      map.addControl(geolocate, 'top-right');
       map.on('load', () => {
         renderMapMarkers();
       });
