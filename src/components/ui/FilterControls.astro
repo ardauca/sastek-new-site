@@ -208,8 +208,22 @@ function getCategoryLucideSvg(name: string): string {
       const locale = root.dataset.locale || 'tr';
 
       // ── Filter and Sorting Engine ───────────────────────────────────────────
+      const normalizeText = (text: string): string => {
+        return (text || '')
+          .toLocaleLowerCase(locale)
+          .replace(/ı/g, 'i')
+          .replace(/ğ/g, 'g')
+          .replace(/ü/g, 'u')
+          .replace(/ş/g, 's')
+          .replace(/ö/g, 'o')
+          .replace(/ç/g, 'c')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+      };
+
       const applyFiltersAndSort = () => {
-        const term = search?.value.trim().toLocaleLowerCase(locale) ?? '';
+        const rawTerm = search?.value.trim() ?? '';
+        const term = normalizeText(rawTerm);
         const selectedCategory = categorySelect?.value ?? '';
         const sortMode = sortSelect?.value ?? 'default';
 
@@ -267,7 +281,7 @@ function getCategoryLucideSvg(name: string): string {
 
         // 2. Filter visibility by search and category
         cards.forEach((card) => {
-          const cardSearch = card.dataset.search?.toLocaleLowerCase(locale) ?? '';
+          const cardSearch = normalizeText(card.dataset.search ?? '');
           const cardCat = card.dataset.category ?? '';
           const matchesTerm = !term || cardSearch.includes(term);
           const matchesCategory = !selectedCategory || cardCat === selectedCategory;
